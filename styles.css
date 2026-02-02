@@ -270,11 +270,13 @@ body {
     margin: 0;
     padding: 0;
     z-index: 10;
-    /* Optimize for smooth scrolling */
+    /* Optimize for smooth scrolling on desktop */
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
     will-change: scroll-position;
     contain: layout style paint;
+    /* Ensure smooth scrolling on mobile */
+    -webkit-overflow-scrolling: touch;
 }
 
 .hero-video-section .hero-video {
@@ -2147,6 +2149,16 @@ body {
     
     .hero-video-section {
         margin-top: 60px; /* Smaller gap on mobile */
+        height: 60vh; /* Reduced height on tablet for scroll-to-scrub */
+        min-height: 300px;
+        /* Enable scroll-to-scrub on mobile/tablet */
+        overflow: hidden; /* Keep hidden to enable scroll locking */
+    }
+    
+    .hero-video-section .hero-video {
+        /* Keep video positioned for scroll-to-scrub */
+        position: absolute;
+        height: 100%;
     }
 
     .product-card {
@@ -2381,9 +2393,17 @@ body {
     }
 
     .hero-video-section {
-        height: 70vh;
-        min-height: 400px;
+        height: 60vh; /* Reduced height on mobile for scroll-to-scrub */
+        min-height: 300px;
         margin-top: 40px;
+        /* Enable scroll-to-scrub on mobile */
+        overflow: hidden; /* Keep hidden to enable scroll locking */
+    }
+    
+    .hero-video-section .hero-video {
+        /* Keep video positioned for scroll-to-scrub */
+        position: absolute;
+        height: 100%;
     }
 
     .video-modes-section {

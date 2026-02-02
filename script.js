@@ -932,12 +932,14 @@ const videoConfig = {
 
 // Initialize videos
 function initVideos() {
-    // Hero video: controlled by handleHeroVideoScroll (scroll-to-scrub)
+    // Hero video: controlled by handleHeroVideoScroll (scroll-to-scrub on all devices)
     const heroVideo = document.getElementById('heroVideo');
     if (heroVideo) {
         heroVideo.style.opacity = '1';
         heroVideo.style.display = 'block';
         heroVideo.muted = true;
+        heroVideo.playsInline = true;
+        // Scroll-to-scrub works on all devices now (desktop + mobile/tablet)
     }
 
     // Section videos
@@ -1011,9 +1013,16 @@ function handleHeroVideoScroll() {
         return;
     }
     
+    // Detect mobile/tablet devices - enable scroll-to-scrub for all devices
+    const isMobileOrTablet = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                             (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ||
+                             ('ontouchstart' in window) || 
+                             (navigator.maxTouchPoints > 0);
+    
     console.log('Hero video scroll: Initializing', {
         videoSrc: heroVideo.querySelector('source')?.src,
-        videoReadyState: heroVideo.readyState
+        videoReadyState: heroVideo.readyState,
+        isMobileOrTablet: isMobileOrTablet
     });
 
     let sectionTop = 0;
@@ -1171,27 +1180,34 @@ function handleHeroVideoScroll() {
                 }
                 
                 // Set playback rate - handle forward and backward differently
-                // For backward (scroll up), manually seek since negative playbackRate isn't reliable
-                if (playbackRate < 0) {
-                    // Scroll UP = Backward play: manually seek backward
+                // For backward (scroll up / swipe up), manually seek since negative playbackRate isn't reliable
+                if (playbackRate < 0 || scrollDirection < 0) {
+                    // Scroll UP / Swipe UP = Backward play: manually seek backward smoothly
                     // Ensure video is playing (required for frames to update)
                     if (heroVideo.paused) {
                         heroVideo.play().catch(() => {});
                     }
                     
                     const now = performance.now();
-                    const dt = lastBackwardSeekTime > 0 ? (now - lastBackwardSeekTime) / 1000 : 0.016; // Time delta in seconds
-                    const backwardStep = Math.abs(playbackRate) * dt; // Step back based on playback rate and time
-                    const newTime = Math.max(0, heroVideo.currentTime - backwardStep);
+                    const dt = lastBackwardSeekTime > 0 ? Math.min((now - lastBackwardSeekTime) / 1000, 0.05) : 0.016; // Time delta in seconds
                     
-                    // Seek backward - this updates the frame
-                    heroVideo.currentTime = newTime;
-                    heroVideo.playbackRate = 0.001; // Very slow forward play to keep frames updating
-                    lastBackwardSeekTime = now;
+                    // Calculate backward step - use scroll speed directly for more responsive backward play
+                    const scrollSpeedFactor = Math.min(lastScrollDelta / 15, 5.0); // More sensitive
+                    const backwardStep = scrollSpeedFactor * dt * 1.2; // Larger multiplier for faster backward play
                     
-                    // Debug log for backward
-                    if (Math.random() < 0.15) {
-                        console.log('Hero video: BACKWARD play, seeking to', newTime.toFixed(2), 's, step:', backwardStep.toFixed(3));
+                    // Always step back when scrolling/swiping up (unless at beginning)
+                    if (heroVideo.currentTime > 0.01) {
+                        const newTime = Math.max(0, heroVideo.currentTime - backwardStep);
+                        
+                        // Seek backward smoothly - this updates the frame
+                        heroVideo.currentTime = newTime;
+                        heroVideo.playbackRate = 0.001; // Very slow forward play to keep frames updating
+                        lastBackwardSeekTime = now;
+                    } else {
+                        // At beginning, stop
+                        heroVideo.playbackRate = 0;
+                        heroVideo.currentTime = 0;
+                        lastBackwardSeekTime = now;
                     }
                 } else if (playbackRate > 0) {
                     // Scroll DOWN = Forward play: use positive playbackRate
@@ -1353,7 +1369,7 @@ function handleHeroVideoScroll() {
                     }
                     pinned = true;
                     pinStartTime = Date.now();
-                    console.log('Hero video: Pinned! scrollY:', scrollY, 'sectionTop:', sectionTop, 'lastScrollY:', lastScrollY, 'readyState:', heroVideo.readyState, 'duration:', heroVideo.duration);
+                    console.log('Hero video: Pinned! scrollY:', scrollY, 'sectionTop:', sectionTop, 'lastScrollY:', lastScrollY, 'readyState:', heroVideo.readyState, 'duration:', heroVideo.duration, 'isMobile:', isMobileOrTablet);
                     
                     // Escape mechanism: auto-release after 30 seconds if stuck
                     if (escapeTimeout) clearTimeout(escapeTimeout);
@@ -1518,7 +1534,7 @@ function handleHeroVideoScroll() {
         const scrollY = window.pageYOffset;
         const atVideo = sectionTop > 0 && scrollY >= sectionTop - 20 && scrollY <= sectionTop + 2000;
         
-        // Only handle wheel events when pinned and in video section
+        // Only handle wheel events when pinned and in video section (desktop)
         if (!pinned || !atVideo) return;
         
         // Prevent default scroll - lock position, scrub video via wheel
@@ -1547,9 +1563,9 @@ function handleHeroVideoScroll() {
             scrollDirection = e.deltaY > 0 ? 1 : (e.deltaY < 0 ? -1 : 0);
             lastScrollDelta = Math.abs(e.deltaY); // Store magnitude for speed calculation (always positive)
             
-            // Debug: log scroll direction
-            if (scrollDirection !== 0) {
-                console.log('Hero video: Scroll', scrollDirection > 0 ? 'DOWN (forward)' : 'UP (backward)', 'deltaY:', e.deltaY, 'speed:', lastScrollDelta);
+            // Debug: log scroll direction (reduced frequency)
+            if (scrollDirection !== 0 && Math.random() < 0.1) {
+                console.log('Hero video: Wheel scroll', scrollDirection > 0 ? 'DOWN (forward)' : 'UP (backward)', 'deltaY:', e.deltaY, 'speed:', lastScrollDelta);
             }
             
             // Store scroll delta for playback rate calculation
@@ -1582,17 +1598,148 @@ function handleHeroVideoScroll() {
         }
     }
 
-    function onTouchMove(e) {
-        if (!pinned || videoEnded) return;
-        const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-        if (videoSection.contains(target) || target === videoSection) {
-            e.preventDefault();
+    // Touch scroll handler for mobile/tablet - scrubs video when pinned
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let lastTouchY = 0;
+    let touchScrollDelta = 0;
+    
+    function onTouchStart(e) {
+        // Don't require pinned state - allow touch to start scrubbing
+        const scrollY = window.pageYOffset;
+        const atVideo = sectionTop > 0 && scrollY >= sectionTop - 20 && scrollY <= sectionTop + 2000;
+        
+        if (atVideo) {
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+            lastTouchY = touchStartY;
+            touchScrollDelta = 0;
+            
+            // Ensure video section is pinned when touch starts in video area
+            if (!pinned && !videoEnded) {
+                // Trigger pinning if not already pinned
+                if (scrollY >= sectionTop - 10) {
+                    pinned = true;
+                    pinStartTime = Date.now();
+                    console.log('Hero video: Pinned via touch start');
+                    // Initialize video for scrubbing
+                    if (heroVideo.readyState >= 2 && cachedDuration <= 0 && heroVideo.duration) {
+                        cachedDuration = heroVideo.duration;
+                    }
+                    if (heroVideo.readyState >= 2 && cachedDuration > 0 && !smoothUpdateRaf) {
+                        heroVideo.currentTime = 0;
+                        heroVideo.playbackRate = 0;
+                        heroVideo.play().catch(() => {});
+                        lastFrameTime = performance.now();
+                        smoothUpdateRaf = requestAnimationFrame(smoothVideoUpdate);
+                    }
+                }
+            }
         }
+    }
+    
+    function onTouchMove(e) {
+        if (videoEnded) return;
+        
+        const scrollY = window.pageYOffset;
+        const atVideo = sectionTop > 0 && scrollY >= sectionTop - 20 && scrollY <= sectionTop + 2000;
+        
+        // Enable touch scrubbing when in video section (pin if needed)
+        if (atVideo) {
+            // Ensure pinned when touching in video section
+            if (!pinned && scrollY >= sectionTop - 10) {
+                pinned = true;
+                pinStartTime = Date.now();
+                console.log('Hero video: Pinned via touch move');
+                // Initialize video if needed
+                if (heroVideo.readyState >= 2 && cachedDuration <= 0 && heroVideo.duration) {
+                    cachedDuration = heroVideo.duration;
+                }
+                if (heroVideo.readyState >= 2 && cachedDuration > 0 && !smoothUpdateRaf) {
+                    heroVideo.currentTime = 0;
+                    heroVideo.playbackRate = 0;
+                    heroVideo.play().catch(() => {});
+                    lastFrameTime = performance.now();
+                    smoothUpdateRaf = requestAnimationFrame(smoothVideoUpdate);
+                }
+            }
+            
+            if (pinned) {
+                const currentY = e.touches[0].clientY;
+                const deltaY = lastTouchY - currentY; // Inverted: swipe down = positive delta
+                lastTouchY = currentY;
+                
+                // Prevent default scroll when pinned in video section
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Get duration
+                let duration = cachedDuration;
+                if (duration <= 0 && heroVideo.duration && isFinite(heroVideo.duration)) {
+                    duration = heroVideo.duration;
+                    cachedDuration = duration;
+                }
+                if (duration <= 0) {
+                    if (heroVideo.readyState < 2) {
+                        heroVideo.load();
+                    }
+                    return;
+                }
+                
+                // Convert touch delta to scroll delta (similar to wheel)
+                // Touch scrolling is typically larger, so scale it down for smoother control
+                const scaledDelta = deltaY * 1.5; // Scale factor for touch sensitivity (adjusted for better control)
+                
+                // Determine scroll direction
+                scrollDirection = scaledDelta > 0 ? 1 : (scaledDelta < 0 ? -1 : 0);
+                lastScrollDelta = Math.abs(scaledDelta);
+                
+                // Update accumulated scroll and target time
+                accumulatedScroll = Math.max(0, Math.min(duration * PIXELS_PER_SECOND, accumulatedScroll + scaledDelta));
+                targetVideoTime = Math.max(0, Math.min(duration, accumulatedScroll / PIXELS_PER_SECOND));
+                
+                // Reset scroll direction after delay
+                if (scrollDirectionTimeout) clearTimeout(scrollDirectionTimeout);
+                scrollDirectionTimeout = setTimeout(() => {
+                    scrollDirection = 0;
+                    lastScrollDelta = 0;
+                }, 100); // Slightly longer delay for touch
+                
+                // Check if video completed
+                if (targetVideoTime >= duration - 0.05 && !videoEnded) {
+                    targetVideoTime = duration;
+                    accumulatedScroll = duration * PIXELS_PER_SECOND;
+                    heroVideo.currentTime = duration;
+                    releaseAndScrollNext();
+                    return;
+                }
+                
+                // Start smooth update loop if not running
+                if (heroVideo.readyState >= 2 && !smoothUpdateRaf) {
+                    lastFrameTime = performance.now();
+                    smoothUpdateRaf = requestAnimationFrame(smoothVideoUpdate);
+                }
+                
+                // Lock scroll position on mobile too
+                const scrollDiff = Math.abs(scrollY - sectionTop);
+                if (scrollDiff > 1) {
+                    window.scrollTo({ top: sectionTop, behavior: 'auto' });
+                }
+            }
+        }
+    }
+    
+    function onTouchEnd(e) {
+        // Reset touch tracking
+        touchStartY = 0;
+        lastTouchY = 0;
     }
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('wheel', onWheel, { passive: false }); // Need passive: false to preventDefault when pinned
-    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: false }); // Need passive: false to preventDefault when pinned
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
 
     heroVideo.addEventListener('ended', releaseAndScrollNext);
 

@@ -188,9 +188,148 @@
             border-radius: 4px;
             display: none;
         }
+
+        /* Tablet Styles */
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 0 0.5rem;
+                margin: 1rem auto;
+                padding-top: 90px; /* Account for fixed navbar */
+            }
+            .admin-header {
+                padding: 1.5rem;
+            }
+            .admin-header h1 {
+                font-size: 1.5rem;
+            }
+            .admin-section {
+                padding: 1.5rem;
+            }
+            .blog-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .blog-item-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .blog-item-actions button {
+                flex: 1;
+            }
+            .form-actions {
+                flex-direction: column;
+            }
+            .form-actions button,
+            .form-actions a {
+                width: 100%;
+                text-align: center;
+            }
+            .blog-image-row {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .blog-image-row input {
+                width: 100%;
+            }
+            .blog-image-row button {
+                width: 100%;
+            }
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 480px) {
+            .admin-container {
+                padding: 0 0.75rem;
+                margin: 0.5rem auto;
+                padding-top: 90px; /* Account for fixed navbar */
+            }
+            .admin-header {
+                padding: 1rem;
+                border-radius: 8px;
+            }
+            .admin-header h1 {
+                font-size: 1.25rem;
+            }
+            .admin-header p {
+                font-size: 0.9rem;
+            }
+            .admin-section {
+                padding: 1rem;
+                border-radius: 8px;
+            }
+            .admin-section h2 {
+                font-size: 1.1rem;
+            }
+            .blog-item {
+                padding: 0.75rem;
+            }
+            .blog-item-info h3 {
+                font-size: 1rem;
+            }
+            .blog-item-info p {
+                font-size: 0.85rem;
+            }
+            .btn-edit, .btn-delete, .btn-add, .btn-save, .btn-download {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.85rem;
+                min-height: 44px; /* Touch-friendly size */
+            }
+            .btn-add {
+                width: 100%;
+                padding: 0.75rem 1rem;
+            }
+            .form-group input,
+            .form-group textarea {
+                padding: 0.6rem;
+                font-size: 16px; /* Prevents zoom on iOS */
+                min-height: 44px; /* Touch-friendly */
+            }
+            .form-group textarea {
+                min-height: 100px;
+            }
+            #uploadInstructions {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+            #saveStatus {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="images/logo.png" alt="PAT IOT SOLUTIONS" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="logo-text" style="display: none;">
+                            <span class="logo-pat">PAT</span>
+                            <span class="logo-iot">IOT SOLUTIONS</span>
+                        </div>
+                    </a>
+                </div>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="index.html#home" class="nav-link">Home</a></li>
+                    <li><a href="index.html#services" class="nav-link">Services</a></li>
+                    <li><a href="index.html#about" class="nav-link">About</a></li>
+                    <li><a href="index.html#products" class="nav-link">Products</a></li>
+                    <li><a href="blog.html" class="nav-link">Blogs</a></li>
+                    <li><a href="index.html#contact" class="nav-link">Contact</a></li>
+                </ul>
+                <div class="hamburger" id="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <div class="admin-container">
         <div class="admin-header">
             <h1><i class="fas fa-blog"></i> Blog Admin</h1>
