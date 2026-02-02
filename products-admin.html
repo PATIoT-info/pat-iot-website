@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products Admin - PAT IOT SOLUTIONS</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        .admin-header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+        }
+        .admin-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .admin-section h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        .product-list, .gallery-list {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .product-item, .gallery-item-admin {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .product-item img, .gallery-item-admin img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .product-item-info, .gallery-item-info {
+            flex: 1;
+        }
+        .product-item-info h3, .gallery-item-info h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+        .product-item-info p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .admin-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn-edit, .btn-delete {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-edit {
+            background: #667eea;
+            color: white;
+        }
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        .admin-form {
+            display: grid;
+            gap: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input, .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .btn-add {
+            background: #27ae60;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .btn-save {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .btn-download {
+            background: #3498db;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-cog"></i> Products Admin</h1>
+            <p>Manage products and gallery images</p>
+        </div>
+
+        <!-- Products Section -->
+        <div class="admin-section">
+            <h2><i class="fas fa-box"></i> Products</h2>
+            <div class="product-list" id="productList"></div>
+            <div id="productFormWrap" style="display: none;">
+                <h3 id="productFormTitle">Add New Product</h3>
+                <form class="admin-form" id="productForm">
+                    <input type="hidden" id="productId" value="">
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" id="productName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Caption/Description</label>
+                        <textarea id="productCaption" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Image Path</label>
+                        <input type="text" id="productImage" placeholder="images/products/product-name.jpg" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Order (display order)</label>
+                        <input type="number" id="productOrder" value="1" min="1">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save">Save Product</button>
+                        <button type="button" class="btn-delete" onclick="cancelProductForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <button class="btn-add" onclick="showProductForm()"><i class="fas fa-plus"></i> Add New Product</button>
+        </div>
+
+        <!-- Gallery Section -->
+        <div class="admin-section">
+            <h2><i class="fas fa-images"></i> Gallery Images</h2>
+            <div class="gallery-list" id="galleryList"></div>
+            <div id="galleryFormWrap" style="display: none;">
+                <h3 id="galleryFormTitle">Add New Gallery Image</h3>
+                <form class="admin-form" id="galleryForm">
+                    <input type="hidden" id="galleryId" value="">
+                    <div class="form-group">
+                        <label>Image Path</label>
+                        <input type="text" id="galleryImage" placeholder="images/gallery/product-1.jpg" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Alt Text</label>
+                        <input type="text" id="galleryAlt" placeholder="Product Gallery Image" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Order (display order)</label>
+                        <input type="number" id="galleryOrder" value="1" min="1">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save">Save Image</button>
+                        <button type="button" class="btn-delete" onclick="cancelGalleryForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <button class="btn-add" onclick="showGalleryForm()"><i class="fas fa-plus"></i> Add New Gallery Image</button>
+        </div>
+
+        <!-- Save Actions -->
+        <div class="admin-section">
+            <h2><i class="fas fa-save"></i> Save Changes</h2>
+            <div class="form-actions">
+                <button class="btn-save" onclick="saveProducts()"><i class="fas fa-save"></i> Save to File (Local)</button>
+                <button class="btn-download" onclick="downloadProducts()"><i class="fas fa-download"></i> Download products.json</button>
+            </div>
+            <p id="saveStatus" style="margin-top: 1rem;"></p>
+        </div>
+    </div>
+
+    <script>
+        let productsData = { products: [], gallery: [] };
+        let editingProductId = null;
+        let editingGalleryId = null;
+
+        // Check if running locally
+        const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+        // Load products data
+        async function loadProducts() {
+            try {
+                const response = await fetch('data/products.json');
+                if (response.ok) {
+                    productsData = await response.json();
+                } else {
+                    console.warn('products.json not found, starting with empty data');
+                    productsData = { products: [], gallery: [] };
+                }
+                renderProducts();
+                renderGallery();
+            } catch (e) {
+                console.error('Error loading products:', e);
+                productsData = { products: [], gallery: [] };
+                renderProducts();
+                renderGallery();
+            }
+        }
+
+        function renderProducts() {
+            const list = document.getElementById('productList');
+            if (!list) return;
+            
+            list.innerHTML = '';
+            const sorted = [...productsData.products].sort((a, b) => (a.order || 0) - (b.order || 0));
+            
+            sorted.forEach(product => {
+                const item = document.createElement('div');
+                item.className = 'product-item';
+                item.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%236b7280%22 font-size=%2212%22%3E${product.name}%3C/text%3E%3C/svg%3E';">
+                    <div class="product-item-info">
+                        <h3>${product.name}</h3>
+                        <p>${product.caption}</p>
+                        <p style="font-size: 0.8rem; color: #999;">Image: ${product.image}</p>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="btn-edit" onclick="editProduct('${product.id}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteProduct('${product.id}')">Delete</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function renderGallery() {
+            const list = document.getElementById('galleryList');
+            if (!list) return;
+            
+            list.innerHTML = '';
+            const sorted = [...productsData.gallery].sort((a, b) => (a.order || 0) - (b.order || 0));
+            
+            sorted.forEach(item => {
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item-admin';
+                galleryItem.innerHTML = `
+                    <img src="${item.image}" alt="${item.alt}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%236b7280%22 font-size=%2212%22%3EGallery%3C/text%3E%3C/svg%3E';">
+                    <div class="gallery-item-info">
+                        <h3>${item.alt}</h3>
+                        <p style="font-size: 0.8rem; color: #999;">Image: ${item.image}</p>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="btn-edit" onclick="editGallery('${item.id}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteGallery('${item.id}')">Delete</button>
+                    </div>
+                `;
+                list.appendChild(galleryItem);
+            });
+        }
+
+        function showProductForm() {
+            editingProductId = null;
+            document.getElementById('productId').value = '';
+            document.getElementById('productName').value = '';
+            document.getElementById('productCaption').value = '';
+            document.getElementById('productImage').value = '';
+            document.getElementById('productOrder').value = (productsData.products.length + 1).toString();
+            document.getElementById('productFormTitle').textContent = 'Add New Product';
+            document.getElementById('productFormWrap').style.display = 'block';
+        }
+
+        function editProduct(id) {
+            const product = productsData.products.find(p => p.id === id);
+            if (!product) return;
+            
+            editingProductId = id;
+            document.getElementById('productId').value = product.id;
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productCaption').value = product.caption;
+            document.getElementById('productImage').value = product.image;
+            document.getElementById('productOrder').value = product.order || 1;
+            document.getElementById('productFormTitle').textContent = 'Edit Product';
+            document.getElementById('productFormWrap').style.display = 'block';
+        }
+
+        function cancelProductForm() {
+            document.getElementById('productFormWrap').style.display = 'none';
+            editingProductId = null;
+        }
+
+        function deleteProduct(id) {
+            if (!confirm('Delete this product?')) return;
+            productsData.products = productsData.products.filter(p => p.id !== id);
+            renderProducts();
+        }
+
+        function showGalleryForm() {
+            editingGalleryId = null;
+            document.getElementById('galleryId').value = '';
+            document.getElementById('galleryImage').value = '';
+            document.getElementById('galleryAlt').value = '';
+            document.getElementById('galleryOrder').value = (productsData.gallery.length + 1).toString();
+            document.getElementById('galleryFormTitle').textContent = 'Add New Gallery Image';
+            document.getElementById('galleryFormWrap').style.display = 'block';
+        }
+
+        function editGallery(id) {
+            const item = productsData.gallery.find(g => g.id === id);
+            if (!item) return;
+            
+            editingGalleryId = id;
+            document.getElementById('galleryId').value = item.id;
+            document.getElementById('galleryImage').value = item.image;
+            document.getElementById('galleryAlt').value = item.alt;
+            document.getElementById('galleryOrder').value = item.order || 1;
+            document.getElementById('galleryFormTitle').textContent = 'Edit Gallery Image';
+            document.getElementById('galleryFormWrap').style.display = 'block';
+        }
+
+        function cancelGalleryForm() {
+            document.getElementById('galleryFormWrap').style.display = 'none';
+            editingGalleryId = null;
+        }
+
+        function deleteGallery(id) {
+            if (!confirm('Delete this gallery image?')) return;
+            productsData.gallery = productsData.gallery.filter(g => g.id !== id);
+            renderGallery();
+        }
+
+        document.getElementById('productForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('productId').value;
+            const product = {
+                id: id || Date.now().toString(),
+                name: document.getElementById('productName').value,
+                caption: document.getElementById('productCaption').value,
+                image: document.getElementById('productImage').value,
+                order: parseInt(document.getElementById('productOrder').value) || 1
+            };
+            
+            if (editingProductId) {
+                const index = productsData.products.findIndex(p => p.id === editingProductId);
+                if (index >= 0) productsData.products[index] = product;
+            } else {
+                productsData.products.push(product);
+            }
+            
+            renderProducts();
+            cancelProductForm();
+        });
+
+        document.getElementById('galleryForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('galleryId').value;
+            const item = {
+                id: id || Date.now().toString(),
+                image: document.getElementById('galleryImage').value,
+                alt: document.getElementById('galleryAlt').value,
+                order: parseInt(document.getElementById('galleryOrder').value) || 1
+            };
+            
+            if (editingGalleryId) {
+                const index = productsData.gallery.findIndex(g => g.id === editingGalleryId);
+                if (index >= 0) productsData.gallery[index] = item;
+            } else {
+                productsData.gallery.push(item);
+            }
+            
+            renderGallery();
+            cancelGalleryForm();
+        });
+
+        async function saveProducts() {
+            const statusEl = document.getElementById('saveStatus');
+            statusEl.textContent = 'Saving...';
+            statusEl.style.color = '#666';
+            
+            if (isLocal) {
+                try {
+                    const response = await fetch('/api/save-products', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(productsData)
+                    });
+                    const result = await response.json();
+                    if (result.ok) {
+                        statusEl.textContent = '✓ Saved to data/products.json';
+                        statusEl.style.color = '#27ae60';
+                    } else {
+                        statusEl.textContent = '✗ Error: ' + (result.error || 'Unknown error');
+                        statusEl.style.color = '#e74c3c';
+                    }
+                } catch (e) {
+                    statusEl.textContent = '✗ Error: ' + e.message;
+                    statusEl.style.color = '#e74c3c';
+                }
+            } else {
+                statusEl.textContent = 'Not running locally. Use "Download products.json" and commit to Git.';
+                statusEl.style.color = '#f39c12';
+            }
+        }
+
+        function downloadProducts() {
+            const blob = new Blob([JSON.stringify(productsData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'products.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Load on page load
+        loadProducts();
+    </script>
+</body>
+</html>

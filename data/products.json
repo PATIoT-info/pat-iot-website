@@ -1,0 +1,57 @@
+{
+  "products": [
+    {
+      "id": "1",
+      "name": "Smart Touch Switch Boards",
+      "caption": "Modern design with smart control and easy installation",
+      "image": "images/products/smart-touch-switch.jpg",
+      "order": 1
+    },
+    {
+      "id": "2",
+      "name": "DALI Touch Dimming",
+      "caption": "Dimming, CCT, RGB, RGBW control",
+      "image": "images/products/dali-touch-panels.jpg",
+      "order": 2
+    },
+    {
+      "id": "3",
+      "name": "PWM Module",
+      "caption": "Pulse Width Module for color control",
+      "image": "images/products/pwm-module.jpg",
+      "order": 3
+    }
+  ],
+  "gallery": [
+    {
+      "id": "1",
+      "image": "images/gallery/product-1.jpg",
+      "alt": "Product Gallery Image 1",
+      "order": 1
+    },
+    {
+      "id": "2",
+      "image": "images/gallery/product-2.jpg",
+      "alt": "Product Gallery Image 2",
+      "order": 2
+    },
+    {
+      "id": "3",
+      "image": "images/gallery/product-3.jpg",
+      "alt": "Product Gallery Image 3",
+      "order": 3
+    },
+    {
+      "id": "4",
+      "image": "images/gallery/product-4.jpg",
+      "alt": "Product Gallery Image 4",
+      "order": 4
+    },
+    {
+      "id": "5",
+      "image": "images/gallery/product-5.jpg",
+      "alt": "Product Gallery Image 5",
+      "order": 5
+    }
+  ]
+}

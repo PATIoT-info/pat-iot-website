@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - PAT IOT SOLUTIONS | Company, Products & Smart Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="images/logo.png" alt="PAT IOT SOLUTIONS" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="logo-text" style="display: none;">
+                            <span class="logo-pat">PAT</span>
+                            <span class="logo-iot">IOT SOLUTIONS</span>
+                        </div>
+                    </a>
+                </div>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="index.html#home" class="nav-link">Home</a></li>
+                    <li><a href="index.html#services" class="nav-link">Services</a></li>
+                    <li><a href="index.html#about" class="nav-link">About</a></li>
+                    <li><a href="index.html#products" class="nav-link">Products</a></li>
+                    <li><a href="blog.html" class="nav-link nav-link-active">Blogs</a></li>
+                    <li><a href="index.html#contact" class="nav-link">Contact</a></li>
+                </ul>
+                <div class="hamburger" id="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Blog Page Hero -->
+    <section class="blog-hero">
+        <div class="container">
+            <h1 class="blog-hero-title">Blog</h1>
+            <p class="blog-hero-subtitle">Updates on our company, products, smart home tips, and industry insights.</p>
+            <p class="blog-admin-create-link-wrap" id="blogAdminCreateLinkWrap" style="display: none; margin-top: 1rem;">
+                <a href="javascript:void(0)" id="blogAdminCreateLink" class="btn btn-primary"><i class="fas fa-plus"></i> Create New Post</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- Blog Posts (loaded from data/blogs.json – admin can add/edit there) -->
+    <section class="blog-section">
+        <div class="container">
+            <div class="blog-admin-create-wrap" id="blogAdminCreateWrap" style="display: none;">
+                <div class="blog-admin-panel">
+                    <h2 class="blog-admin-title"><i class="fas fa-plus"></i> Admin – Create New Post</h2>
+                    <p class="blog-admin-hint">Fill in the fields below to create a new blog post. Click <strong>Create post</strong> to preview, then <strong>Save to file (local)</strong> or <strong>Download blogs.json</strong> to save.</p>
+                    <form class="blog-admin-form" id="blogAdminCreateForm">
+                        <label>Title <input type="text" id="createTitle" required></label>
+                        <label>Slug (URL-friendly, e.g. "my-new-post") <input type="text" id="createSlug" placeholder="my-new-post" required></label>
+                        <label>Excerpt (short summary) <textarea id="createExcerpt" rows="2"></textarea></label>
+                        <label>Content (HTML) <textarea id="createContent" rows="8" placeholder="<p>Paragraph...</p>"></textarea></label>
+                        <label>Date <input type="date" id="createDate"></label>
+                        <label>Category <input type="text" id="createCategory" placeholder="Company, Products, Solutions, Tips"></label>
+                        <label>Main image path <input type="text" id="createImage" placeholder="images/hero-image.jpg"></label>
+                        <label>Author <input type="text" id="createAuthor" placeholder="PAT IOT Team"></label>
+                        <label>Read time <input type="text" id="createReadTime" placeholder="3 min read"></label>
+                        <div class="blog-admin-images">
+                            <strong>Post images (src + caption)</strong>
+                            <div id="createImagesList"></div>
+                            <button type="button" class="btn btn-secondary" id="createAddImage"><i class="fas fa-plus"></i> Add image</button>
+                        </div>
+                        <div class="blog-admin-actions">
+                            <button type="button" class="btn btn-primary" id="createPreview">Create post</button>
+                            <button type="button" class="btn btn-primary blog-admin-save-local" id="createSaveLocal" style="display: none;"><i class="fas fa-save"></i> Save to file (local)</button>
+                            <button type="button" class="btn btn-primary" id="createDownloadJson">Download blogs.json</button>
+                        </div>
+                        <p class="blog-admin-save-status" id="createSaveStatus" style="display: none;"></p>
+                    </form>
+                </div>
+            </div>
+            <div class="blog-grid" id="blogGrid">
+                <p class="blog-loading" id="blogLoading">Loading blogs…</p>
+            </div>
+        </div>
+    </section>
+    <!-- Fallback data when opening from file:// or when data/blogs.json is not reachable -->
+    <script type="application/json" id="blogDataFallback">{"posts":[{"id":"1","slug":"welcome-to-pat-iot-solutions","title":"Welcome to PAT IOT Solutions","excerpt":"Discover how we're transforming homes with smart automation and IoT technology.","content":"<p>PAT IoT Solutions is dedicated to bringing intelligent automation to every home. From smart lighting and DALI dimming to motorised curtains and secure access, we design and deliver solutions that fit your lifestyle.</p><p>Our team in Hyderabad works with clients across India to plan, install, and support home automation systems using our own manufactured products and trusted third-party solutions.</p>","date":"2026-01-15","category":"Company","image":"images/hero-image.jpg"},{"id":"2","slug":"smart-switches-control-at-your-fingertips","title":"Smart Switches: Control at Your Fingertips","excerpt":"Learn about our smart touch switches and how they simplify lighting control.","content":"<p>Our smart touch switch boards combine modern design with reliable control. They integrate with your existing wiring and can be used for lights, fans, and other loads.</p><p>Features include touch control, optional scheduling, and compatibility with our automation ecosystem. Ideal for new builds and renovations.</p>","date":"2026-01-10","category":"Products","image":"images/products/smart-touch-switch.jpg"},{"id":"3","slug":"dali-touch-dimming-explained","title":"DALI Touch Dimming Explained","excerpt":"Professional-grade dimming and lighting control for residential and commercial spaces.","content":"<p>DALI (Digital Addressable Lighting Interface) gives precise control over dimming, CCT, and RGB/RGBW. Our touch panels and dimming modules are built for both homes and commercial projects.</p><p>Benefits include energy savings, scene presets, and long-term reliability. We offer 2-year warranty on all DALI products.</p>","date":"2026-01-05","category":"Products","image":"images/products/dali-touch-panels.jpg"},{"id":"4","slug":"pwm-module-precision-lighting-control","title":"PWM Module: Precision Lighting Control","excerpt":"How our PWM modules deliver smooth, efficient LED dimming and control.","content":"<p>Our PWM (Pulse Width Modulation) modules provide smooth dimming and colour control for LED strips and fixtures. They are designed for integration with smart home systems and our own control panels.</p><p>Use them for accent lighting, coves, and RGB/RGBW setups. Warranty and support are included.</p>","date":"2025-12-20","category":"Products","image":"images/products/pwm-module.jpg"},{"id":"5","slug":"motorised-curtains-for-modern-homes","title":"Motorised Curtains for Modern Homes","excerpt":"Automate your curtains for comfort, privacy, and energy efficiency.","content":"<p>Motorised curtains are part of our solutions offering. We source quality motors and tracks and integrate them with your automation so you can control curtains from the same app or panel as your lights.</p><p>Perfect for large windows, bedrooms, and living areas. We handle design and installation.</p>","date":"2025-12-10","category":"Solutions","image":"images/services/motorised-curtains.jpg"},{"id":"6","slug":"getting-started-with-home-automation","title":"Getting Started with Home Automation","excerpt":"A beginner's guide to choosing and integrating smart home solutions.","content":"<p>Starting with smart home automation doesn't have to be overwhelming. We recommend beginning with lighting and one or two zones, then expanding to curtains, climate, and security as needed.</p><p>Our team can help you choose the right products and plan a phased rollout that fits your budget and lifestyle.</p>","date":"2025-12-01","category":"Tips","image":"images/hero-image.jpg"}]}</script>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="logo">
+                        <img src="images/logo.png" alt="PAT IOT SOLUTIONS" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="logo-text" style="display: none;">
+                            <span class="logo-pat">PAT</span>
+                            <span class="logo-iot">IOT SOLUTIONS</span>
+                        </div>
+                    </div>
+                    <p>Transforming homes into intelligent living spaces with cutting-edge IoT and automation technology.</p>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/share/182eKatbLq/" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/patiot.solutions?igsh=MWFiZjkxdm1nNnRjdg==" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.linkedin.com/in/pat-iot-solutions-65b1a4375" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html#home">Home</a></li>
+                        <li><a href="index.html#services">Services</a></li>
+                        <li><a href="index.html#about">About</a></li>
+                        <li><a href="index.html#products">Products</a></li>
+                        <li><a href="blog.html">Blogs</a></li>
+                        <li><a href="index.html#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="index.html#services">Smart Lighting</a></li>
+                        <li><a href="index.html#services">Security Systems</a></li>
+                        <li><a href="index.html#services">Climate Control</a></li>
+                        <li><a href="index.html#services">Entertainment</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Newsletter</h4>
+                    <p>Subscribe to get updates on new products and special offers.</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Your Email">
+                        <button type="submit" class="btn btn-primary">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 PAT IOT SOLUTIONS. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        (function() {
+            var grid = document.getElementById('blogGrid');
+            var loading = document.getElementById('blogLoading');
+            if (!grid) return;
+
+            function formatDate(iso) {
+                try {
+                    return new Date(iso + 'T12:00:00').toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+                } catch (e) { return iso; }
+            }
+
+            function renderPosts(posts) {
+                grid.innerHTML = '';
+                if (!posts || posts.length === 0) {
+                    grid.innerHTML = '<p class="blog-empty">No blog posts yet. Add posts in <code>data/blogs.json</code>.</p>';
+                    return;
+                }
+                var isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+                var isAdmin = new URLSearchParams(window.location.search).get('admin') === '1';
+                var showAdminActions = isLocal || isAdmin;
+                posts.forEach(function(post) {
+                    var url = 'blog-post.html?slug=' + encodeURIComponent(post.slug || post.id);
+                    var card = document.createElement('article');
+                    card.className = 'blog-card';
+                    var adminActions = showAdminActions ? '<div class="blog-card-admin-actions"><a href="' + url + '&edit=1" class="blog-card-edit-btn" title="Edit"><i class="fas fa-edit"></i></a><button type="button" class="blog-card-delete-btn" data-slug="' + (post.slug || post.id).replace(/"/g, '&quot;') + '" title="Delete"><i class="fas fa-trash"></i></button></div>' : '';
+                    card.innerHTML =
+                        '<a href="' + url + '" class="blog-card-link">' +
+                        '  <div class="blog-card-image">' +
+                        '    <img src="' + (post.image || 'images/hero-image.jpg') + '" alt="' + (post.title || '').replace(/"/g, '&quot;') + '" loading="lazy" onerror="this.src=\'images/hero-image.jpg\'">' +
+                        '    <span class="blog-card-category">' + (post.category || 'Blog') + '</span>' +
+                        '  </div>' +
+                        '  <div class="blog-card-content">' +
+                        '    <time class="blog-card-date" datetime="' + (post.date || '') + '">' + formatDate(post.date || '') + '</time>' +
+                        '    <h2 class="blog-card-title">' + (post.title || 'Untitled').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</h2>' +
+                        '    <p class="blog-card-excerpt">' + (post.excerpt || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>' +
+                        '  </div>' +
+                        '</a>' + adminActions;
+                    grid.appendChild(card);
+                    if (showAdminActions) {
+                        var deleteBtn = card.querySelector('.blog-card-delete-btn');
+                        if (deleteBtn) {
+                            deleteBtn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                var postSlug = this.getAttribute('data-slug');
+                                var postTitle = post.title || 'this post';
+                                if (!confirm('Are you sure you want to delete "' + postTitle + '"? This cannot be undone.')) return;
+                                var posts = (allPostsData && allPostsData.posts) ? allPostsData.posts.slice() : [];
+                                var idx = posts.findIndex(function(p) { return (p.slug || p.id) === postSlug; });
+                                if (idx >= 0) {
+                                    posts.splice(idx, 1);
+                                    if (isLocal) {
+                                        fetch('/api/save-blogs', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ posts: posts })
+                                        }).then(function(r) { return r.json(); }).then(function(data) {
+                                            if (data.ok) {
+                                                allPostsData = { posts: posts };
+                                                useBlogData(allPostsData);
+                                            } else {
+                                                alert('Error: ' + (data.error || 'Delete failed'));
+                                            }
+                                        }).catch(function(err) {
+                                            alert('Error: ' + (err.message || 'Request failed'));
+                                        });
+                                    } else {
+                                        var json = JSON.stringify({ posts: posts }, null, 2);
+                                        var blob = new Blob([json], { type: 'application/json' });
+                                        var a = document.createElement('a');
+                                        a.href = URL.createObjectURL(blob);
+                                        a.download = 'blogs.json';
+                                        a.click();
+                                        URL.revokeObjectURL(a.href);
+                                        allPostsData = { posts: posts };
+                                        useBlogData(allPostsData);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+            function useBlogData(data) {
+                loading.style.display = 'none';
+                var posts = (data && data.posts) ? data.posts : [];
+                posts.sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); });
+                renderPosts(posts);
+            }
+
+            function tryFallback() {
+                var el = document.getElementById('blogDataFallback');
+                if (el && el.textContent) {
+                    try {
+                        var data = JSON.parse(el.textContent);
+                        useBlogData(data);
+                        return;
+                    } catch (e) {}
+                }
+                loading.style.display = 'none';
+                grid.innerHTML = '<p class="blog-empty">Blogs are loaded from <code>data/blogs.json</code>. Run the site from a local server (e.g. live server) or see BLOG_ADMIN.md.</p>';
+            }
+
+            var allPostsData = null;
+            var isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+            var isAdmin = new URLSearchParams(window.location.search).get('admin') === '1';
+            var adminCreateWrap = document.getElementById('blogAdminCreateWrap');
+            var adminCreateLinkWrap = document.getElementById('blogAdminCreateLinkWrap');
+            var adminCreateForm = document.getElementById('blogAdminCreateForm');
+            var createImagesList = document.getElementById('createImagesList');
+            var createSaveLocalBtn = document.getElementById('createSaveLocal');
+            var createSaveStatus = document.getElementById('createSaveStatus');
+
+            if ((isLocal || isAdmin) && adminCreateLinkWrap) {
+                adminCreateLinkWrap.style.display = 'block';
+            }
+
+            function addCreateImageRow(src, caption) {
+                src = src || '';
+                caption = caption || '';
+                var row = document.createElement('div');
+                row.className = 'blog-admin-image-row';
+                row.innerHTML = '<input type="text" name="imgSrc" placeholder="images/photo.jpg" value="' + (src.replace(/"/g, '&quot;')) + '"> <input type="text" name="imgCaption" placeholder="Caption" value="' + (caption.replace(/"/g, '&quot;')) + '"> <button type="button" class="blog-admin-remove-img" aria-label="Remove">\u00d7</button>';
+                createImagesList.appendChild(row);
+                row.querySelector('.blog-admin-remove-img').addEventListener('click', function() {
+                    row.remove();
+                });
+            }
+
+            function postFromCreateForm() {
+                var images = [];
+                var rows = createImagesList.querySelectorAll('.blog-admin-image-row');
+                rows.forEach(function(row) {
+                    var src = (row.querySelector('input[name="imgSrc"]') || {}).value;
+                    var cap = (row.querySelector('input[name="imgCaption"]') || {}).value;
+                    if (src && src.trim()) {
+                        images.push({ src: src.trim(), caption: (cap && cap.trim()) ? cap.trim() : '' });
+                    }
+                });
+                var slug = (document.getElementById('createSlug') || {}).value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+                var maxId = 0;
+                if (allPostsData && allPostsData.posts) {
+                    allPostsData.posts.forEach(function(p) {
+                        var id = parseInt(p.id) || 0;
+                        if (id > maxId) maxId = id;
+                    });
+                }
+                return {
+                    id: String(maxId + 1),
+                    slug: slug,
+                    title: (document.getElementById('createTitle') || {}).value || '',
+                    excerpt: (document.getElementById('createExcerpt') || {}).value || '',
+                    content: (document.getElementById('createContent') || {}).value || '',
+                    date: (document.getElementById('createDate') || {}).value || new Date().toISOString().split('T')[0],
+                    category: (document.getElementById('createCategory') || {}).value || 'Blog',
+                    image: (document.getElementById('createImage') || {}).value || '',
+                    author: (document.getElementById('createAuthor') || {}).value || '',
+                    readTime: (document.getElementById('createReadTime') || {}).value || '',
+                    images: images.length ? images : undefined
+                };
+            }
+
+            if (adminCreateLinkWrap) {
+                document.getElementById('blogAdminCreateLink').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (adminCreateWrap) adminCreateWrap.style.display = adminCreateWrap.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+
+            if (adminCreateForm) {
+                document.getElementById('createAddImage').addEventListener('click', function() {
+                    addCreateImageRow('', '');
+                });
+                document.getElementById('createPreview').addEventListener('click', function() {
+                    var post = postFromCreateForm();
+                    if (!post.slug) {
+                        alert('Please enter a slug (URL-friendly name)');
+                        return;
+                    }
+                    window.location.href = 'blog-post.html?slug=' + encodeURIComponent(post.slug) + '&edit=1&new=1';
+                });
+                if (createSaveLocalBtn && isLocal) {
+                    createSaveLocalBtn.style.display = 'inline-block';
+                    createSaveLocalBtn.addEventListener('click', function() {
+                        var post = postFromCreateForm();
+                        if (!post.slug) {
+                            alert('Please enter a slug');
+                            return;
+                        }
+                        var posts = (allPostsData && allPostsData.posts) ? allPostsData.posts.slice() : [];
+                        var exists = posts.find(function(p) { return p.slug === post.slug; });
+                        if (exists) {
+                            if (!confirm('A post with this slug already exists. Replace it?')) return;
+                            var idx = posts.findIndex(function(p) { return p.slug === post.slug; });
+                            posts[idx] = post;
+                        } else {
+                            posts.push(post);
+                        }
+                        if (createSaveStatus) { createSaveStatus.style.display = 'block'; createSaveStatus.textContent = 'Saving…'; createSaveStatus.className = 'blog-admin-save-status'; }
+                        fetch('/api/save-blogs', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ posts: posts })
+                        }).then(function(r) { return r.json(); }).then(function(data) {
+                            if (createSaveStatus) {
+                                createSaveStatus.textContent = data.ok ? 'Saved to data/blogs.json' : ('Error: ' + (data.error || 'Unknown'));
+                                createSaveStatus.className = 'blog-admin-save-status ' + (data.ok ? 'success' : 'error');
+                            }
+                            if (data.ok) {
+                                allPostsData = { posts: posts };
+                                useBlogData(allPostsData);
+                                setTimeout(function() { adminCreateForm.reset(); createImagesList.innerHTML = ''; }, 1000);
+                            }
+                        }).catch(function(err) {
+                            if (createSaveStatus) {
+                                createSaveStatus.textContent = 'Error: ' + (err.message || 'Request failed');
+                                createSaveStatus.className = 'blog-admin-save-status error';
+                            }
+                        });
+                    });
+                }
+                document.getElementById('createDownloadJson').addEventListener('click', function() {
+                    var post = postFromCreateForm();
+                    if (!post.slug) {
+                        alert('Please enter a slug');
+                        return;
+                    }
+                    var posts = (allPostsData && allPostsData.posts) ? allPostsData.posts.slice() : [];
+                    var exists = posts.find(function(p) { return p.slug === post.slug; });
+                    if (exists) {
+                        if (!confirm('A post with this slug already exists. Replace it?')) return;
+                        var idx = posts.findIndex(function(p) { return p.slug === post.slug; });
+                        posts[idx] = post;
+                    } else {
+                        posts.push(post);
+                    }
+                    var json = JSON.stringify({ posts: posts }, null, 2);
+                    var blob = new Blob([json], { type: 'application/json' });
+                    var a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'blogs.json';
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                });
+            }
+
+            fetch('data/blogs.json')
+                .then(function(r) {
+                    if (!r.ok) throw new Error('Not found');
+                    return r.json();
+                })
+                .then(function(data) {
+                    allPostsData = data;
+                    useBlogData(data);
+                })
+                .catch(function() {
+                    tryFallback();
+                });
+
+            document.addEventListener('DOMContentLoaded', function() {
+                var navbar = document.getElementById('navbar');
+                if (navbar) {
+                    var lastScroll = 0;
+                    window.addEventListener('scroll', function() {
+                        var currentScroll = window.pageYOffset;
+                        if (currentScroll > 80) {
+                            navbar.classList.add('scrolled');
+                            if (currentScroll > lastScroll && currentScroll > 150) navbar.classList.add('navbar-hidden');
+                            else navbar.classList.remove('navbar-hidden');
+                        } else {
+                            navbar.classList.remove('scrolled', 'navbar-hidden');
+                        }
+                        lastScroll = currentScroll;
+                    });
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

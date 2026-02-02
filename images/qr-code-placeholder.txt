@@ -1,0 +1,16 @@
+# QR Code Image
+
+Place your QR code image here with the filename: qr-code.png
+
+## Requirements:
+
+- **Filename**: qr-code.png
+- **Format**: PNG (recommended for QR codes)
+- **Size**: 200x200px or larger (square)
+- **File Size**: Optimized for web
+- **Quality**: High quality, clear and scannable
+
+## Location:
+
+The QR code will appear in the Contact section, making it easy for customers to scan and get more information about your company.
+

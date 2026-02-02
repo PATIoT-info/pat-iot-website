@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Post - PAT IOT SOLUTIONS</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="images/logo.png" alt="PAT IOT SOLUTIONS" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="logo-text" style="display: none;">
+                            <span class="logo-pat">PAT</span>
+                            <span class="logo-iot">IOT SOLUTIONS</span>
+                        </div>
+                    </a>
+                </div>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="index.html#home" class="nav-link">Home</a></li>
+                    <li><a href="index.html#services" class="nav-link">Services</a></li>
+                    <li><a href="index.html#about" class="nav-link">About</a></li>
+                    <li><a href="index.html#products" class="nav-link">Products</a></li>
+                    <li><a href="blog.html" class="nav-link nav-link-active">Blogs</a></li>
+                    <li><a href="index.html#contact" class="nav-link">Contact</a></li>
+                </ul>
+                <div class="hamburger" id="hamburger">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <article class="blog-post-page">
+        <div class="container">
+            <div class="blog-post-loading" id="blogPostLoading">Loading…</div>
+            <div class="blog-post-error" id="blogPostError" style="display: none;">
+                <p>Post not found.</p>
+                <a href="blog.html" class="btn btn-primary">Back to Blogs</a>
+            </div>
+            <div class="blog-post-content" id="blogPostContent" style="display: none;">
+                <header class="blog-post-header">
+                    <span class="blog-post-category" id="blogPostCategory"></span>
+                    <h1 class="blog-post-title" id="blogPostTitle"></h1>
+                    <div class="blog-post-meta" id="blogPostMeta">
+                        <time class="blog-post-date" id="blogPostDate"></time>
+                        <span class="blog-post-author" id="blogPostAuthor" style="display: none;"></span>
+                        <span class="blog-post-read-time" id="blogPostReadTime" style="display: none;"></span>
+                    </div>
+                </header>
+                <div class="blog-post-image-wrap" id="blogPostImageWrap" style="display: none;">
+                    <img id="blogPostImage" src="" alt="" loading="lazy">
+                </div>
+                <div class="blog-post-body" id="blogPostBody"></div>
+                <div class="blog-post-gallery" id="blogPostGallery" style="display: none;"></div>
+                <div class="blog-post-back">
+                    <p><a href="blog.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a></p>
+                    <p class="blog-post-edit-link"><a href="javascript:void(0)" id="blogEditLink"><i class="fas fa-edit"></i> Admin: Edit this post</a></p>
+                </div>
+
+                <!-- Admin: Add/Edit post info (only when URL has ?edit=1) -->
+                <div class="blog-admin-panel" id="blogAdminPanel" style="display: none;">
+                    <h2 class="blog-admin-title"><i class="fas fa-edit"></i> Admin – <span id="adminTitleText">Edit this post</span></h2>
+                    <p class="blog-admin-hint" id="blogAdminHint">Update the fields below, then click <strong>Update preview</strong> to see changes. When running locally (<code>npm run admin</code>), use <strong>Save to file (local)</strong> to write <code>data/blogs.json</code>; on the published site, use <strong>Download blogs.json</strong> and replace the file in your repo. <strong>Then commit and push to Git</strong> so users see the updated blogs.</p>
+                    <form class="blog-admin-form" id="blogAdminForm">
+                        <label>Title <input type="text" id="adminTitle" required></label>
+                        <label>Excerpt (short summary) <textarea id="adminExcerpt" rows="2"></textarea></label>
+                        <label>Content (HTML) <textarea id="adminContent" rows="8" placeholder="<p>Paragraph...</p>"></textarea></label>
+                        <label>Date <input type="date" id="adminDate"></label>
+                        <label>Category <input type="text" id="adminCategory" placeholder="Company, Products, Solutions, Tips"></label>
+                        <label>Main image path <input type="text" id="adminImage" placeholder="images/hero-image.jpg"></label>
+                        <label>Author <input type="text" id="adminAuthor" placeholder="PAT IOT Team"></label>
+                        <label>Read time <input type="text" id="adminReadTime" placeholder="3 min read"></label>
+                        <div class="blog-admin-images">
+                            <strong>Post images (src + caption)</strong>
+                            <div id="adminImagesList"></div>
+                            <button type="button" class="btn btn-secondary" id="adminAddImage"><i class="fas fa-plus"></i> Add image</button>
+                        </div>
+                        <div class="blog-admin-actions">
+                            <button type="button" class="btn btn-primary" id="adminUpdatePreview">Update preview</button>
+                            <button type="button" class="btn btn-primary blog-admin-save-local" id="adminSaveLocal" style="display: none;"><i class="fas fa-save"></i> Save to file (local)</button>
+                            <button type="button" class="btn btn-primary" id="adminDownloadJson">Download blogs.json</button>
+                            <button type="button" class="btn btn-danger" id="adminDeletePost" style="display: none;"><i class="fas fa-trash"></i> Delete this post</button>
+                        </div>
+                        <p class="blog-admin-save-status" id="adminSaveStatus" style="display: none;"></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="logo">
+                        <img src="images/logo.png" alt="PAT IOT SOLUTIONS" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="logo-text" style="display: none;">
+                            <span class="logo-pat">PAT</span>
+                            <span class="logo-iot">IOT SOLUTIONS</span>
+                        </div>
+                    </div>
+                    <p>Transforming homes into intelligent living spaces with cutting-edge IoT and automation technology.</p>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/share/182eKatbLq/" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/patiot.solutions?igsh=MWFiZjkxdm1nNnRjdg==" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.linkedin.com/in/pat-iot-solutions-65b1a4375" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html#home">Home</a></li>
+                        <li><a href="index.html#services">Services</a></li>
+                        <li><a href="index.html#about">About</a></li>
+                        <li><a href="index.html#products">Products</a></li>
+                        <li><a href="blog.html">Blogs</a></li>
+                        <li><a href="index.html#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 PAT IOT SOLUTIONS. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            var slug = params.get('slug');
+            var isEdit = params.get('edit') === '1' || params.get('admin') === '1';
+            var isNew = params.get('new') === '1';
+            var loading = document.getElementById('blogPostLoading');
+            var error = document.getElementById('blogPostError');
+            var content = document.getElementById('blogPostContent');
+            var categoryEl = document.getElementById('blogPostCategory');
+            var titleEl = document.getElementById('blogPostTitle');
+            var dateEl = document.getElementById('blogPostDate');
+            var imageWrap = document.getElementById('blogPostImageWrap');
+            var imageEl = document.getElementById('blogPostImage');
+            var bodyEl = document.getElementById('blogPostBody');
+            var authorEl = document.getElementById('blogPostAuthor');
+            var readTimeEl = document.getElementById('blogPostReadTime');
+            var galleryEl = document.getElementById('blogPostGallery');
+            var adminPanel = document.getElementById('blogAdminPanel');
+            var adminForm = document.getElementById('blogAdminForm');
+            var adminImagesList = document.getElementById('adminImagesList');
+            var allPostsData = null;
+
+            if (!slug && !isNew) {
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                return;
+            }
+
+            function showPost(post) {
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                document.title = post.title + ' - PAT IOT SOLUTIONS Blog';
+                categoryEl.textContent = post.category || 'Blog';
+                titleEl.textContent = post.title;
+                dateEl.setAttribute('datetime', post.date);
+                dateEl.textContent = new Date(post.date + 'T12:00:00').toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+
+                if (post.author) {
+                    authorEl.style.display = 'inline';
+                    authorEl.textContent = ' \u2022 ' + post.author;
+                } else {
+                    authorEl.style.display = 'none';
+                }
+                if (post.readTime) {
+                    readTimeEl.style.display = 'inline';
+                    readTimeEl.textContent = ' \u2022 ' + post.readTime;
+                } else {
+                    readTimeEl.style.display = 'none';
+                }
+
+                if (post.image) {
+                    imageWrap.style.display = 'block';
+                    imageEl.src = post.image;
+                    imageEl.alt = post.title;
+                    imageEl.onerror = function() { imageWrap.style.display = 'none'; };
+                } else {
+                    imageWrap.style.display = 'none';
+                }
+
+                bodyEl.innerHTML = post.content || ('<p>' + (post.excerpt || '') + '</p>');
+
+                if (post.images && post.images.length > 0) {
+                    galleryEl.style.display = 'block';
+                    galleryEl.innerHTML = '';
+                    post.images.forEach(function(item) {
+                        var src = typeof item === 'string' ? item : (item.src || item);
+                        var caption = typeof item === 'object' && item.caption ? item.caption : '';
+                        var div = document.createElement('div');
+                        div.className = 'blog-post-gallery-item';
+                        div.innerHTML = '<img src="' + src + '" alt="' + (caption || post.title).replace(/"/g, '&quot;') + '" loading="lazy" onerror="this.parentElement.style.display=\'none\'">' +
+                            (caption ? '<p class="blog-post-gallery-caption">' + caption.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>' : '');
+                        galleryEl.appendChild(div);
+                    });
+                } else {
+                    galleryEl.style.display = 'none';
+                }
+            }
+
+            function postFromForm() {
+                var images = [];
+                var rows = adminImagesList.querySelectorAll('.blog-admin-image-row');
+                rows.forEach(function(row) {
+                    var src = (row.querySelector('input[name="imgSrc"]') || {}).value;
+                    var cap = (row.querySelector('input[name="imgCaption"]') || {}).value;
+                    if (src && src.trim()) {
+                        images.push({ src: src.trim(), caption: (cap && cap.trim()) ? cap.trim() : '' });
+                    }
+                });
+                var post = allPostsData && (allPostsData.posts || []).find(function(p) { return p.slug === slug; });
+                var currentSlug = slug;
+                if (isNew && !currentSlug) {
+                    var titleSlug = (document.getElementById('adminTitle') || {}).value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+                    currentSlug = titleSlug || 'new-post';
+                }
+                var maxId = 0;
+                if (allPostsData && allPostsData.posts) {
+                    allPostsData.posts.forEach(function(p) {
+                        var id = parseInt(p.id) || 0;
+                        if (id > maxId) maxId = id;
+                    });
+                }
+                return {
+                    id: (post && post.id) || String(maxId + 1),
+                    slug: (post && post.slug) || currentSlug,
+                    title: (document.getElementById('adminTitle') || {}).value || '',
+                    excerpt: (document.getElementById('adminExcerpt') || {}).value || '',
+                    content: (document.getElementById('adminContent') || {}).value || '',
+                    date: (document.getElementById('adminDate') || {}).value || new Date().toISOString().split('T')[0],
+                    category: (document.getElementById('adminCategory') || {}).value || 'Blog',
+                    image: (document.getElementById('adminImage') || {}).value || '',
+                    author: (document.getElementById('adminAuthor') || {}).value || '',
+                    readTime: (document.getElementById('adminReadTime') || {}).value || '',
+                    images: images.length ? images : undefined
+                };
+            }
+
+            function fillFormFromPost(post) {
+                if (!post || !adminForm) return;
+                var id = function(x) { return document.getElementById(x); };
+                if (id('adminTitle')) id('adminTitle').value = post.title || '';
+                if (id('adminExcerpt')) id('adminExcerpt').value = post.excerpt || '';
+                if (id('adminContent')) id('adminContent').value = post.content || '';
+                if (id('adminDate')) id('adminDate').value = post.date || '';
+                if (id('adminCategory')) id('adminCategory').value = post.category || '';
+                if (id('adminImage')) id('adminImage').value = post.image || '';
+                if (id('adminAuthor')) id('adminAuthor').value = post.author || '';
+                if (id('adminReadTime')) id('adminReadTime').value = post.readTime || '';
+                adminImagesList.innerHTML = '';
+                var list = post.images && post.images.length ? post.images : [{ src: '', caption: '' }];
+                list.forEach(function(item) {
+                    var src = typeof item === 'string' ? item : (item.src || '');
+                    var cap = typeof item === 'object' && item.caption ? item.caption : '';
+                    addImageRow(src, cap);
+                });
+            }
+
+            function addImageRow(src, caption) {
+                src = src || '';
+                caption = caption || '';
+                var row = document.createElement('div');
+                row.className = 'blog-admin-image-row';
+                row.innerHTML = '<input type="text" name="imgSrc" placeholder="images/photo.jpg" value="' + (src.replace(/"/g, '&quot;')) + '"> <input type="text" name="imgCaption" placeholder="Caption" value="' + (caption.replace(/"/g, '&quot;')) + '"> <button type="button" class="blog-admin-remove-img" aria-label="Remove">\u00d7</button>';
+                adminImagesList.appendChild(row);
+                row.querySelector('.blog-admin-remove-img').addEventListener('click', function() {
+                    row.remove();
+                });
+            }
+
+            fetch('data/blogs.json')
+                .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+                .then(function(data) {
+                    allPostsData = data;
+                    if (isNew) {
+                        loading.style.display = 'none';
+                        content.style.display = 'block';
+                        if (adminPanel) {
+                            adminPanel.style.display = 'block';
+                            var titleTextEl = document.getElementById('adminTitleText');
+                            if (titleTextEl) titleTextEl.textContent = 'Create New Post';
+                            var today = new Date().toISOString().split('T')[0];
+                            if (document.getElementById('adminDate')) document.getElementById('adminDate').value = today;
+                            if (slug && document.getElementById('adminTitle')) {
+                                var titleFromSlug = slug.split('-').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+                                document.getElementById('adminTitle').value = titleFromSlug;
+                            }
+                        }
+                        return;
+                    }
+                    var post = (data.posts || []).find(function(p) { return p.slug === slug; });
+                    if (!post) {
+                        loading.style.display = 'none';
+                        error.style.display = 'block';
+                        return;
+                    }
+                    showPost(post);
+                    if (isEdit && adminPanel) {
+                        adminPanel.style.display = 'block';
+                        fillFormFromPost(post);
+                    }
+                })
+                .catch(function() {
+                    if (isNew) {
+                        loading.style.display = 'none';
+                        content.style.display = 'block';
+                        if (adminPanel) {
+                            adminPanel.style.display = 'block';
+                            var today = new Date().toISOString().split('T')[0];
+                            if (document.getElementById('adminDate')) document.getElementById('adminDate').value = today;
+                        }
+                        return;
+                    }
+                    loading.style.display = 'none';
+                    error.style.display = 'block';
+                });
+
+            var isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+            var editLinkWrap = document.querySelector('.blog-post-edit-link');
+            var editLink = document.getElementById('blogEditLink');
+            if (editLinkWrap && editLink) {
+                if (!isEdit && !isLocal) {
+                    editLinkWrap.style.display = 'none';
+                } else {
+                    if (isEdit || isNew) {
+                        editLink.href = isNew ? 'blog.html' : ('?slug=' + encodeURIComponent(slug));
+                        editLink.innerHTML = '<i class="fas fa-edit"></i> ' + (isNew ? 'Back to Blogs' : 'Hide edit panel');
+                    } else {
+                        editLink.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            var p = new URLSearchParams(window.location.search);
+                            p.set('edit', '1');
+                            window.location.search = p.toString();
+                        });
+                    }
+                }
+            }
+            var saveLocalBtn = document.getElementById('adminSaveLocal');
+            var saveStatusEl = document.getElementById('adminSaveStatus');
+            if (saveLocalBtn && isLocal) {
+                saveLocalBtn.style.display = 'inline-block';
+            }
+
+            if (adminForm) {
+                document.getElementById('adminAddImage').addEventListener('click', function() {
+                    addImageRow('', '');
+                });
+                document.getElementById('adminUpdatePreview').addEventListener('click', function() {
+                    var post = postFromForm();
+                    showPost(post);
+                });
+                function getUpdatedPosts() {
+                    var post = postFromForm();
+                    var posts = (allPostsData && allPostsData.posts) ? allPostsData.posts.slice() : [];
+                    var currentSlug = slug || post.slug;
+                    var idx = currentSlug ? posts.findIndex(function(p) { return p.slug === currentSlug; }) : -1;
+                    if (idx >= 0) {
+                        posts[idx] = post;
+                    } else {
+                        posts.push(post);
+                    }
+                    if (isNew && currentSlug !== post.slug) {
+                        var newUrl = 'blog-post.html?slug=' + encodeURIComponent(post.slug) + '&edit=1';
+                        window.history.replaceState({}, '', newUrl);
+                        slug = post.slug;
+                    }
+                    return posts;
+                }
+                if (saveLocalBtn) {
+                    saveLocalBtn.addEventListener('click', function() {
+                        var posts = getUpdatedPosts();
+                        var statusEl = document.getElementById('adminSaveStatus');
+                        if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = 'Saving…'; statusEl.className = 'blog-admin-save-status'; }
+                        fetch('/api/save-blogs', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ posts: posts })
+                        }).then(function(r) { return r.json(); }).then(function(data) {
+                            if (statusEl) {
+                                statusEl.textContent = data.ok ? 'Saved to data/blogs.json' : ('Error: ' + (data.error || 'Unknown'));
+                                statusEl.className = 'blog-admin-save-status ' + (data.ok ? 'success' : 'error');
+                            }
+                        }).catch(function(err) {
+                            if (statusEl) {
+                                statusEl.textContent = 'Error: ' + (err.message || 'Request failed');
+                                statusEl.className = 'blog-admin-save-status error';
+                            }
+                        });
+                    });
+                }
+                document.getElementById('adminDownloadJson').addEventListener('click', function() {
+                    var posts = getUpdatedPosts();
+                    var json = JSON.stringify({ posts: posts }, null, 2);
+                    var blob = new Blob([json], { type: 'application/json' });
+                    var a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'blogs.json';
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                });
+                var deleteBtn = document.getElementById('adminDeletePost');
+                if (deleteBtn && !isNew && slug) {
+                    deleteBtn.style.display = 'inline-block';
+                    deleteBtn.addEventListener('click', function() {
+                        var postTitle = (document.getElementById('adminTitle') || {}).value || 'this post';
+                        if (!confirm('Are you sure you want to delete "' + postTitle + '"? This cannot be undone.')) return;
+                        var posts = (allPostsData && allPostsData.posts) ? allPostsData.posts.slice() : [];
+                        var idx = posts.findIndex(function(p) { return p.slug === slug; });
+                        if (idx >= 0) {
+                            posts.splice(idx, 1);
+                            var statusEl = document.getElementById('adminSaveStatus');
+                            if (isLocal) {
+                                if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = 'Deleting…'; statusEl.className = 'blog-admin-save-status'; }
+                                fetch('/api/save-blogs', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ posts: posts })
+                                }).then(function(r) { return r.json(); }).then(function(data) {
+                                    if (data.ok) {
+                                        window.location.href = 'blog.html';
+                                    } else {
+                                        if (statusEl) {
+                                            statusEl.textContent = 'Error: ' + (data.error || 'Delete failed');
+                                            statusEl.className = 'blog-admin-save-status error';
+                                        }
+                                    }
+                                }).catch(function(err) {
+                                    if (statusEl) {
+                                        statusEl.textContent = 'Error: ' + (err.message || 'Request failed');
+                                        statusEl.className = 'blog-admin-save-status error';
+                                    }
+                                });
+                            } else {
+                                var json = JSON.stringify({ posts: posts }, null, 2);
+                                var blob = new Blob([json], { type: 'application/json' });
+                                var a = document.createElement('a');
+                                a.href = URL.createObjectURL(blob);
+                                a.download = 'blogs.json';
+                                a.click();
+                                URL.revokeObjectURL(a.href);
+                                setTimeout(function() { window.location.href = 'blog.html'; }, 500);
+                            }
+                        }
+                    });
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
