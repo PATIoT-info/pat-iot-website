@@ -219,8 +219,16 @@
         <div class="admin-section">
             <h2><i class="fas fa-save"></i> Save Changes</h2>
             <div class="form-actions">
-                <button class="btn-save" onclick="saveProducts()"><i class="fas fa-save"></i> Save to File (Local)</button>
+                <button class="btn-save" onclick="saveProducts()" id="saveLocalBtn" style="display: none;"><i class="fas fa-save"></i> Save to File (Local)</button>
                 <button class="btn-download" onclick="downloadProducts()"><i class="fas fa-download"></i> Download products.json</button>
+                <a href="https://github.com/PATIoT-info/pat-iot-website/edit/main/data/products.json" target="_blank" class="btn-save" style="background: #28a745; margin-left: 0.5rem;"><i class="fab fa-github"></i> Upload to GitHub</a>
+            </div>
+            <div id="uploadInstructions" style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px; display: none;">
+                <strong>📤 How to Upload:</strong><br>
+                1. Click "Download products.json" above<br>
+                2. Click "Upload to GitHub" button (opens GitHub editor)<br>
+                3. In GitHub: Delete all content → Paste downloaded file content → Click "Commit changes"<br>
+                4. Your website will update automatically in 1-2 minutes!
             </div>
             <p id="saveStatus" style="margin-top: 1rem;"></p>
         </div>
@@ -233,6 +241,14 @@
 
         // Check if running locally
         const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        // Show/hide local save button
+        if (isLocal) {
+            const saveLocalBtn = document.getElementById('saveLocalBtn');
+            if (saveLocalBtn) {
+                saveLocalBtn.style.display = 'inline-block';
+            }
+        }
 
         // Load products data
         async function loadProducts() {
@@ -456,6 +472,12 @@
             a.download = 'products.json';
             a.click();
             URL.revokeObjectURL(url);
+            
+            // Show upload instructions
+            const instructions = document.getElementById('uploadInstructions');
+            if (instructions) {
+                instructions.style.display = 'block';
+            }
         }
 
         // Load on page load

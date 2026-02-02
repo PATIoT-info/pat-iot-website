@@ -68,7 +68,12 @@
                 <!-- Admin: Add/Edit post info (only when URL has ?edit=1) -->
                 <div class="blog-admin-panel" id="blogAdminPanel" style="display: none;">
                     <h2 class="blog-admin-title"><i class="fas fa-edit"></i> Admin – <span id="adminTitleText">Edit this post</span></h2>
-                    <p class="blog-admin-hint" id="blogAdminHint">Update the fields below, then click <strong>Update preview</strong> to see changes. When running locally (<code>npm run admin</code>), use <strong>Save to file (local)</strong> to write <code>data/blogs.json</code>; on the published site, use <strong>Download blogs.json</strong> and replace the file in your repo. <strong>Then commit and push to Git</strong> so users see the updated blogs.</p>
+                    <p class="blog-admin-hint" id="blogAdminHint">
+                        <strong>📝 How to Save Changes:</strong><br>
+                        • <strong>On Published Site:</strong> Click <strong>"Download blogs.json"</strong> → Go to <a href="https://github.com/PATIoT-info/pat-iot-website/edit/main/data/blogs.json" target="_blank">GitHub</a> → Click pencil icon → Paste content → Commit<br>
+                        • <strong>Local Server:</strong> Use <strong>"Save to file (local)"</strong> button (only shows when running <code>npm run admin</code>)<br>
+                        Update fields below, then click <strong>Update preview</strong> to see changes.
+                    </p>
                     <form class="blog-admin-form" id="blogAdminForm">
                         <label>Title <input type="text" id="adminTitle" required></label>
                         <label>Excerpt (short summary) <textarea id="adminExcerpt" rows="2"></textarea></label>
@@ -86,8 +91,16 @@
                         <div class="blog-admin-actions">
                             <button type="button" class="btn btn-primary" id="adminUpdatePreview">Update preview</button>
                             <button type="button" class="btn btn-primary blog-admin-save-local" id="adminSaveLocal" style="display: none;"><i class="fas fa-save"></i> Save to file (local)</button>
-                            <button type="button" class="btn btn-primary" id="adminDownloadJson">Download blogs.json</button>
+                            <button type="button" class="btn btn-primary" id="adminDownloadJson"><i class="fas fa-download"></i> Download blogs.json</button>
+                            <a href="https://github.com/PATIoT-info/pat-iot-website/edit/main/data/blogs.json" target="_blank" class="btn btn-success" id="adminUploadToGitHub" style="display: inline-block; margin-left: 0.5rem;"><i class="fab fa-github"></i> Upload to GitHub</a>
                             <button type="button" class="btn btn-danger" id="adminDeletePost" style="display: none;"><i class="fas fa-trash"></i> Delete this post</button>
+                        </div>
+                        <div class="blog-admin-upload-instructions" style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px; display: none;" id="uploadInstructions">
+                            <strong>📤 How to Upload:</strong><br>
+                            1. Click "Download blogs.json" above<br>
+                            2. Click "Upload to GitHub" button (opens GitHub editor)<br>
+                            3. In GitHub: Delete all content → Paste downloaded file content → Click "Commit changes"<br>
+                            4. Your website will update automatically in 1-2 minutes!
                         </div>
                         <p class="blog-admin-save-status" id="adminSaveStatus" style="display: none;"></p>
                     </form>
@@ -333,8 +346,10 @@
             var editLinkWrap = document.querySelector('.blog-post-edit-link');
             var editLink = document.getElementById('blogEditLink');
             if (editLinkWrap && editLink) {
-                if (!isEdit && !isLocal) {
-                    editLinkWrap.style.display = 'none';
+                // Always show edit link on published site (for admin access)
+                if (!isEdit) {
+                    // Show edit link on published site
+                    editLinkWrap.style.display = 'block';
                 } else {
                     if (isEdit || isNew) {
                         editLink.href = isNew ? 'blog.html' : ('?slug=' + encodeURIComponent(slug));
@@ -411,7 +426,24 @@
                     a.download = 'blogs.json';
                     a.click();
                     URL.revokeObjectURL(a.href);
+                    
+                    // Show upload instructions
+                    var instructions = document.getElementById('uploadInstructions');
+                    if (instructions) {
+                        instructions.style.display = 'block';
+                    }
                 });
+                
+                // Show instructions when clicking upload button
+                var uploadBtn = document.getElementById('adminUploadToGitHub');
+                if (uploadBtn) {
+                    uploadBtn.addEventListener('click', function() {
+                        var instructions = document.getElementById('uploadInstructions');
+                        if (instructions) {
+                            instructions.style.display = 'block';
+                        }
+                    });
+                }
                 var deleteBtn = document.getElementById('adminDeletePost');
                 if (deleteBtn && !isNew && slug) {
                     deleteBtn.style.display = 'inline-block';

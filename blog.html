@@ -46,6 +46,11 @@
         <div class="container">
             <h1 class="blog-hero-title">Blog</h1>
             <p class="blog-hero-subtitle">Updates on our company, products, smart home tips, and industry insights.</p>
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <a href="blog-admin.html?admin=1" class="btn btn-secondary" style="display: inline-block;">
+                    <i class="fas fa-cog"></i> Admin: Manage Blog Posts
+                </a>
+            </div>
             <p class="blog-admin-create-link-wrap" id="blogAdminCreateLinkWrap" style="display: none; margin-top: 1rem;">
                 <a href="javascript:void(0)" id="blogAdminCreateLink" class="btn btn-primary"><i class="fas fa-plus"></i> Create New Post</a>
             </p>
@@ -81,8 +86,8 @@
                         </div>
                         <p class="blog-admin-save-status" id="createSaveStatus" style="display: none;"></p>
                     </form>
-                </div>
-            </div>
+                        </div>
+                        </div>
             <div class="blog-grid" id="blogGrid">
                 <p class="blog-loading" id="blogLoading">Loading blogs…</p>
             </div>
@@ -407,23 +412,23 @@
                     tryFallback();
                 });
 
-            document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {
                 var navbar = document.getElementById('navbar');
-                if (navbar) {
+            if (navbar) {
                     var lastScroll = 0;
-                    window.addEventListener('scroll', function() {
+                window.addEventListener('scroll', function() {
                         var currentScroll = window.pageYOffset;
-                        if (currentScroll > 80) {
-                            navbar.classList.add('scrolled');
-                            if (currentScroll > lastScroll && currentScroll > 150) navbar.classList.add('navbar-hidden');
-                            else navbar.classList.remove('navbar-hidden');
-                        } else {
-                            navbar.classList.remove('scrolled', 'navbar-hidden');
-                        }
-                        lastScroll = currentScroll;
-                    });
-                }
-            });
+                    if (currentScroll > 80) {
+                        navbar.classList.add('scrolled');
+                        if (currentScroll > lastScroll && currentScroll > 150) navbar.classList.add('navbar-hidden');
+                        else navbar.classList.remove('navbar-hidden');
+                    } else {
+                        navbar.classList.remove('scrolled', 'navbar-hidden');
+                    }
+                    lastScroll = currentScroll;
+                });
+            }
+        });
         })();
     </script>
 </body>
