@@ -1,0 +1,12 @@
+# Hero Image
+
+Please add your hero image here with the filename: hero-image.jpg
+
+Recommended specifications:
+- Format: JPG or PNG
+- Size: 1920x1080px or larger
+- Aspect Ratio: 16:9
+- File size: Optimized for web (under 500KB recommended)
+
+The image will be displayed in the hero section with "Transform Your Living" text overlay.
+

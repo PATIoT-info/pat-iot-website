@@ -1,0 +1,8 @@
+{
+  "name": "pat-iot-whitelion",
+  "private": true,
+  "scripts": {
+    "admin": "node local-admin-server.js",
+    "start": "node local-admin-server.js"
+  }
+}

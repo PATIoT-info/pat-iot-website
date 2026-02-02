@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAT IOT SOLUTIONS - Smart Home Automation & IoT Solutions</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <img src="images/logo.png" alt="PAT IOT SOLUTIONS" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="logo-text" style="display: none;">
+                        <span class="logo-pat">PAT</span>
+                        <span class="logo-iot">IOT SOLUTIONS</span>
+                    </div>
+                </div>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="#home" class="nav-link">Home</a></li>
+                    <li><a href="#services" class="nav-link">Services</a></li>
+                    <li><a href="#about" class="nav-link">About</a></li>
+                    <li><a href="#products" class="nav-link">Products</a></li>
+                    <li><a href="blog.html" class="nav-link">Blogs</a></li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                </ul>
+                <div class="hamburger" id="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with Image -->
+    <section id="home" class="hero">
+        <!-- Hero Image Background -->
+        <div class="hero-image">
+            <img src="images/hero-image.jpg" alt="Transform Your Living" class="hero-bg-image" loading="eager" decoding="async">
+            <div class="hero-overlay"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">Transform Your Living</h1>
+                <p class="hero-subtitle">Experience the future of home automation with cutting-edge technology that makes your life easier, safer, and more efficient.</p>
+                <div class="hero-buttons">
+                    <div class="hero-buttons-row">
+                        <a href="#contact" class="btn btn-primary">Get Demo</a>
+                        <a href="#services" class="btn btn-secondary">Learn More</a>
+                    </div>
+                    <a href="brochure/brochure.pdf" target="_blank" class="btn btn-brochure">
+                        <i class="fas fa-file-pdf"></i> Brochure
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </section>
+
+    <!-- Video Section - scroll to scrub (smooth interpolation) -->
+    <section class="hero-video-section">
+        <video class="hero-video" id="heroVideo" muted playsinline preload="auto">
+            <source src="videos/hero-video.mp4" type="video/mp4">
+            <source src="videos/hero-video.webm" type="video/webm">
+        </video>
+        <div class="video-overlay"></div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services section-with-video">
+        <!-- Optional Video Background for Services Section -->
+        <video class="section-video" id="servicesVideo" autoplay muted loop playsinline>
+            <source src="videos/services-video.mp4" type="video/mp4">
+            <source src="videos/services-video.webm" type="video/webm">
+        </video>
+        <div class="section-video-overlay"></div>
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Services & Solutions</h2>
+                <p class="section-subtitle">Comprehensive home automation solutions and products tailored to your needs</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="images/services/motorised-curtains.jpg" alt="Motorised Curtains" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'service-icon\'><i class=\'fas fa-window-maximize\'></i></div>';">
+                    </div>
+                    <h3>Motorised Curtains</h3>
+                    <p>Automated curtain control for modern homes with remote control, scheduling, and silent operation.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="images/services/smart-door-locks.jpg" alt="Smart Door Locks" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'service-icon\'><i class=\'fas fa-lock\'></i></div>';">
+                    </div>
+                    <h3>Smart Door Locks</h3>
+                    <p>Secure and convenient access control with keyless entry, mobile app control, and access logs.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="images/services/ir-blasters.jpg" alt="IR Blasters" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'service-icon\'><i class=\'fas fa-broadcast-tower\'></i></div>';">
+                    </div>
+                    <h3>IR Blasters</h3>
+                    <p>Control your existing IR devices with universal compatibility, multi-device support, and easy setup.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="images/services/smart-door-bell.jpg" alt="Smart Door Bell" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'service-icon\'><i class=\'fas fa-bell\'></i></div>';">
+                    </div>
+                    <h3>Smart Door Bell</h3>
+                    <p>Video doorbell with smart features including live video feed, mobile notifications, and two-way audio.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="images/services/motion-sensors.jpg" alt="Motion Sensors" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'service-icon\'><i class=\'fas fa-running\'></i></div>';">
+                    </div>
+                    <h3>Motion Sensors</h3>
+                    <p>Intelligent motion detection with automatic lighting control and security alerts for enhanced safety.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="images/services/voice-control.jpg" alt="Voice Control" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'service-icon\'><i class=\'fas fa-mobile-alt\'></i></div>';">
+                    </div>
+                    <h3>Voice Control</h3>
+                    <p>Control your entire home with voice commands through integration with popular smart assistants.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Modes Section -->
+    <section class="video-modes-section">
+        <div class="video-modes-container">
+            <!-- Morning Mode Video -->
+            <video class="mode-video" id="morningVideo" muted playsinline>
+                <source src="videos/morning-mode.mp4" type="video/mp4">
+                <source src="videos/morning-mode.webm" type="video/webm">
+            </video>
+            <!-- Movie Mode Video -->
+            <video class="mode-video" id="movieVideo" muted playsinline>
+                <source src="videos/movie-mode.mp4" type="video/mp4">
+                <source src="videos/movie-mode.webm" type="video/webm">
+            </video>
+            <!-- Night Mode Video -->
+            <video class="mode-video" id="nightVideo" muted playsinline>
+                <source src="videos/night-mode.mp4" type="video/mp4">
+                <source src="videos/night-mode.webm" type="video/webm">
+            </video>
+            <div class="video-overlay-modes"></div>
+            
+            <!-- Mode Control Buttons -->
+            <div class="video-mode-controls-wrapper">
+                <div class="mode-controls-hint" id="modeControlsHint">
+                    <span class="mode-hint-text">Tap to switch mode</span>
+                    <i class="fas fa-chevron-down mode-hint-arrow"></i>
+                </div>
+                <div class="video-mode-controls">
+                    <button class="mode-btn" id="morningBtn" data-mode="morning" title="Morning Mode">
+                        <i class="fas fa-sun mode-btn-icon"></i>
+                        <span class="mode-btn-label">Morning</span>
+                    </button>
+                    <button class="mode-btn" id="movieBtn" data-mode="movie" title="Movie Mode">
+                        <i class="fas fa-video mode-btn-icon"></i>
+                        <span class="mode-btn-label">Movie</span>
+                    </button>
+                    <button class="mode-btn" id="nightBtn" data-mode="night" title="Night Mode">
+                        <i class="fas fa-moon mode-btn-icon"></i>
+                        <span class="mode-btn-label">Night</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about section-with-video">
+        <!-- Optional Video Background for About Section -->
+        <video class="section-video" id="aboutVideo" autoplay muted loop playsinline>
+            <source src="videos/about-video.mp4" type="video/mp4">
+            <source src="videos/about-video.webm" type="video/webm">
+        </video>
+        <div class="section-video-overlay"></div>
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2 class="section-title">About Us</h2>
+                    <p>PAT IoT Solutions Pvt. Ltd. is a leading home automation company dedicated to transforming ordinary homes into intelligent living spaces. We specialize in manufacturing premium smart touch switch boards, DALI touch dimming systems, and PWM modules, while also providing comprehensive smart home automation solutions.</p>
+                    <p>Based in Hyderabad, Telangana, our team of certified professionals works closely with clients to design and implement customized automation systems that perfectly match their lifestyle and budget. We combine our own manufactured products with carefully selected third-party solutions to deliver complete home automation experiences.</p>
+                    <p>Our commitment to quality, innovation, and customer satisfaction has made us a trusted name in the Indian smart home automation industry.</p>
+                </div>
+                <div class="about-image">
+                    <img src="images/about-us.jpg" alt="PAT IOT SOLUTIONS - About Us" class="about-image-img">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Clients Section -->
+    <section id="clients" class="clients-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Clients</h2>
+                <p class="section-subtitle">Trusted by leading brands and homeowners</p>
+            </div>
+        </div>
+        <div class="clients-scroll-wrap">
+            <div class="clients-track">
+                <div class="client-logo"><img src="images/clients/client-1.png" alt="Client 1" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-2.png" alt="Client 2" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-3.png" alt="Client 3" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-4.png" alt="Client 4" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-5.png" alt="Client 5" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-6.png" alt="Client 6" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-7.png" alt="Client 7" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-8.png" alt="Client 8" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-9.png" alt="Client 9" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <!-- Duplicate for seamless loop -->
+                <div class="client-logo"><img src="images/clients/client-1.png" alt="Client 1" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-2.png" alt="Client 2" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-3.png" alt="Client 3" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-4.png" alt="Client 4" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-5.png" alt="Client 5" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-6.png" alt="Client 6" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-7.png" alt="Client 7" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-8.png" alt="Client 8" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-9.png" alt="Client 9" onerror="this.parentElement.classList.add('placeholder')"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="products-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Products</h2>
+                <p class="section-subtitle">Manufactured by PAT IOT SOLUTIONS - Premium quality smart home products</p>
+            </div>
+            <div class="products-scroll-container">
+                <div class="products-scroll-wrapper" id="productsScrollWrapper">
+                    <!-- Products loaded dynamically from data/products.json -->
+                </div>
+                <div class="scroll-indicators">
+                    <button class="scroll-btn scroll-left" aria-label="Scroll left">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="scroll-btn scroll-right" aria-label="Scroll right">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Gallery Section -->
+    <section class="product-gallery-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Product Gallery</h2>
+                <p class="section-subtitle">Explore our products in detail - Browse through different views and angles</p>
+            </div>
+            <div class="gallery-scroll-container">
+                <div class="gallery-scroll-wrapper" id="galleryScrollWrapper">
+                    <!-- Gallery images loaded dynamically from data/products.json -->
+                </div>
+                <div class="gallery-scroll-buttons">
+                    <button class="gallery-scroll-btn gallery-scroll-left" aria-label="Scroll gallery left">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="gallery-scroll-btn gallery-scroll-right" aria-label="Scroll gallery right">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lightbox Modal -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" id="lightboxClose" aria-label="Close lightbox">
+            <i class="fas fa-times"></i>
+        </button>
+        <button class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="Previous image">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="Next image">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <div class="lightbox-content">
+            <img src="" alt="Gallery Image" class="lightbox-image" id="lightboxImage">
+        </div>
+        <div class="lightbox-counter" id="lightboxCounter"></div>
+    </div>
+
+    <!-- Warranty Section -->
+    <section class="warranty-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Product Warranty</h2>
+                <p class="section-subtitle">Quality assurance and warranty information for our manufactured products</p>
+            </div>
+            <div class="warranty-content">
+                <div class="warranty-info">
+                    <div class="warranty-card">
+                        <div class="warranty-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Smart Touch Switch Boards</h3>
+                        <p class="warranty-period"><strong>Warranty:</strong> 2 Years</p>
+                        <p>Comprehensive warranty covering manufacturing defects, material quality, and workmanship. Includes free replacement for defective units.</p>
+                    </div>
+                    <div class="warranty-card">
+                        <div class="warranty-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>DALI Touch Dimming</h3>
+                        <p class="warranty-period"><strong>Warranty:</strong> 2 Years</p>
+                        <p>Full warranty on all components including touch panels, dimming modules, and control systems. Technical support included.</p>
+                    </div>
+                    <div class="warranty-card">
+                        <div class="warranty-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>PWM Module</h3>
+                        <p class="warranty-period"><strong>Warranty:</strong> 2 Years</p>
+                        <p>Complete warranty coverage for PWM modules including circuit boards, connectors, and color control functionality.</p>
+                    </div>
+                </div>
+                <div class="warranty-terms">
+                    <h3>Warranty Terms & Conditions</h3>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Warranty period starts from the date of purchase</li>
+                        <li><i class="fas fa-check"></i> Warranty covers manufacturing defects and component failures</li>
+                        <li><i class="fas fa-check"></i> Free replacement or repair for defective products</li>
+                        <li><i class="fas fa-check"></i> Professional installation recommended for warranty validity</li>
+                        <li><i class="fas fa-check"></i> Warranty does not cover damage due to misuse, accidents, or unauthorized modifications</li>
+                        <li><i class="fas fa-check"></i> Contact our support team for warranty claims and service requests</li>
+                    </ul>
+                    <div class="warranty-contact">
+                        <p><strong>For warranty claims, contact:</strong></p>
+                        <p>Phone: +91 83746 63171 | Email: marketing@patiot.in</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Get In Touch</h2>
+                <p class="section-subtitle">Ready to transform your home? Contact us today for a free consultation.</p>
+            </div>
+            <div class="contact-content">
+                <form class="contact-form" id="contactForm">
+                    <div class="form-group">
+                        <input type="text" id="name" name="name" placeholder="Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="email" name="email" placeholder="Your Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="tel" id="phone" name="phone" placeholder="Your Phone">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="message" name="message" rows="5" placeholder="Your Message" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </form>
+                <aside class="contact-box">
+                    <div class="contact-box-header">
+                        <h3>Contact Information</h3>
+                    </div>
+                    <div class="contact-box-content">
+                        <div class="info-item-compact">
+                            <div class="info-icon-compact">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="info-text-compact">
+                                <h4>Address</h4>
+                                <p>D-2, 3rd Floor, CMC layout, 1-55/193, Near, Pearl Village Rd, Kondapur, Hyderabad, Telangana 500084</p>
+                            </div>
+                        </div>
+                        <div class="info-item-compact">
+                            <div class="info-icon-compact">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="info-text-compact">
+                                <h4>Phone</h4>
+                                <p>+91 83746 63171</p>
+                            </div>
+                        </div>
+                        <div class="info-item-compact">
+                            <div class="info-icon-compact">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="info-text-compact">
+                                <h4>Email</h4>
+                                <p><a href="mailto:marketing@patiot.in">marketing@patiot.in</a></p>
+                            </div>
+                        </div>
+                        <div class="qr-code-box">
+                            <img src="images/qr-code.png" alt="Scan QR Code" class="qr-code-image-compact">
+                            <p class="qr-code-label">Scan for More Info</p>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="logo">
+                        <img src="images/logo.png" alt="PAT IOT SOLUTIONS" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="logo-text" style="display: none;">
+                            <span class="logo-pat">PAT</span>
+                            <span class="logo-iot">IOT SOLUTIONS</span>
+                        </div>
+                    </div>
+                    <p>Transforming homes into intelligent living spaces with cutting-edge IoT and automation technology.</p>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/share/182eKatbLq/" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/patiot.solutions?igsh=MWFiZjkxdm1nNnRjdg==" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.linkedin.com/in/pat-iot-solutions-65b1a4375" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#products">Products</a></li>
+                        <li><a href="blog.html">Blogs</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="#services">Smart Lighting</a></li>
+                        <li><a href="#services">Security Systems</a></li>
+                        <li><a href="#services">Climate Control</a></li>
+                        <li><a href="#services">Entertainment</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Newsletter</h4>
+                    <p>Subscribe to get updates on new products and special offers.</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Your Email">
+                        <button type="submit" class="btn btn-primary">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 PAT IOT SOLUTIONS. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

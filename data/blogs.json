@@ -1,0 +1,114 @@
+{
+  "posts": [
+    {
+      "id": "1",
+      "slug": "welcome-to-pat-iot-solutions",
+      "title": "Welcome to PAT IOT Solutions",
+      "excerpt": "Discover how we're transforming homes with smart automation and IoT technology.",
+      "content": "<p>PAT IoT Solutions is dedicated to bringing intelligent automation to every home. From smart lighting and DALI dimming to motorised curtains and secure access, we design and deliver solutions that fit your lifestyle.</p><p>Our team in Hyderabad works with clients across India to plan, install, and support home automation systems using our own manufactured products and trusted third-party solutions.</p><p>Whether you are building a new home or upgrading an existing one, we help you choose the right products and integrate them seamlessly.</p>",
+      "date": "2026-01-15",
+      "category": "Company",
+      "image": "images/hero-image.jpg",
+      "author": "PAT IOT Team",
+      "readTime": "20 min read"
+    },
+    {
+      "id": "2",
+      "slug": "smart-switches-control-at-your-fingertips",
+      "title": "Smart Switches: Control at Your Fingertips",
+      "excerpt": "Learn about our smart touch switches and how they simplify lighting control.",
+      "content": "<p>Our smart touch switch boards combine modern design with reliable control. They integrate with your existing wiring and can be used for lights, fans, and other loads.</p><p>Features include touch control, optional scheduling, and compatibility with our automation ecosystem. Ideal for new builds and renovations.</p><p>Available in 2-gang and 4-gang options with a 2-year warranty. Contact us for installation and bulk orders.</p>",
+      "date": "2026-01-10",
+      "category": "Products",
+      "image": "images/products/smart-touch-switch.jpg",
+      "author": "PAT IOT Team",
+      "readTime": "3 min read",
+      "images": [
+        {
+          "src": "images/products/smart-touch-switch.jpg",
+          "caption": "Smart touch switch board – modern and reliable"
+        },
+        {
+          "src": "images/gallery/product-1.jpg",
+          "caption": "Installation example in a living room"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "slug": "dali-touch-dimming-explained",
+      "title": "DALI Touch Dimming Explained",
+      "excerpt": "Professional-grade dimming and lighting control for residential and commercial spaces.",
+      "content": "<p>DALI (Digital Addressable Lighting Interface) gives precise control over dimming, CCT, and RGB/RGBW. Our touch panels and dimming modules are built for both homes and commercial projects.</p><p>Benefits include energy savings, scene presets, and long-term reliability. We offer 2-year warranty on all DALI products.</p><p>Use DALI for large lighting installations where individual fixture control and diagnostics matter.</p>",
+      "date": "2026-01-05",
+      "category": "Products",
+      "image": "images/products/dali-touch-panels.jpg",
+      "author": "PAT IOT Team",
+      "readTime": "3 min read",
+      "images": [
+        {
+          "src": "images/products/dali-touch-panels.jpg",
+          "caption": "DALI touch dimming panel"
+        },
+        {
+          "src": "images/products/dali-touch-panels.jpg",
+          "caption": "Dimming and scene control"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "slug": "pwm-module-precision-lighting-control",
+      "title": "PWM Module: Precision Lighting Control",
+      "excerpt": "How our PWM modules deliver smooth, efficient LED dimming and control.",
+      "content": "<p>Our PWM (Pulse Width Modulation) modules provide smooth dimming and colour control for LED strips and fixtures. They are designed for integration with smart home systems and our own control panels.</p><p>Use them for accent lighting, coves, and RGB/RGBW setups. Warranty and support are included.</p>",
+      "date": "2025-12-20",
+      "category": "Products",
+      "image": "images/products/pwm-module.jpg",
+      "author": "PAT IOT Team",
+      "readTime": "2 min read",
+      "images": [
+        {
+          "src": "images/products/pwm-module.jpg",
+          "caption": "PWM module for LED control"
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "slug": "motorised-curtains-for-modern-homes",
+      "title": "Motorised Curtains for Modern Homes",
+      "excerpt": "Automate your curtains for comfort, privacy, and energy efficiency.",
+      "content": "<p>Motorised curtains are part of our solutions offering. We source quality motors and tracks and integrate them with your automation so you can control curtains from the same app or panel as your lights.</p><p>Perfect for large windows, bedrooms, and living areas. We handle design and installation.</p>",
+      "date": "2025-12-10",
+      "category": "Solutions",
+      "image": "images/services/motorised-curtains.jpg",
+      "author": "PAT IOT Team",
+      "readTime": "2 min read",
+      "images": [
+        {
+          "src": "images/services/motorised-curtains.jpg",
+          "caption": "Motorised curtain solution"
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "slug": "getting-started-with-home-automation",
+      "title": "Getting Started with Home Automation",
+      "excerpt": "A beginner's guide to choosing and integrating smart home solutions.",
+      "content": "<p>Starting with smart home automation doesn't have to be overwhelming. We recommend beginning with lighting and one or two zones, then expanding to curtains, climate, and security as needed.</p><p>Our team can help you choose the right products and plan a phased rollout that fits your budget and lifestyle.</p>",
+      "date": "2025-12-01",
+      "category": "Tips",
+      "image": "images/hero-image.jpg",
+      "author": "PAT IOT Team",
+      "readTime": "3 min read",
+      "images": [
+        {
+          "src": "images/hero-image.jpg",
+          "caption": "Transform your living space with automation"
+        }
+      ]
+    }
+  ]
+}
