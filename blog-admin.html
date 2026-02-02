@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Admin - PAT IOT SOLUTIONS</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        .admin-header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+        }
+        .admin-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .admin-section h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        .blog-list {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .blog-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9f9f9;
+        }
+        .blog-item-info {
+            flex: 1;
+        }
+        .blog-item-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+        }
+        .blog-item-info p {
+            margin: 0.25rem 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .blog-item-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn-edit, .btn-delete, .btn-add, .btn-save, .btn-download {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .btn-edit {
+            background: #667eea;
+            color: white;
+        }
+        .btn-edit:hover {
+            background: #5568d3;
+        }
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+        .btn-add {
+            background: #27ae60;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+        .btn-add:hover {
+            background: #229954;
+        }
+        .btn-save {
+            background: #667eea;
+            color: white;
+        }
+        .btn-save:hover {
+            background: #5568d3;
+        }
+        .btn-download {
+            background: #3498db;
+            color: white;
+        }
+        .btn-download:hover {
+            background: #2980b9;
+        }
+        .admin-form {
+            display: grid;
+            gap: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .blog-images-list {
+            margin-top: 1rem;
+        }
+        .blog-image-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            align-items: center;
+        }
+        .blog-image-row input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .blog-image-row button {
+            padding: 0.5rem 1rem;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #saveStatus {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+        }
+        #saveStatus.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        #saveStatus.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        #uploadInstructions {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 4px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-blog"></i> Blog Admin</h1>
+            <p>Manage blog posts - Add, edit, or delete posts</p>
+        </div>
+
+        <!-- Blog Posts Section -->
+        <div class="admin-section">
+            <h2><i class="fas fa-newspaper"></i> Blog Posts</h2>
+            <div class="blog-list" id="blogList"></div>
+            <button class="btn-add" onclick="showBlogForm()"><i class="fas fa-plus"></i> Add New Blog Post</button>
+            
+            <div id="blogFormWrap" style="display: none; margin-top: 2rem;">
+                <h3 id="blogFormTitle">Add New Blog Post</h3>
+                <form class="admin-form" id="blogForm">
+                    <input type="hidden" id="blogId" value="">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="blogTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Slug (URL-friendly name, e.g., "my-new-post")</label>
+                        <input type="text" id="blogSlug" placeholder="my-new-post" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Excerpt (short summary)</label>
+                        <textarea id="blogExcerpt" rows="2" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Content (HTML)</label>
+                        <textarea id="blogContent" rows="10" placeholder="<p>Your content here...</p>" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="blogDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" id="blogCategory" placeholder="Company, Products, Solutions, Tips" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Main Image Path</label>
+                        <input type="text" id="blogImage" placeholder="images/hero-image.jpg">
+                    </div>
+                    <div class="form-group">
+                        <label>Author</label>
+                        <input type="text" id="blogAuthor" placeholder="PAT IOT Team">
+                    </div>
+                    <div class="form-group">
+                        <label>Read Time</label>
+                        <input type="text" id="blogReadTime" placeholder="3 min read">
+                    </div>
+                    <div class="form-group">
+                        <label>Post Images (with captions)</label>
+                        <div class="blog-images-list" id="blogImagesList"></div>
+                        <button type="button" class="btn-add" onclick="addBlogImageRow()" style="margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem;"><i class="fas fa-plus"></i> Add Image</button>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save">Save Post</button>
+                        <button type="button" class="btn-delete" onclick="cancelBlogForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Save Actions -->
+        <div class="admin-section">
+            <h2><i class="fas fa-save"></i> Save Changes</h2>
+            <div class="form-actions">
+                <button class="btn-save" onclick="saveBlogs()" id="saveLocalBtn" style="display: none;"><i class="fas fa-save"></i> Save to File (Local)</button>
+                <button class="btn-download" onclick="downloadBlogs()"><i class="fas fa-download"></i> Download blogs.json</button>
+                <a href="https://github.com/PATIoT-info/pat-iot-website/edit/main/data/blogs.json" target="_blank" class="btn-save" style="background: #28a745; margin-left: 0.5rem; text-decoration: none; display: inline-block;"><i class="fab fa-github"></i> Upload to GitHub</a>
+            </div>
+            <div id="uploadInstructions" style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px; display: none;">
+                <strong>📤 How to Upload:</strong><br>
+                1. Click "Download blogs.json" above<br>
+                2. Click "Upload to GitHub" button (opens GitHub editor)<br>
+                3. In GitHub: Delete all content → Paste downloaded file content → Click "Commit changes"<br>
+                4. Your website will update automatically in 1-2 minutes!
+            </div>
+            <p id="saveStatus" style="margin-top: 1rem;"></p>
+        </div>
+    </div>
+
+    <script>
+        let blogsData = { posts: [] };
+        let editingBlogId = null;
+
+        // Check if running locally
+        const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        // Show/hide local save button
+        if (isLocal) {
+            const saveLocalBtn = document.getElementById('saveLocalBtn');
+            if (saveLocalBtn) {
+                saveLocalBtn.style.display = 'inline-block';
+            }
+        }
+
+        // Load blogs data
+        async function loadBlogs() {
+            try {
+                const response = await fetch('data/blogs.json');
+                if (response.ok) {
+                    blogsData = await response.json();
+                } else {
+                    console.warn('blogs.json not found, starting with empty data');
+                    blogsData = { posts: [] };
+                }
+                renderBlogs();
+            } catch (e) {
+                console.error('Error loading blogs:', e);
+                blogsData = { posts: [] };
+                renderBlogs();
+            }
+        }
+
+        // Render blogs list
+        function renderBlogs() {
+            const list = document.getElementById('blogList');
+            if (!list) return;
+            
+            if (blogsData.posts.length === 0) {
+                list.innerHTML = '<p>No blog posts yet. Click "Add New Blog Post" to create one.</p>';
+                return;
+            }
+            
+            // Sort by date (newest first)
+            const sorted = [...blogsData.posts].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            list.innerHTML = sorted.map(post => `
+                <div class="blog-item">
+                    <div class="blog-item-info">
+                        <h3>${post.title || 'Untitled'}</h3>
+                        <p><strong>Slug:</strong> ${post.slug || 'N/A'} | <strong>Category:</strong> ${post.category || 'N/A'} | <strong>Date:</strong> ${post.date || 'N/A'}</p>
+                        <p>${(post.excerpt || '').substring(0, 100)}${(post.excerpt || '').length > 100 ? '...' : ''}</p>
+                    </div>
+                    <div class="blog-item-actions">
+                        <button class="btn-edit" onclick="editBlog('${post.id || post.slug}')"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn-delete" onclick="deleteBlog('${post.id || post.slug}')"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Show blog form
+        function showBlogForm() {
+            editingBlogId = null;
+            document.getElementById('blogId').value = '';
+            document.getElementById('blogTitle').value = '';
+            document.getElementById('blogSlug').value = '';
+            document.getElementById('blogExcerpt').value = '';
+            document.getElementById('blogContent').value = '';
+            document.getElementById('blogDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('blogCategory').value = '';
+            document.getElementById('blogImage').value = '';
+            document.getElementById('blogAuthor').value = 'PAT IOT Team';
+            document.getElementById('blogReadTime').value = '';
+            document.getElementById('blogImagesList').innerHTML = '';
+            document.getElementById('blogFormTitle').textContent = 'Add New Blog Post';
+            document.getElementById('blogFormWrap').style.display = 'block';
+            addBlogImageRow(); // Add one empty image row
+        }
+
+        // Add blog image row
+        function addBlogImageRow(src = '', caption = '') {
+            const list = document.getElementById('blogImagesList');
+            const row = document.createElement('div');
+            row.className = 'blog-image-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Image path (e.g., images/blog/image.jpg)" value="${src}" class="blog-img-src">
+                <input type="text" placeholder="Caption (optional)" value="${caption}" class="blog-img-caption">
+                <button type="button" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            list.appendChild(row);
+        }
+
+        // Edit blog
+        function editBlog(id) {
+            const post = blogsData.posts.find(p => (p.id === id) || (p.slug === id));
+            if (!post) return;
+            
+            editingBlogId = id;
+            document.getElementById('blogId').value = post.id || '';
+            document.getElementById('blogTitle').value = post.title || '';
+            document.getElementById('blogSlug').value = post.slug || '';
+            document.getElementById('blogExcerpt').value = post.excerpt || '';
+            document.getElementById('blogContent').value = post.content || '';
+            document.getElementById('blogDate').value = post.date || '';
+            document.getElementById('blogCategory').value = post.category || '';
+            document.getElementById('blogImage').value = post.image || '';
+            document.getElementById('blogAuthor').value = post.author || '';
+            document.getElementById('blogReadTime').value = post.readTime || '';
+            
+            // Load images
+            const imagesList = document.getElementById('blogImagesList');
+            imagesList.innerHTML = '';
+            if (post.images && post.images.length > 0) {
+                post.images.forEach(img => {
+                    const src = typeof img === 'string' ? img : (img.src || '');
+                    const caption = typeof img === 'object' ? (img.caption || '') : '';
+                    addBlogImageRow(src, caption);
+                });
+            } else {
+                addBlogImageRow();
+            }
+            
+            document.getElementById('blogFormTitle').textContent = 'Edit Blog Post';
+            document.getElementById('blogFormWrap').style.display = 'block';
+            document.getElementById('blogFormWrap').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Cancel blog form
+        function cancelBlogForm() {
+            document.getElementById('blogFormWrap').style.display = 'none';
+            editingBlogId = null;
+        }
+
+        // Delete blog
+        function deleteBlog(id) {
+            const post = blogsData.posts.find(p => (p.id === id) || (p.slug === id));
+            if (!post) return;
+            
+            if (!confirm(`Delete blog post "${post.title}"? This cannot be undone.`)) return;
+            
+            blogsData.posts = blogsData.posts.filter(p => (p.id !== id) && (p.slug !== id));
+            renderBlogs();
+        }
+
+        // Form submit handler
+        document.getElementById('blogForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Collect images
+            const images = [];
+            document.querySelectorAll('.blog-image-row').forEach(row => {
+                const src = row.querySelector('.blog-img-src').value.trim();
+                const caption = row.querySelector('.blog-img-caption').value.trim();
+                if (src) {
+                    images.push(caption ? { src, caption } : src);
+                }
+            });
+            
+            const post = {
+                id: document.getElementById('blogId').value || Date.now().toString(),
+                slug: document.getElementById('blogSlug').value.trim(),
+                title: document.getElementById('blogTitle').value.trim(),
+                excerpt: document.getElementById('blogExcerpt').value.trim(),
+                content: document.getElementById('blogContent').value.trim(),
+                date: document.getElementById('blogDate').value,
+                category: document.getElementById('blogCategory').value.trim(),
+                image: document.getElementById('blogImage').value.trim() || undefined,
+                author: document.getElementById('blogAuthor').value.trim() || undefined,
+                readTime: document.getElementById('blogReadTime').value.trim() || undefined,
+                images: images.length > 0 ? images : undefined
+            };
+            
+            if (editingBlogId) {
+                const index = blogsData.posts.findIndex(p => (p.id === editingBlogId) || (p.slug === editingBlogId));
+                if (index >= 0) {
+                    blogsData.posts[index] = post;
+                }
+            } else {
+                blogsData.posts.push(post);
+            }
+            
+            renderBlogs();
+            cancelBlogForm();
+        });
+
+        // Save blogs (local server)
+        async function saveBlogs() {
+            const statusEl = document.getElementById('saveStatus');
+            statusEl.textContent = 'Saving...';
+            statusEl.className = '';
+            statusEl.style.color = '#666';
+            
+            if (isLocal) {
+                try {
+                    const response = await fetch('/api/save-blogs', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(blogsData)
+                    });
+                    const result = await response.json();
+                    if (result.ok) {
+                        statusEl.textContent = '✓ Saved to data/blogs.json';
+                        statusEl.className = 'success';
+                    } else {
+                        statusEl.textContent = '✗ Error: ' + (result.error || 'Unknown error');
+                        statusEl.className = 'error';
+                    }
+                } catch (e) {
+                    statusEl.textContent = '✗ Error: ' + e.message;
+                    statusEl.className = 'error';
+                }
+            } else {
+                statusEl.textContent = 'Local server not running. Use "Download blogs.json" instead.';
+                statusEl.className = 'error';
+            }
+        }
+
+        // Download blogs.json
+        function downloadBlogs() {
+            const json = JSON.stringify(blogsData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'blogs.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            // Show upload instructions
+            const instructions = document.getElementById('uploadInstructions');
+            if (instructions) {
+                instructions.style.display = 'block';
+            }
+        }
+
+        // Load on page load
+        loadBlogs();
+    </script>
+</body>
+</html>
