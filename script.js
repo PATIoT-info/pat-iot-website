@@ -1004,6 +1004,7 @@ function handleHeroVideoScroll() {
     const heroVideo = document.getElementById('heroVideo');
     const videoSection = document.querySelector('.hero-video-section');
     const nextSection = document.querySelector('#services');
+    const heroScrubArrow = document.getElementById('heroScrubArrow');
     if (!heroVideo || !videoSection || !nextSection) {
         console.warn('Hero video scroll: Missing required elements', {
             heroVideo: !!heroVideo,
@@ -1055,6 +1056,29 @@ function handleHeroVideoScroll() {
     heroVideo.preload = 'auto';
     heroVideo.playsInline = true;
 
+    let heroIndicatorProgress = 0;
+    function setHeroScrubIndicatorProgress(progress, smooth = false) {
+        if (!heroScrubArrow) return;
+        const p = Math.max(0, Math.min(1, progress || 0));
+        const indicator = heroScrubArrow.parentElement; // .hero-scrub-indicator
+        if (!indicator) return;
+
+        // Optionally smooth indicator so it "follows" the video instead of jumping.
+        if (smooth) {
+            heroIndicatorProgress = heroIndicatorProgress + (p - heroIndicatorProgress) * 0.18;
+        } else {
+            heroIndicatorProgress = p;
+        }
+
+        // Pixel-perfect movement: 0 => top, 1 => bottom (within track bounds)
+        const indicatorH = indicator.clientHeight || 0;
+        const arrowH = heroScrubArrow.offsetHeight || 0;
+        const travel = Math.max(0, indicatorH - arrowH);
+        const y = travel * heroIndicatorProgress;
+
+        heroScrubArrow.style.transform = `translate(-50%, ${y.toFixed(2)}px)`;
+    }
+
     // Cache sectionTop – avoid reading during scroll when possible
     function updateSectionTop() {
         if (!videoSection) return;
@@ -1086,6 +1110,8 @@ function handleHeroVideoScroll() {
         pinned = false;
         scrollDirection = 0;
         lastScrollDelta = 0;
+        // Arrow should only be at bottom when video is truly ended
+        setHeroScrubIndicatorProgress(1);
         if (scrollDirectionTimeout) {
             clearTimeout(scrollDirectionTimeout);
             scrollDirectionTimeout = null;
@@ -1124,6 +1150,75 @@ function handleHeroVideoScroll() {
 
     // Smooth interpolation – cache duration to reduce layout/reads
     let cachedDuration = 0;
+
+    // Mobile/tablet: avoid scroll-locking (no preventDefault/scrollTo).
+    // Instead, map scroll progress through the section to video.currentTime.
+    if (isMobileOrTablet) {
+        let mobileRaf = null;
+
+        function mobileUpdateFromScroll() {
+            mobileRaf = null;
+            if (videoEnded) return;
+
+            updateSectionTop();
+
+            // Wait for metadata so duration is known
+            if (cachedDuration <= 0 && heroVideo.duration && isFinite(heroVideo.duration)) {
+                cachedDuration = heroVideo.duration;
+            }
+            if (cachedDuration <= 0) return;
+
+            const duration = cachedDuration;
+            const scrollY = window.pageYOffset;
+            const viewportH = window.innerHeight || 1;
+
+            // Scrub window: from sectionTop to sectionBottom - viewport height
+            const sectionH = videoSection.offsetHeight || viewportH;
+            const start = sectionTop;
+            const end = Math.max(start + 1, (sectionTop + sectionH) - viewportH);
+
+            const raw = (scrollY - start) / (end - start);
+            // Make mobile scrub much faster: amplify scroll progress
+            const speedFactor = 3; // ~2–3 quick swipes to reach end
+            const progress = Math.max(0, Math.min(1, raw * speedFactor));
+            setHeroScrubIndicatorProgress(progress, false);
+
+            // Only scrub while the section is being scrolled through
+            if (progress > 0 && progress < 1) {
+                // Ensure video can render frames
+                if (heroVideo.paused) heroVideo.play().catch(() => {});
+            }
+
+            const newTime = progress * duration;
+            // Avoid hammering currentTime with tiny changes
+            if (Math.abs((heroVideo.currentTime || 0) - newTime) > 0.02) {
+                heroVideo.currentTime = newTime;
+            }
+
+            // Auto-advance when the user reaches the end of the scrub window
+            if (progress >= 0.999 && !videoEnded) {
+                heroVideo.currentTime = duration;
+                releaseAndScrollNext();
+            }
+        }
+
+        function onMobileScroll() {
+            if (mobileRaf) return;
+            mobileRaf = requestAnimationFrame(mobileUpdateFromScroll);
+        }
+
+        // Ensure the browser loads metadata early
+        if (heroVideo.readyState < 1) heroVideo.load();
+
+        window.addEventListener('scroll', onMobileScroll, { passive: true });
+        window.addEventListener('resize', onMobileScroll, { passive: true });
+        heroVideo.addEventListener('loadedmetadata', onMobileScroll, { passive: true });
+        heroVideo.addEventListener('canplay', onMobileScroll, { passive: true });
+
+        // Initial sync
+        setTimeout(onMobileScroll, 150);
+        return;
+    }
     function smoothVideoUpdate(timestamp) {
         if (!pinned || videoEnded) {
             smoothUpdateRaf = null;
@@ -1146,6 +1241,8 @@ function handleHeroVideoScroll() {
         
         const duration = cachedDuration;
         currentVideoTime = heroVideo.currentTime || 0;
+        // Follow actual video duration (currentTime/duration) so arrow matches playback.
+        setHeroScrubIndicatorProgress(duration > 0 ? (currentVideoTime / duration) : 0, true);
         const diff = targetVideoTime - currentVideoTime;
         const absDiff = Math.abs(diff);
         
@@ -1314,6 +1411,8 @@ function handleHeroVideoScroll() {
                 pinned = false;
                 videoEnded = false;
                 isFirstScroll = true;
+                // Back above the video section: reset indicator to top
+                setHeroScrubIndicatorProgress(0);
                 if (escapeTimeout) {
                     clearTimeout(escapeTimeout);
                     escapeTimeout = null;
@@ -1383,6 +1482,7 @@ function handleHeroVideoScroll() {
                     accumulatedScroll = 0;
                     targetVideoTime = 0;
                     currentVideoTime = 0;
+                    setHeroScrubIndicatorProgress(0);
                     // Defer video work so first scroll doesn’t block – fixes “whole site lag”
                     // Initialize video immediately - ensure it's ready for seeking
                     heroVideo.muted = true;

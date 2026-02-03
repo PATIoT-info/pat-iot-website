@@ -62,7 +62,7 @@
                 <div class="blog-post-gallery" id="blogPostGallery" style="display: none;"></div>
                 <div class="blog-post-back">
                     <p><a href="blog.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a></p>
-                    <p class="blog-post-edit-link"><a href="javascript:void(0)" id="blogEditLink"><i class="fas fa-edit"></i> Admin: Edit this post</a></p>
+                    <p class="blog-post-edit-link" style="display: none;"><a href="javascript:void(0)" id="blogEditLink"><i class="fas fa-edit"></i> Admin: Edit this post</a></p>
                 </div>
 
                 <!-- Admin: Add/Edit post info (only when URL has ?edit=1) -->
@@ -150,7 +150,8 @@
         (function() {
             var params = new URLSearchParams(window.location.search);
             var slug = params.get('slug');
-            var isEdit = params.get('edit') === '1' || params.get('admin') === '1';
+            var isEdit = params.get('edit') === '1';
+            var isAdminParam = params.get('admin') === '1';
             var isNew = params.get('new') === '1';
             var loading = document.getElementById('blogPostLoading');
             var error = document.getElementById('blogPostError');
@@ -322,7 +323,10 @@
                         return;
                     }
                     showPost(post);
-                    if (isEdit && adminPanel) {
+                    // Only show admin edit panel when explicitly in edit mode AND user is admin/local
+                    var isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+                    var isAdminUser = isLocal || isAdminParam;
+                    if (isEdit && isAdminUser && adminPanel) {
                         adminPanel.style.display = 'block';
                         fillFormFromPost(post);
                     }
@@ -345,24 +349,13 @@
             var isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
             var editLinkWrap = document.querySelector('.blog-post-edit-link');
             var editLink = document.getElementById('blogEditLink');
-            if (editLinkWrap && editLink) {
-                // Always show edit link on published site (for admin access)
-                if (!isEdit) {
-                    // Show edit link on published site
-                    editLinkWrap.style.display = 'block';
-                } else {
-                    if (isEdit || isNew) {
-                        editLink.href = isNew ? 'blog.html' : ('?slug=' + encodeURIComponent(slug));
-                        editLink.innerHTML = '<i class="fas fa-edit"></i> ' + (isNew ? 'Back to Blogs' : 'Hide edit panel');
-                    } else {
-                        editLink.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            var p = new URLSearchParams(window.location.search);
-                            p.set('edit', '1');
-                            window.location.search = p.toString();
-                        });
-                    }
-                }
+            // Only show the edit button when in explicit admin mode (or local admin)
+            var isAdminUser = isLocal || isAdminParam;
+            var showEditButton = (isEdit || isAdminParam) && isAdminUser;
+            if (editLinkWrap && editLink && showEditButton) {
+                editLinkWrap.style.display = 'block';
+                editLink.href = isNew ? 'blog.html' : ('?slug=' + encodeURIComponent(slug));
+                editLink.innerHTML = '<i class="fas fa-edit"></i> ' + (isNew ? 'Back to Blogs' : 'Hide edit panel');
             }
             var saveLocalBtn = document.getElementById('adminSaveLocal');
             var saveStatusEl = document.getElementById('adminSaveStatus');

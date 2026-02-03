@@ -46,7 +46,7 @@
         <div class="container">
             <h1 class="blog-hero-title">Blog</h1>
             <p class="blog-hero-subtitle">Updates on our company, products, smart home tips, and industry insights.</p>
-            <div style="text-align: center; margin-top: 1.5rem;">
+            <div id="blogAdminHeroLinkWrap" style="text-align: center; margin-top: 1.5rem; display: none;">
                 <a href="blog-admin.html?admin=1" class="btn btn-secondary" style="display: inline-block;">
                     <i class="fas fa-cog"></i> Admin: Manage Blog Posts
                 </a>
@@ -265,9 +265,14 @@
             var createImagesList = document.getElementById('createImagesList');
             var createSaveLocalBtn = document.getElementById('createSaveLocal');
             var createSaveStatus = document.getElementById('createSaveStatus');
+            var adminHeroLinkWrap = document.getElementById('blogAdminHeroLinkWrap');
 
             if ((isLocal || isAdmin) && adminCreateLinkWrap) {
                 adminCreateLinkWrap.style.display = 'block';
+            }
+
+            if ((isLocal || isAdmin) && adminHeroLinkWrap) {
+                adminHeroLinkWrap.style.display = 'block';
             }
 
             function addCreateImageRow(src, caption) {

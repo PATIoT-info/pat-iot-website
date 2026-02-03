@@ -325,6 +325,66 @@ body {
     backface-visibility: hidden;
 }
 
+.hero-scrub-indicator {
+    position: absolute;
+    top: 18px;
+    bottom: 18px;
+    right: 18px;
+    width: 26px;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0.95;
+}
+
+.hero-scrub-track {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 3px;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.55);
+    border-radius: 3px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+}
+
+.hero-scrub-arrow {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, 0);
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+    will-change: transform;
+    transition: transform 60ms linear;
+}
+
+.hero-scrub-arrow-head {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    transform: translate(-50%, -40%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid rgba(17, 24, 39, 0.9);
+}
+
+@media (max-width: 768px) {
+    .hero-scrub-indicator {
+        right: 12px;
+        width: 22px;
+        top: 14px;
+        bottom: 14px;
+    }
+    .hero-scrub-track { width: 3px; }
+    .hero-scrub-arrow { width: 16px; height: 16px; }
+}
+
 .hero-video.fade-out {
     opacity: 1 !important; /* Keep video visible always */
 }
@@ -2149,16 +2209,20 @@ body {
     
     .hero-video-section {
         margin-top: 60px; /* Smaller gap on mobile */
-        height: 60vh; /* Reduced height on tablet for scroll-to-scrub */
-        min-height: 300px;
-        /* Enable scroll-to-scrub on mobile/tablet */
-        overflow: hidden; /* Keep hidden to enable scroll locking */
+        /* Mobile/tablet scrub mode: natural scroll, no scroll-lock */
+        height: 220vh; /* Creates scroll distance to scrub video */
+        max-height: none;
+        min-height: 600px;
+        overflow: visible;
     }
     
     .hero-video-section .hero-video {
-        /* Keep video positioned for scroll-to-scrub */
-        position: absolute;
-        height: 100%;
+        /* Sticky video stays on screen while user scrolls */
+        position: sticky;
+        top: 90px; /* below fixed navbar */
+        height: calc(100vh - 90px);
+        width: 100%;
+        object-fit: cover;
     }
 
     .product-card {
@@ -2393,17 +2457,20 @@ body {
     }
 
     .hero-video-section {
-        height: 60vh; /* Reduced height on mobile for scroll-to-scrub */
-        min-height: 300px;
+        /* Mobile scrub mode: keep it tall enough for smooth scrub */
+        height: 200vh;
+        min-height: 520px;
         margin-top: 40px;
-        /* Enable scroll-to-scrub on mobile */
-        overflow: hidden; /* Keep hidden to enable scroll locking */
+        max-height: none;
+        overflow: visible;
     }
     
     .hero-video-section .hero-video {
-        /* Keep video positioned for scroll-to-scrub */
-        position: absolute;
-        height: 100%;
+        position: sticky;
+        top: 90px; /* below fixed navbar */
+        height: calc(100vh - 90px);
+        width: 100%;
+        object-fit: cover;
     }
 
     .video-modes-section {
@@ -2422,8 +2489,8 @@ body {
 
 /* ========== Blog Page ========== */
 .blog-hero {
-    padding: 6rem 0 2rem;
-    margin-top: 90px; /* Account for fixed navbar (increased logo size) */
+    padding: 4.25rem 0 1.5rem; /* Reduced vertical height */
+    margin-top: 80px; /* Slightly smaller header offset */
     scroll-margin-top: 90px; /* Account for fixed navbar when scrolling */
     background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-white) 100%);
     text-align: center;
@@ -2886,8 +2953,8 @@ body {
 
 @media (max-width: 768px) {
     .blog-hero {
-        padding: 6rem 0 2rem;
-        margin-top: 90px; /* Account for fixed navbar on mobile */
+        padding: 4.25rem 0 1.5rem; /* Match smaller height on mobile */
+        margin-top: 80px;
     }
 
     .blog-hero-title {
