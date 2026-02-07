@@ -66,18 +66,40 @@
         </div>
     </section>
 
-    <!-- Video Section - scroll to scrub (works on desktop, mobile, and tablet) -->
+    <!-- Video Section - plays 3 hero videos step‑by‑step based on scroll -->
     <section class="hero-video-section">
-        <video class="hero-video" id="heroVideo" muted playsinline preload="auto">
-            <source src="videos/hero-video.mp4" type="video/mp4">
-            <source src="videos/hero-video.webm" type="video/webm">
+        <!-- Three stacked videos: previous holds last frame while next crossfades in -->
+        <video class="hero-video hero-video-layer" id="heroVideo1" muted playsinline preload="auto" data-hero-index="0">
+            <source src="videos/hero-video-1.mp4" type="video/mp4">
+        </video>
+        <video class="hero-video hero-video-layer" id="heroVideo2" muted playsinline preload="auto" data-hero-index="1">
+            <source src="videos/hero-video-2.mp4" type="video/mp4">
+        </video>
+        <video class="hero-video hero-video-layer" id="heroVideo3" muted playsinline preload="auto" data-hero-index="2">
+            <source src="videos/hero-video-3.mp4" type="video/mp4">
         </video>
         <div class="video-overlay"></div>
-        <!-- Scroll-to-scrub indicator (moves top ↕ bottom) -->
-        <div class="hero-scrub-indicator" aria-hidden="true">
-            <div class="hero-scrub-track"></div>
-            <div class="hero-scrub-arrow" id="heroScrubArrow">
-                <div class="hero-scrub-arrow-head"></div>
+    </section>
+
+    <!-- Our Products Section -->
+    <section id="products" class="products-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Products</h2>
+                <p class="section-subtitle">Manufactured by PAT IOT SOLUTIONS - Premium quality smart home products</p>
+            </div>
+            <div class="products-scroll-container">
+                <div class="products-scroll-wrapper" id="productsScrollWrapper">
+                    <!-- Products loaded dynamically from data/products.json -->
+                </div>
+                <div class="scroll-indicators">
+                    <button class="scroll-btn scroll-left" aria-label="Scroll left">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="scroll-btn scroll-right" aria-label="Scroll right">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </section>
@@ -137,6 +159,22 @@
                     </div>
                     <h3>Voice Control</h3>
                     <p>Control your entire home with voice commands through integration with popular smart assistants.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PAT IoT App Section -->
+    <section id="pat-app" class="pat-app-section">
+        <div class="container">
+            <div class="pat-app-content">
+                <div class="pat-app-text">
+                    <h2 class="section-title">PAT IoT App</h2>
+                    <p>PAT IoT App lets you control and personalize your entire home from anywhere with ease. Designed for simplicity and complete security, the app allows you to manage lights, fans, curtains, and other smart devices in real time through a single intuitive interface.</p>
+                    <p>You can use the app across multiple devices with no limits, add real photos of your home to each room for a more personalized experience, and enjoy full end-to-end encryption for total peace of mind. With seamless customization, instant responsiveness, and smooth performance, PAT IoT App delivers a reliable and effortless smart living experience—making your home smarter, safer, and more comfortable every day.</p>
+                </div>
+                <div class="pat-app-image">
+                    <img src="images/pat-home-app.jpg" alt="PAT Home App" class="pat-app-img">
                 </div>
             </div>
         </div>
@@ -242,29 +280,6 @@
         </div>
     </section>
 
-    <!-- Products Section -->
-    <section id="products" class="products-section">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Our Products</h2>
-                <p class="section-subtitle">Manufactured by PAT IOT SOLUTIONS - Premium quality smart home products</p>
-            </div>
-            <div class="products-scroll-container">
-                <div class="products-scroll-wrapper" id="productsScrollWrapper">
-                    <!-- Products loaded dynamically from data/products.json -->
-                </div>
-                <div class="scroll-indicators">
-                    <button class="scroll-btn scroll-left" aria-label="Scroll left">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <button class="scroll-btn scroll-right" aria-label="Scroll right">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Product Gallery Section -->
     <section class="product-gallery-section">
         <div class="container">
@@ -287,23 +302,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Lightbox Modal -->
-    <div class="lightbox" id="lightbox">
-        <button class="lightbox-close" id="lightboxClose" aria-label="Close lightbox">
-            <i class="fas fa-times"></i>
-        </button>
-        <button class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="Previous image">
-            <i class="fas fa-chevron-left"></i>
-        </button>
-        <button class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="Next image">
-            <i class="fas fa-chevron-right"></i>
-        </button>
-        <div class="lightbox-content">
-            <img src="" alt="Gallery Image" class="lightbox-image" id="lightboxImage">
-        </div>
-        <div class="lightbox-counter" id="lightboxCounter"></div>
-    </div>
 
     <!-- Warranty Section -->
     <section class="warranty-section">

@@ -22,13 +22,23 @@
     }
 })();
 
-// Navbar scroll effect - hide on scroll down, show on scroll up (RAF-throttled for smooth scroll)
+// Navbar scroll effect - hide on scroll down, show on scroll up
 (function() {
     const navbar = document.getElementById('navbar');
     if (!navbar) return;
     
     let lastScroll = 0;
     let scrollRafPending = false;
+
+    function showNavbar() {
+        navbar.classList.remove('navbar-hidden');
+        navbar.classList.add('navbar-visible');
+    }
+
+    function hideNavbar() {
+        navbar.classList.add('navbar-hidden');
+        navbar.classList.remove('navbar-visible');
+    }
 
     window.addEventListener('scroll', () => {
         if (scrollRafPending) return;
@@ -39,22 +49,46 @@
                 return;
             }
             const currentScroll = window.pageYOffset;
+
             if (currentScroll > 100) navbar.classList.add('scrolled');
             else navbar.classList.remove('scrolled');
-            if (currentScroll > lastScroll && currentScroll > 100) {
-                navbar.classList.add('navbar-hidden');
-                navbar.classList.remove('navbar-visible');
-            } else if (currentScroll < lastScroll) {
-                navbar.classList.remove('navbar-hidden');
-                navbar.classList.add('navbar-visible');
-            }
-            if (currentScroll < 50) {
-                navbar.classList.remove('navbar-hidden');
-                navbar.classList.add('navbar-visible');
+
+            // Show navbar when scrolling up or near top; hide only when scrolling down past 100px
+            const scrollingDownPast100 = currentScroll > lastScroll && currentScroll > 100;
+            if (scrollingDownPast100) {
+                hideNavbar();
+            } else {
+                showNavbar();
             }
             lastScroll = currentScroll;
             scrollRafPending = false;
         });
+    }, { passive: true });
+
+    // Extra safety: if scrolling is intercepted (e.g., video scrubbing), still show navbar on upward gesture.
+    window.addEventListener('wheel', (e) => {
+        if (e.deltaY < 0) showNavbar();
+    }, { passive: true });
+
+    // Ensure navbar is visible on first paint.
+    requestAnimationFrame(showNavbar);
+
+    let touchStartY = null;
+    window.addEventListener('touchstart', (e) => {
+        if (!e.touches || !e.touches[0]) return;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+        if (touchStartY == null || !e.touches || !e.touches[0]) return;
+        const currentY = e.touches[0].clientY;
+        // Finger moving down usually means user is trying to scroll up.
+        if (currentY - touchStartY > 6) showNavbar();
+    }, { passive: true });
+
+    // Keyboard "scroll up" intent (desktop/laptops)
+    window.addEventListener('keydown', (e) => {
+        const keys = ['ArrowUp', 'PageUp', 'Home'];
+        if (keys.includes(e.key)) showNavbar();
     }, { passive: true });
 })();
 
@@ -111,7 +145,7 @@ async function loadProducts() {
             productsWrapper.innerHTML = sortedProducts.map(product => `
                 <div class="product-card">
                     <div class="product-image">
-                        <img src="${product.image}" alt="${product.name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%236b7280%22 font-family=%22Arial%22 font-size=%2214%22%3E${product.name}%3C/text%3E%3C/svg%3E';">
+                        <img src="${encodeURI(product.image)}" alt="${product.name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%236b7280%22 font-family=%22Arial%22 font-size=%2214%22%3E${product.name}%3C/text%3E%3C/svg%3E';">
                     </div>
                     <div class="product-label">${product.name}</div>
                     <p class="product-caption">${product.caption}</p>
@@ -124,7 +158,7 @@ async function loadProducts() {
             const sortedGallery = [...data.gallery].sort((a, b) => (a.order || 0) - (b.order || 0));
             galleryWrapper.innerHTML = sortedGallery.map(item => `
                 <div class="gallery-item">
-                    <img src="${item.image}" alt="${item.alt}" class="gallery-image">
+                    <img src="${encodeURI(item.image)}" alt="${item.alt}" class="gallery-image">
                 </div>
             `).join('');
             
@@ -999,11 +1033,17 @@ function handleVideoTransitions() {
     });
 }
 
-// Hero video: scroll-to-scrub with optimized performance (no lag)
+// Hero video: simple 4-step scroll behavior (desktop):
+// 1st scroll inside section → gently snap/lock to video
+// 2nd scroll down         → play part 1 (curtain)
+// 3rd scroll down         → play part 2 (lights)
+// 4th scroll down         → play part 3 (TV)
+// 5th scroll down         → smooth scroll to next section
+// On mobile/tablet the video just plays normally when in view.
 function handleHeroVideoScroll() {
     const heroVideo = document.getElementById('heroVideo');
     const videoSection = document.querySelector('.hero-video-section');
-    const nextSection = document.querySelector('#services');
+    const nextSection = document.querySelector('#products');
     const heroScrubArrow = document.getElementById('heroScrubArrow');
     if (!heroVideo || !videoSection || !nextSection) {
         console.warn('Hero video scroll: Missing required elements', {
@@ -1938,6 +1978,394 @@ function handleHeroVideoScroll() {
     });
 }
 
+// New simplified step-based hero behavior using THREE separate video files.
+// Expected files (place in /videos):
+//   videos/hero-video-1.mp4  – curtains
+//   videos/hero-video-2.mp4  – lights on
+//   videos/hero-video-3.mp4  – TV on
+function initHeroVideoSteps() {
+    const videoSection = document.querySelector('.hero-video-section');
+    const nextSection = document.querySelector('#products');
+    const heroScrubArrow = document.getElementById('heroScrubArrow');
+
+    const heroVideos = [
+        document.getElementById('heroVideo1'),
+        document.getElementById('heroVideo2'),
+        document.getElementById('heroVideo3')
+    ];
+
+    if (!videoSection || !nextSection || heroVideos.some(v => !v)) return;
+
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const clipDurations = [0, 0, 0];
+
+    // Basic setup for all clips
+    heroVideos.forEach((video, index) => {
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.pause();
+        try {
+            video.currentTime = 0;
+        } catch (e) {}
+        video.style.opacity = index === 0 ? '1' : '0';
+
+        video.addEventListener('loadedmetadata', () => {
+            if (video.duration && isFinite(video.duration)) {
+                clipDurations[index] = video.duration;
+            }
+        });
+    });
+
+    function updateArrow(index, t) {
+        if (!heroScrubArrow) return;
+        const duration = clipDurations[index] || heroVideos[index].duration || 0;
+        if (!duration) return;
+        const track = heroScrubArrow.parentElement;
+        if (!track) return;
+
+        const totalClips = heroVideos.length;
+        const clipProgress = Math.max(0, Math.min(1, t / duration));
+        const overall = Math.max(
+            0,
+            Math.min(1, (index + clipProgress) / totalClips)
+        );
+        const trackH = track.clientHeight || 0;
+        const arrowH = heroScrubArrow.offsetHeight || 0;
+        const travel = Math.max(0, trackH - arrowH);
+        heroScrubArrow.style.transform = `translate(-50%, ${travel * overall}px)`;
+    }
+
+    // Mobile / tablet: scrub sequence based on scroll position (no autoplay)
+    if (isTouchDevice) {
+        let mobileRaf = null;
+        let totalDuration = 0;
+
+        function updateDurations() {
+            totalDuration = 0;
+            for (let i = 0; i < heroVideos.length; i++) {
+                const d = clipDurations[i] || heroVideos[i].duration || 0;
+                clipDurations[i] = d;
+                totalDuration += (isFinite(d) ? d : 0);
+            }
+        }
+
+        function mobileUpdateFromScroll() {
+            mobileRaf = null;
+            updateDurations();
+            if (!totalDuration || totalDuration <= 0) return;
+
+            updateSectionTop();
+            const scrollY = window.pageYOffset || window.scrollY || 0;
+            const viewportH = window.innerHeight || 1;
+            const sectionH = videoSection.offsetHeight || viewportH;
+            const start = sectionTop;
+            const end = Math.max(start + 1, (sectionTop + sectionH) - viewportH);
+
+            let raw = (scrollY - start) / (end - start);
+            // Amplify to make mobile scrubbing faster / require fewer swipes
+            const speedFactor = 2; // adjust: 1 = linear, 2 = faster
+            let progress = Math.max(0, Math.min(1, raw * speedFactor));
+
+            // Map progress to overall time across all clips
+            const overallTime = progress * totalDuration;
+            // Find which clip and time within that clip
+            let acc = 0;
+            let targetIndex = 0;
+            let timeInClip = 0;
+            for (let i = 0; i < heroVideos.length; i++) {
+                const d = clipDurations[i] || heroVideos[i].duration || 0;
+                if (overallTime <= acc + d || i === heroVideos.length - 1) {
+                    targetIndex = i;
+                    timeInClip = Math.max(0, Math.min(d || 0, overallTime - acc));
+                    break;
+                }
+                acc += d;
+            }
+
+            // Seek target clip and pause (so it holds frame)
+            const targetVideo = heroVideos[targetIndex];
+            try {
+                if (Math.abs((targetVideo.currentTime || 0) - timeInClip) > 0.03) {
+                    targetVideo.currentTime = timeInClip;
+                }
+            } catch (e) {}
+
+            // Ensure only target video is visible
+            fadeToVideo(targetIndex);
+            // update progress UI if present
+            updateArrow(targetIndex, timeInClip);
+        }
+
+        function onMobileScroll() {
+            if (mobileRaf) return;
+            mobileRaf = requestAnimationFrame(mobileUpdateFromScroll);
+        }
+
+        // Observe metadata so we have durations
+        heroVideos.forEach(v => {
+            v.addEventListener('loadedmetadata', () => { updateDurations(); }, { once: true });
+            v.addEventListener('canplay', () => { updateDurations(); }, { once: true });
+        });
+
+        // Initial sync when section becomes visible
+        const io = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // sync once
+                    setTimeout(onMobileScroll, 120);
+                }
+            });
+        }, { threshold: 0.2 });
+
+        io.observe(videoSection);
+
+        window.addEventListener('scroll', onMobileScroll, { passive: true });
+        window.addEventListener('resize', onMobileScroll, { passive: true });
+
+        return;
+    }
+
+    // Desktop: step-based behavior for 3 separate videos
+    let currentIndex = 0;      // 0/1/2 = which video is active
+    let currentStep = 0;       // 0: not locked, 1: locked, 2: after video1, 3: after video2, 4: after video3
+    let locked = false;
+    let isPlaying = false;
+    let scrollingToPin = false;
+
+    function inVideoViewport() {
+        const rect = videoSection.getBoundingClientRect();
+        return rect.top < window.innerHeight && rect.bottom > 0;
+    }
+
+    // Only true when user has scrolled so the hero video section is at the top (don't lock/play before we're here)
+    function atHeroVideoSection() {
+        const rect = videoSection.getBoundingClientRect();
+        return rect.top <= 220 && rect.bottom > 120;
+    }
+
+    function fadeToVideo(index) {
+        heroVideos.forEach((video, i) => {
+            video.style.opacity = i === index ? '1' : '0';
+        });
+        currentIndex = index;
+    }
+
+    // Show a clip paused on its last frame (wait for seek so first video doesn't flash wrong frame)
+    function showLastFrame(index, onDone) {
+        const video = heroVideos[index];
+        isPlaying = true;
+
+        const showFrame = () => {
+            const duration = clipDurations[index] || video.duration || 0;
+            if (!duration) {
+                isPlaying = false;
+                if (typeof onDone === 'function') onDone();
+                return;
+            }
+            const lastTime = Math.max(0, duration - 0.05);
+            video.pause();
+
+            const applyAfterSeek = () => {
+                video.pause();
+                fadeToVideo(index);
+                updateArrow(index, duration);
+                isPlaying = false;
+                if (typeof onDone === 'function') onDone();
+            };
+
+            const onSeeked = () => {
+                video.removeEventListener('seeked', onSeeked);
+                clearTimeout(seekFallback);
+                applyAfterSeek();
+            };
+            const seekFallback = setTimeout(onSeeked, 150);
+
+            try {
+                video.currentTime = lastTime;
+            } catch (e) {
+                clearTimeout(seekFallback);
+                applyAfterSeek();
+                return;
+            }
+            video.addEventListener('seeked', onSeeked, { once: true });
+        };
+
+        const doWhenReady = () => {
+            video.removeEventListener('loadedmetadata', doWhenReady);
+            video.removeEventListener('canplay', doWhenReady);
+            showFrame();
+        };
+
+        if ((clipDurations[index] || video.duration) && video.readyState >= 2) {
+            showFrame();
+        } else {
+            video.addEventListener('loadedmetadata', doWhenReady);
+            video.addEventListener('canplay', doWhenReady);
+            video.load();
+        }
+    }
+
+    // Play a specific clip from the beginning, then hold on its last frame
+    function playClip(index, onDone) {
+        const video = heroVideos[index];
+        isPlaying = true;
+
+        const handleTimeUpdate = () => {
+            updateArrow(index, video.currentTime || 0);
+        };
+
+        const finish = () => {
+            const duration = clipDurations[index] || video.duration || 0;
+            if (duration) {
+                try {
+                    video.currentTime = Math.max(0, duration - 0.05);
+                } catch (e) {}
+            }
+            video.pause();
+            fadeToVideo(index);
+            updateArrow(index, duration || 0);
+            video.removeEventListener('timeupdate', handleTimeUpdate);
+            video.removeEventListener('ended', handleEnded);
+            isPlaying = false;
+            if (typeof onDone === 'function') onDone();
+        };
+
+        const handleEnded = () => {
+            const d = clipDurations[index] || video.duration || 0;
+            if (d > 0) {
+                try {
+                    video.currentTime = Math.max(0, d - 0.05);
+                } catch (err) {}
+            }
+            video.pause();
+            finish();
+        };
+
+        const startPlayback = () => {
+            const duration = video.duration || 0;
+            if (duration && isFinite(duration)) {
+                clipDurations[index] = duration;
+            }
+            try {
+                video.currentTime = 0;
+            } catch (e) {}
+            fadeToVideo(index);
+            video.play().catch(() => {});
+            video.addEventListener('timeupdate', handleTimeUpdate);
+            video.addEventListener('ended', handleEnded);
+        };
+
+        if (video.readyState >= 2) {
+            startPlayback();
+        } else {
+            video.addEventListener('canplay', startPlayback, { once: true });
+            video.load();
+        }
+    }
+
+    function goToVideoTop() {
+        // smooth pin to top; ignore extra wheel events while animating
+        scrollingToPin = true;
+        videoSection.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+        // fallback to clear the flag after animation (browsers vary in duration)
+        setTimeout(() => { scrollingToPin = false; }, 700);
+    }
+
+    function goToNextSection() {
+        const top = nextSection.offsetTop;
+        window.scrollTo({ top, behavior: 'smooth' });
+        locked = false;
+    }
+
+    window.addEventListener('wheel', (e) => {
+        if (!inVideoViewport()) return;
+        if (scrollingToPin) {
+            // while we're animating the pin, swallow extra wheel events
+            e.preventDefault();
+            return;
+        }
+
+        // Only lock when user has actually reached the hero video section; don't start before they're there
+        if (e.deltaY > 0 && currentStep === 0 && !atHeroVideoSection()) return;
+
+        if (e.deltaY > 0) { // scroll down
+            // First downward scroll: lock to video (only when section is at top)
+            if (currentStep === 0) {
+                locked = true;
+                currentStep = 1;
+                goToVideoTop();
+                e.preventDefault();
+                return;
+            }
+            // Second scroll: play video 1
+            if (currentStep === 1 && !isPlaying) {
+                playClip(0, () => { currentStep = 2; });
+                e.preventDefault();
+                return;
+            }
+            // Third scroll: play video 2
+            if (currentStep === 2 && !isPlaying) {
+                playClip(1, () => { currentStep = 3; });
+                e.preventDefault();
+                return;
+            }
+            // Fourth scroll: play video 3
+            if (currentStep === 3 && !isPlaying) {
+                playClip(2, () => { currentStep = 4; });
+                e.preventDefault();
+                return;
+            }
+            // Fifth scroll: go to next section
+            if (currentStep === 4 && !isPlaying) {
+                goToNextSection();
+                currentStep = 5;
+                e.preventDefault();
+                return;
+            }
+        } else if (e.deltaY < 0) { // scroll up – show previous video at last frame (no play)
+            // From step 4 → show video 3 at last frame
+            if (currentStep === 4 && !isPlaying) {
+                showLastFrame(2, () => { currentStep = 3; });
+                e.preventDefault();
+                return;
+            }
+            // From step 3 → show video 2 at last frame
+            if (currentStep === 3 && !isPlaying) {
+                showLastFrame(1, () => { currentStep = 2; });
+                e.preventDefault();
+                return;
+            }
+            // From step 2 → show video 1 at last frame
+            if (currentStep === 2 && !isPlaying) {
+                showLastFrame(0, () => { currentStep = 1; });
+                e.preventDefault();
+                return;
+            }
+            // From step 1 → unlock and allow normal scroll back up
+            if (currentStep === 1 && locked && !isPlaying) {
+                locked = false;
+                e.preventDefault(); // small ease; next scroll will actually move page
+                return;
+            }
+            // If user scrolls up after going to next section, bring them back to video 3 last frame
+            if (currentStep >= 5 && !isPlaying) {
+                locked = true;
+                currentStep = 4;
+                goToVideoTop();
+                showLastFrame(2, () => { currentStep = 4; });
+                e.preventDefault();
+                return;
+            }
+        }
+
+        if (locked) {
+            // While locked, prevent default so page doesn’t jump
+            e.preventDefault();
+        }
+    }, { passive: false });
+}
+
 // Lazy load videos when they come into view
 function lazyLoadVideos() {
     const videos = document.querySelectorAll('video[data-src]');
@@ -2251,7 +2679,8 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         initVideos();
         handleVideoTransitions();
-        handleHeroVideoScroll();
+        // Use simplified, step-based hero video behavior
+        initHeroVideoSteps();
         lazyLoadVideos();
         // Removed initInteractiveVideoSpeed() for better performance
         loadProducts().then(() => {

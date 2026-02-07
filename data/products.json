@@ -21,6 +21,14 @@
       "image": "images/products/pwm-module.jpg",
       "order": 3
     }
+    ,
+    {
+      "id": "4",
+      "name": "Curtain Module",
+      "caption": "Motorised curtain control module for seamless automation",
+      "image": "images/products/curtain-switch.jpg",
+      "order": 4
+    }
   ],
   "gallery": [
     {
