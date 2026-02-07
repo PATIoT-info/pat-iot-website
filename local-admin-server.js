@@ -47,80 +47,84 @@ function serveFile(filePath, res) {
 
 function saveBlogs(req, res) {
   let body = '';
-  req.on('data', (chunk) => { body += chunk; });
+  req.on('data', chunk => (body += chunk));
   req.on('end', () => {
     try {
       const data = JSON.parse(body);
       if (!Array.isArray(data.posts)) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'Expected { posts: [...] }' }));
-        return;
+        return res.end(JSON.stringify({ ok: false, error: 'Expected { posts: [...] }' }));
       }
-      const dir = path.dirname(BLOGS_PATH);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(BLOGS_PATH, JSON.stringify({ posts: data.posts }, null, 2), 'utf8');
+      fs.mkdirSync(path.dirname(BLOGS_PATH), { recursive: true });
+      fs.writeFileSync(BLOGS_PATH, JSON.stringify({ posts: data.posts }, null, 2));
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true }));
     } catch (e) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: String(e.message) }));
+      res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   });
 }
 
 function saveProducts(req, res) {
   let body = '';
-  req.on('data', (chunk) => { body += chunk; });
+  req.on('data', chunk => (body += chunk));
   req.on('end', () => {
     try {
       const data = JSON.parse(body);
       if (!Array.isArray(data.products) || !Array.isArray(data.gallery)) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'Expected { products: [...], gallery: [...] }' }));
-        return;
+        return res.end(
+          JSON.stringify({ ok: false, error: 'Expected { products: [...], gallery: [...] }' })
+        );
       }
-      const dir = path.dirname(PRODUCTS_PATH);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(PRODUCTS_PATH, JSON.stringify({ products: data.products, gallery: data.gallery }, null, 2), 'utf8');
+      fs.mkdirSync(path.dirname(PRODUCTS_PATH), { recursive: true });
+      fs.writeFileSync(
+        PRODUCTS_PATH,
+        JSON.stringify({ products: data.products, gallery: data.gallery }, null, 2)
+      );
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true }));
     } catch (e) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: String(e.message) }));
+      res.end(JSON.stringify({ ok: false, error: e.message }));
     }
   });
 }
 
 const server = http.createServer((req, res) => {
   const url = req.url.split('?')[0];
+
   if (req.method === 'POST' && url === '/api/save-blogs') {
-    saveBlogs(req, res);
-    return;
+    return saveBlogs(req, res);
   }
+
   if (req.method === 'POST' && url === '/api/save-products') {
-    saveProducts(req, res);
-    return;
+    return saveProducts(req, res);
   }
+
   let filePath = path.join(ROOT, url === '/' ? 'index.html' : url);
+
   if (path.extname(filePath) === '') {
-    if (!url.endsWith('/')) filePath += '.html';
-    else filePath = path.join(filePath, 'index.html');
+    filePath = url.endsWith('/') ? path.join(filePath, 'index.html') : filePath + '.html';
   }
+
   if (!filePath.startsWith(ROOT)) {
     res.writeHead(403);
-    res.end('Forbidden');
-    return;
+    return res.end('Forbidden');
   }
+
   if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
     res.writeHead(404);
-    res.end('Not found');
-    return;
+    return res.end('Not found');
   }
+
   serveFile(filePath, res);
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log('Local admin server: http://127.0.0.1:' + PORT);
+/* 🔑 IMPORTANT FIX: bind to 0.0.0.0 instead of 127.0.0.1 */
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Local admin server running at: http://0.0.0.0:${PORT}`);
   console.log('Edit a post, then use "Save to file (local)" in the admin panel.');
   console.log('Then commit and push to Git to publish.');
 });

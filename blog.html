@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="page-blog">
     <!-- Navigation -->
     <nav class="navbar" id="navbar">
         <div class="container">
@@ -171,7 +171,7 @@
                 }
                 var isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
                 var isAdmin = new URLSearchParams(window.location.search).get('admin') === '1';
-                var showAdminActions = isLocal || isAdmin;
+                var showAdminActions = isAdmin; /* Only when URL has ?admin=1 */
                 posts.forEach(function(post) {
                     var url = 'blog-post.html?slug=' + encodeURIComponent(post.slug || post.id);
                     var card = document.createElement('article');
@@ -267,11 +267,12 @@
             var createSaveStatus = document.getElementById('createSaveStatus');
             var adminHeroLinkWrap = document.getElementById('blogAdminHeroLinkWrap');
 
-            if ((isLocal || isAdmin) && adminCreateLinkWrap) {
+            /* Only show admin UI when ?admin=1 (not for localhost-only visitors) */
+            if (isAdmin && adminCreateLinkWrap) {
                 adminCreateLinkWrap.style.display = 'block';
             }
 
-            if ((isLocal || isAdmin) && adminHeroLinkWrap) {
+            if (isAdmin && adminHeroLinkWrap) {
                 adminHeroLinkWrap.style.display = 'block';
             }
 
