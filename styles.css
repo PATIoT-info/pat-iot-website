@@ -3083,3 +3083,325 @@ body {
     }
 }
 
+/* ============================================
+   COMPREHENSIVE MOBILE OVERHAUL
+   Targets: phones up to 768px wide
+   ============================================ */
+
+@media (max-width: 768px) {
+
+    /* --- Navbar --- */
+    .logo-img {
+        height: 52px;
+    }
+    .footer-section .logo-img {
+        height: 64px;
+    }
+    .nav-wrapper {
+        padding: 0.4rem 0;
+    }
+
+    /* --- Hero Section --- */
+    .hero {
+        min-height: 85vh;
+    }
+    .hero-content {
+        margin-left: 0;
+        padding: 1.25rem 1rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .hero-title {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    .hero-subtitle {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .hero-buttons {
+        align-items: center;
+        width: 100%;
+    }
+    .hero-buttons-row {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .hero-buttons-row .btn,
+    .btn-brochure {
+        width: 100%;
+        max-width: 280px;
+        justify-content: center;
+    }
+    .scroll-indicator {
+        display: none;
+    }
+
+    /* --- Section Spacing --- */
+    .products-section,
+    .services,
+    .warranty-section {
+        padding: 3rem 0;
+    }
+    .pat-app-section {
+        padding: 3rem 0;
+    }
+    .contact {
+        padding: 3rem 0;
+    }
+    .clients-section {
+        padding: 2.5rem 0;
+    }
+    .product-gallery-section {
+        padding: 3rem 0;
+    }
+    .section-header {
+        margin-bottom: 1.5rem;
+    }
+    .section-title {
+        font-size: 1.6rem;
+    }
+    .section-subtitle {
+        font-size: 0.95rem;
+    }
+
+    /* --- Products Scroll --- */
+    .products-scroll-container {
+        margin-top: 1.5rem;
+    }
+    .product-card {
+        min-width: 240px;
+        max-width: 240px;
+    }
+    .product-image {
+        height: 175px;
+    }
+    .product-label {
+        font-size: 1rem;
+        padding: 0.75rem 1rem 0.4rem;
+    }
+    .product-caption {
+        font-size: 0.85rem;
+        padding: 0 1rem 1rem;
+    }
+    .scroll-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    /* --- Services Grid --- */
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    .service-card {
+        padding: 1.25rem;
+    }
+    .service-image {
+        height: 180px;
+    }
+    .service-card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+    .service-card p {
+        font-size: 0.9rem;
+    }
+
+    /* --- PAT App Section --- */
+    .pat-app-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    .pat-app-content .pat-app-image {
+        order: -1;
+    }
+    .pat-app-img {
+        max-height: 260px;
+        width: auto;
+        margin: 0 auto;
+        display: block;
+    }
+    .pat-app-text p {
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+
+    /* --- Video Modes --- */
+    .video-modes-section {
+        height: 55vh;
+        min-height: 320px;
+    }
+
+    /* --- About Section --- */
+    .about-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    .about-text p {
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+    .about-image-img {
+        height: 240px;
+        width: 100%;
+        object-fit: cover;
+        border-radius: 0.75rem;
+    }
+
+    /* --- Clients --- */
+    .client-logo {
+        width: 150px;
+        height: 75px;
+    }
+    .clients-track {
+        gap: 2rem;
+        animation-duration: 28s;
+    }
+
+    /* --- Gallery --- */
+    .gallery-item {
+        min-width: 240px;
+        max-width: 240px;
+        height: 240px;
+    }
+    .gallery-scroll-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+    }
+
+    /* --- Warranty --- */
+    .warranty-section {
+        padding: 3rem 0;
+    }
+    .warranty-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    .warranty-info {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    .warranty-card {
+        padding: 1.25rem;
+    }
+    .warranty-terms {
+        padding: 1.25rem;
+    }
+    .warranty-terms h3 {
+        font-size: 1.2rem;
+    }
+    .warranty-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    /* --- Contact --- */
+    .contact-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    .contact-box {
+        position: relative;
+        top: 0;
+        order: -1;
+    }
+    .contact-form {
+        padding: 0;
+    }
+    .form-group input,
+    .form-group textarea {
+        font-size: 16px; /* prevents iOS zoom */
+        padding: 0.85rem;
+    }
+
+    /* --- Footer --- */
+    .footer {
+        padding: 2.5rem 0 1.5rem;
+    }
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .footer-section {
+        text-align: center;
+    }
+    .footer-section ul {
+        padding: 0;
+    }
+    .social-links {
+        justify-content: center;
+    }
+    .newsletter-form {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .newsletter-form input,
+    .newsletter-form .btn {
+        width: 100%;
+        max-width: 320px;
+        margin: 0 auto;
+    }
+    .footer-bottom {
+        text-align: center;
+        font-size: 0.85rem;
+    }
+
+    /* --- Prevent horizontal overflow --- */
+    section,
+    .container {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+}
+
+/* Extra small phones (< 400px) */
+@media (max-width: 400px) {
+    .hero-title {
+        font-size: 1.6rem;
+    }
+    .hero-subtitle {
+        font-size: 0.9rem;
+    }
+    .section-title {
+        font-size: 1.4rem;
+    }
+    .product-card {
+        min-width: 200px;
+        max-width: 200px;
+    }
+    .product-image {
+        height: 150px;
+    }
+    .gallery-item {
+        min-width: 200px;
+        max-width: 200px;
+        height: 200px;
+    }
+    .logo-img {
+        height: 44px;
+    }
+    .video-modes-section {
+        height: 45vh;
+        min-height: 260px;
+    }
+    .about-image-img {
+        height: 200px;
+    }
+    .container {
+        padding: 0 12px;
+    }
+}
