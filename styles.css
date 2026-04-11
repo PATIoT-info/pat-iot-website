@@ -343,6 +343,28 @@ body {
     }
 }
 
+/* Mobile play overlay for hero video */
+.mobile-play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    pointer-events: none; /* allow touches to pass through except the button */
+    background: rgba(0,0,0,0.35);
+}
+.mobile-play-btn {
+    background: rgba(255,255,255,0.95);
+    border: none;
+    padding: 0.8rem 1.2rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    pointer-events: auto; /* button should receive clicks */
+}
+
 /* Stacked hero layers: opacity controlled by script for crossfade; higher index = on top */
 .hero-video-section .hero-video.hero-video-layer {
     opacity: 0;

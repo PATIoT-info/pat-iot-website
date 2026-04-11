@@ -256,7 +256,7 @@ function initGalleryScroll() {
     window.addEventListener('resize', updateGalleryButtons);
 }
 
-// Lightbox Functionality
+// Lightbox Functionality (disabled - gallery images are not clickable)
 function initLightbox() {
     const lightbox = document.getElementById('lightbox');
     const lightboxImage = document.getElementById('lightboxImage');
@@ -264,7 +264,7 @@ function initLightbox() {
     const lightboxPrev = document.getElementById('lightboxPrev');
     const lightboxNext = document.getElementById('lightboxNext');
     const lightboxCounter = document.getElementById('lightboxCounter');
-    
+
     if (!lightbox || !lightboxImage) return;
     
     let currentImageIndex = 0;
@@ -275,34 +275,14 @@ function initLightbox() {
     function refreshImageSources() {
         galleryImages = Array.from(document.querySelectorAll('.gallery-image'));
         imageSources = [];
-        
-        console.log('Lightbox: Refreshing sources, found', galleryImages.length, 'gallery images');
-        
-        galleryImages.forEach((img, idx) => {
-            // Try multiple ways to get the source
-            const srcAttr = img.getAttribute('src');
-            const srcResolved = img.src;
-            
-            // Prefer resolved src, fallback to attribute
-            const src = srcResolved || srcAttr;
-            
-            console.log(`Lightbox: Image ${idx}:`, {
-                'src attribute': srcAttr,
-                'resolved src': srcResolved,
-                'using': src
-            });
-            
+
+        galleryImages.forEach((img) => {
+            const src = img.src || img.getAttribute('src');
             if (src && src.trim() && !src.includes('data:image') && src !== '' && src !== window.location.href) {
-                // Use resolved URL if available, otherwise use attribute
-                const finalSrc = srcResolved || src;
-                imageSources.push(finalSrc);
-                console.log('Lightbox: ✓ Collected image source:', finalSrc);
-            } else {
-                console.warn('Lightbox: ✗ Skipped invalid image source:', src);
+                imageSources.push(src);
             }
         });
         
-        console.log('Lightbox: Total images collected:', imageSources.length, 'sources:', imageSources);
         updateNavButtons();
     }
     
@@ -311,28 +291,13 @@ function initLightbox() {
         // Refresh sources before opening
         refreshImageSources();
         
-        console.log('Lightbox: openLightbox called with index:', index, 'sources:', imageSources);
-        
-        if (imageSources.length === 0) {
-            console.error('Lightbox: No images available! Gallery images:', galleryImages.length);
-            alert('No images available in gallery. Please check console for details.');
-            return;
-        }
-        
-        if (index < 0 || index >= imageSources.length) {
-            console.error('Lightbox: Invalid index', index, 'valid range: 0-' + (imageSources.length - 1));
-            return;
-        }
-        
+        if (imageSources.length === 0) return;
+        if (index < 0 || index >= imageSources.length) return;
+
         currentImageIndex = index;
         const imageSrc = imageSources[currentImageIndex];
-        
-        if (!imageSrc || imageSrc.trim() === '') {
-            console.error('Lightbox: Empty image source at index', index);
-            return;
-        }
-        
-        console.log('Lightbox: Opening image', currentImageIndex, 'src:', imageSrc);
+
+        if (!imageSrc || imageSrc.trim() === '') return;
         
         // Show lightbox FIRST (before setting image src)
         lightbox.classList.add('active');
@@ -361,236 +326,38 @@ function initLightbox() {
         
         // Set image source with error handling
         lightboxImage.onload = () => {
-            console.log('Lightbox: Image onload fired!', {
-                src: imageSrc,
-                naturalWidth: lightboxImage.naturalWidth,
-                naturalHeight: lightboxImage.naturalHeight,
-                width: lightboxImage.width,
-                height: lightboxImage.height,
-                complete: lightboxImage.complete,
-                offsetWidth: lightboxImage.offsetWidth,
-                offsetHeight: lightboxImage.offsetHeight
-            });
-            
-            // CRITICAL: Force visibility with inline styles (highest priority)
-            lightboxImage.setAttribute('style', 
-                'display: block !important; ' +
-                'visibility: visible !important; ' +
-                'opacity: 1 !important; ' +
-                'width: auto !important; ' +
-                'height: auto !important; ' +
-                'max-width: 100% !important; ' +
-                'max-height: 90vh !important; ' +
-                'position: relative !important; ' +
-                'z-index: 10002 !important;'
-            );
-            
-            // Also set via style object as backup
-            lightboxImage.style.cssText = 
-                'display: block !important; ' +
-                'visibility: visible !important; ' +
-                'opacity: 1 !important; ' +
-                'width: auto !important; ' +
-                'height: auto !important; ' +
-                'max-width: 100% !important; ' +
-                'max-height: 90vh !important;';
-            
-            // Remove any error message if image loads successfully
-            const existingError = content ? content.querySelector('.lightbox-error') : null;
-            if (existingError) {
-                existingError.remove();
-            }
-            
-            // Ensure image has dimensions
-            if (lightboxImage.naturalWidth === 0 || lightboxImage.naturalHeight === 0) {
-                console.error('Lightbox: Image has zero dimensions!', {
-                    naturalWidth: lightboxImage.naturalWidth,
-                    naturalHeight: lightboxImage.naturalHeight,
-                    src: imageSrc
-                });
-                // Don't show alert - just log
-                console.warn('Image loaded but has zero dimensions. Check image file.');
-            }
-            
-            // Force content visibility
-            if (content) {
-                content.setAttribute('style', 
-                    'display: flex !important; ' +
-                    'visibility: visible !important; ' +
-                    'opacity: 1 !important; ' +
-                    'max-width: 90% !important; ' +
-                    'max-height: 90% !important;'
-                );
-            }
-            
-            // Force lightbox visibility
-            lightbox.setAttribute('style', 
-                'display: flex !important; ' +
-                'opacity: 1 !important; ' +
-                'visibility: visible !important;'
-            );
-            
-            // Verify it's actually visible
-            setTimeout(() => {
-                const rect = lightboxImage.getBoundingClientRect();
-                const computed = window.getComputedStyle(lightboxImage);
-                console.log('Lightbox: Final visibility check:', {
-                    boundingRect: rect,
-                    computedDisplay: computed.display,
-                    computedVisibility: computed.visibility,
-                    computedOpacity: computed.opacity,
-                    computedWidth: computed.width,
-                    computedHeight: computed.height,
-                    naturalWidth: lightboxImage.naturalWidth,
-                    naturalHeight: lightboxImage.naturalHeight
-                });
-                
-                if (rect.width === 0 || rect.height === 0) {
-                    console.error('Lightbox: Image bounding rect is zero!', rect);
-                    console.warn('Image is not visible. Check console for details.');
-                    // Try to show error message
-                    const errorMsg = document.createElement('div');
-                    errorMsg.style.cssText = 
-                        'position: absolute; ' +
-                        'top: 50%; ' +
-                        'left: 50%; ' +
-                        'transform: translate(-50%, -50%); ' +
-                        'color: white; ' +
-                        'text-align: center; ' +
-                        'padding: 2rem; ' +
-                        'background: rgba(0, 0, 0, 0.7); ' +
-                        'border-radius: 0.5rem; ' +
-                        'z-index: 10003;';
-                    errorMsg.innerHTML = '<p>Image not visible</p>';
-                    errorMsg.className = 'lightbox-error';
-                    if (content) {
-                        content.appendChild(errorMsg);
-                    }
-                }
-            }, 50);
-            
-            console.log('Lightbox: Image loaded successfully:', imageSrc, 'dimensions:', lightboxImage.naturalWidth, 'x', lightboxImage.naturalHeight);
-        };
-        
-        lightboxImage.onerror = () => {
-            console.error('Lightbox: Failed to load image:', imageSrc);
-            
-            // Show a placeholder/error message instead of alert
             lightboxImage.style.opacity = '1';
-            lightboxImage.style.display = 'block';
-            lightboxImage.style.visibility = 'visible';
-            lightboxImage.alt = 'Image failed to load: ' + imageSrc;
-            
-            // Create a visual error indicator
+            const existingError = content ? content.querySelector('.lightbox-error') : null;
+            if (existingError) existingError.remove();
+        };
+
+        lightboxImage.onerror = () => {
+            lightboxImage.style.opacity = '1';
             const errorMsg = document.createElement('div');
-            errorMsg.style.cssText = 
-                'position: absolute; ' +
-                'top: 50%; ' +
-                'left: 50%; ' +
-                'transform: translate(-50%, -50%); ' +
-                'color: white; ' +
-                'text-align: center; ' +
-                'padding: 2rem; ' +
-                'background: rgba(0, 0, 0, 0.7); ' +
-                'border-radius: 0.5rem; ' +
-                'z-index: 10003;';
-            errorMsg.innerHTML = 
+            errorMsg.style.cssText =
+                'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); ' +
+                'color: white; text-align: center; padding: 2rem; ' +
+                'background: rgba(0,0,0,0.7); border-radius: 0.5rem; z-index: 10003;';
+            errorMsg.innerHTML =
                 '<i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>' +
-                '<p style="margin: 0; font-size: 1.1rem;">Image not found</p>' +
-                '<p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; opacity: 0.8;">' + 
-                imageSrc.split('/').pop() + '</p>';
-            
-            // Remove any existing error message
-            const existingError = content.querySelector('.lightbox-error');
-            if (existingError) {
-                existingError.remove();
-            }
-            
+                '<p style="margin: 0; font-size: 1.1rem;">Image not found</p>';
             errorMsg.className = 'lightbox-error';
-            if (content) {
-                content.appendChild(errorMsg);
-            }
-            
-            // Don't show alert - just log to console
-            console.warn('Lightbox: Image failed to load. Showing error message in lightbox.');
+            const existingError = content ? content.querySelector('.lightbox-error') : null;
+            if (existingError) existingError.remove();
+            if (content) content.appendChild(errorMsg);
         };
         
-        // Set the source - this will trigger load or error
-        console.log('Lightbox: Setting image src to:', imageSrc);
-        
-        // Clear src first to force reload (important for same image)
-        if (lightboxImage.src) {
-            lightboxImage.src = '';
-            // Small delay to ensure browser processes the clear
-            setTimeout(() => {
-                lightboxImage.src = imageSrc;
-            }, 10);
-        } else {
-            // Set new src directly
-            lightboxImage.src = imageSrc;
-        }
-        
-        // If image is already loaded (cached), check and trigger onload
+        lightboxImage.src = imageSrc;
+
+        // If cached, trigger onload manually
         setTimeout(() => {
-            if (lightboxImage.complete && lightboxImage.naturalWidth > 0) {
-                console.log('Lightbox: Image was cached, triggering onload manually');
-                if (lightboxImage.onload) {
-                    lightboxImage.onload();
-                }
+            if (lightboxImage.complete && lightboxImage.naturalWidth > 0 && lightboxImage.onload) {
+                lightboxImage.onload();
             }
         }, 50);
-        
+
         updateCounter();
         updateNavButtons();
-        
-        // Debug: Check if lightbox is actually visible
-        setTimeout(() => {
-            const computedStyle = window.getComputedStyle(lightbox);
-            console.log('Lightbox visibility check:', {
-                display: computedStyle.display,
-                opacity: computedStyle.opacity,
-                visibility: computedStyle.visibility,
-                zIndex: computedStyle.zIndex,
-                hasActiveClass: lightbox.classList.contains('active'),
-                backgroundColor: computedStyle.backgroundColor
-            });
-            
-            const imgStyle = window.getComputedStyle(lightboxImage);
-            console.log('Image visibility check:', {
-                display: imgStyle.display,
-                opacity: imgStyle.opacity,
-                visibility: imgStyle.visibility,
-                width: imgStyle.width,
-                height: imgStyle.height,
-                maxWidth: imgStyle.maxWidth,
-                maxHeight: imgStyle.maxHeight,
-                src: lightboxImage.src,
-                complete: lightboxImage.complete,
-                naturalWidth: lightboxImage.naturalWidth,
-                naturalHeight: lightboxImage.naturalHeight,
-                offsetWidth: lightboxImage.offsetWidth,
-                offsetHeight: lightboxImage.offsetHeight
-            });
-            
-            const contentStyle = content ? window.getComputedStyle(content) : null;
-            if (contentStyle) {
-                console.log('Content visibility check:', {
-                    display: contentStyle.display,
-                    opacity: contentStyle.opacity,
-                    visibility: contentStyle.visibility,
-                    width: contentStyle.width,
-                    height: contentStyle.height
-                });
-            }
-        }, 100);
-        
-        // Fallback: if image doesn't load in 3 seconds, show error
-        setTimeout(() => {
-            if (lightboxImage.complete === false || lightboxImage.naturalWidth === 0) {
-                console.error('Lightbox: Image load timeout:', imageSrc);
-                lightboxImage.onerror();
-            }
-        }, 3000);
     }
     
     // Close lightbox
@@ -939,68 +706,15 @@ window.addEventListener('load', () => {
     document.body.classList.add('loaded');
 });
 
-// Video Background Management and Transitions
-const videoConfig = {
-    // Enable/disable videos for each section
-    hero: {
-        enabled: true,
-        videoId: 'heroVideo',
-        fadeOnScroll: true
-    },
-    services: {
-        enabled: false, // Set to true to enable video background
-        videoId: 'servicesVideo',
-        fadeOnScroll: true
-    },
-    about: {
-        enabled: false, // Set to true to enable video background
-        videoId: 'aboutVideo',
-        fadeOnScroll: true
-    },
-    solutions: {
-        enabled: false, // Set to true to enable video background
-        videoId: 'solutionsVideo',
-        fadeOnScroll: true
-    }
-};
-
-// Initialize videos
+// Initialize hero video visibility
 function initVideos() {
-    // Hero video: controlled by handleHeroVideoScroll (scroll-to-scrub on all devices)
     const heroVideo = document.getElementById('heroVideo');
     if (heroVideo) {
         heroVideo.style.opacity = '1';
         heroVideo.style.display = 'block';
         heroVideo.muted = true;
         heroVideo.playsInline = true;
-        // Scroll-to-scrub works on all devices now (desktop + mobile/tablet)
     }
-
-    // Section videos
-    Object.keys(videoConfig).forEach(section => {
-        if (section === 'hero') return;
-        
-        const config = videoConfig[section];
-        const video = document.getElementById(config.videoId);
-        
-        if (video) {
-            if (config.enabled) {
-                video.addEventListener('loadeddata', () => {
-                    video.play().catch(e => console.log('Video autoplay prevented:', e));
-                });
-                // Show video with fade-in
-                setTimeout(() => {
-                    video.classList.add('fade-in');
-                }, 100);
-            } else {
-                video.style.display = 'none';
-                const overlay = video.nextElementSibling;
-                if (overlay && overlay.classList.contains('section-video-overlay')) {
-                    overlay.style.display = 'none';
-                }
-            }
-        }
-    });
 }
 
 // Video scroll transitions
@@ -1060,12 +774,6 @@ function handleHeroVideoScroll() {
                              ('ontouchstart' in window) || 
                              (navigator.maxTouchPoints > 0);
     
-    console.log('Hero video scroll: Initializing', {
-        videoSrc: heroVideo.querySelector('source')?.src,
-        videoReadyState: heroVideo.readyState,
-        isMobileOrTablet: isMobileOrTablet
-    });
-
     let sectionTop = 0;
     let pinned = false;
     let videoEnded = false;
@@ -1170,7 +878,6 @@ function handleHeroVideoScroll() {
             heroVideo.currentTime = cachedDuration;
             heroVideo.playbackRate = 0; // Stop playback
             heroVideo.pause();
-            console.log('Hero video: Released, paused at end');
         }
         
         // Brief pause (1 second) to show completed video, then scroll to next section
@@ -1183,7 +890,6 @@ function handleHeroVideoScroll() {
     // Escape key to release pin
     document.addEventListener('keydown', (e) => {
         if ((e.key === 'Escape' || e.keyCode === 27) && pinned && !videoEnded) {
-            console.log('Hero video: Escape key pressed, releasing pin');
             releaseAndScrollNext();
         }
     });
@@ -1306,14 +1012,6 @@ function handleHeroVideoScroll() {
                     // Set playback rate: positive for forward (scroll down), negative for backward (scroll up)
                     playbackRate = scrollDirection * baseRate;
                     
-                    // Debug log more frequently to see what's happening
-                    if (Math.random() < 0.2) { // Log 20% of the time for debugging
-                        console.log('Hero video: Direction:', scrollDirection > 0 ? 'DOWN→FORWARD' : scrollDirection < 0 ? 'UP→BACKWARD' : 'STOP', 
-                                    'playbackRate:', playbackRate.toFixed(2), 
-                                    'currentTime:', heroVideo.currentTime.toFixed(2) + 's / ' + duration.toFixed(2) + 's',
-                                    'scrollDirection:', scrollDirection,
-                                    'lastScrollDelta:', lastScrollDelta);
-                    }
                 }
                 
                 // Set playback rate - handle forward and backward differently
@@ -1473,7 +1171,6 @@ function handleHeroVideoScroll() {
             // Release pin if scrolled past video section
             const videoHeight = cachedDuration > 0 ? cachedDuration * PIXELS_PER_SECOND : 2000;
             if (pinned && scrollY > sectionTop + videoHeight + 100) {
-                console.log('Hero video: User scrolled past video section, releasing pin');
                 releaseAndScrollNext();
                 lastScrollY = scrollY;
                 scrollRaf = null;
@@ -1508,13 +1205,11 @@ function handleHeroVideoScroll() {
                     }
                     pinned = true;
                     pinStartTime = Date.now();
-                    console.log('Hero video: Pinned! scrollY:', scrollY, 'sectionTop:', sectionTop, 'lastScrollY:', lastScrollY, 'readyState:', heroVideo.readyState, 'duration:', heroVideo.duration, 'isMobile:', isMobileOrTablet);
-                    
+
                     // Escape mechanism: auto-release after 30 seconds if stuck
                     if (escapeTimeout) clearTimeout(escapeTimeout);
                     escapeTimeout = setTimeout(() => {
                         if (pinned && !videoEnded) {
-                            console.warn('Hero video: Auto-releasing pin after timeout');
                             releaseAndScrollNext();
                         }
                     }, 30000); // 30 seconds
@@ -1532,77 +1227,50 @@ function handleHeroVideoScroll() {
                     // Initialize video for scrubbing - SIMPLIFIED VERSION
                     function initVideoForScrubbing() {
                         if (!pinned || videoEnded) return;
-                        
-                        console.log('Hero video: Initializing for scrubbing, readyState:', heroVideo.readyState);
-                        
-                        // Load video if needed
+
                         if (heroVideo.readyState < 2) {
-                            console.log('Hero video: Loading video...');
                             heroVideo.load();
                         }
-                        
-                        // Wait for video to be ready, then start playing
+
                         function startScrubbing() {
                             if (!pinned || videoEnded) return;
-                            
-                            console.log('Hero video: Starting scrubbing, readyState:', heroVideo.readyState, 'duration:', heroVideo.duration);
-                            
+
                             if (heroVideo.readyState >= 2 && heroVideo.duration && isFinite(heroVideo.duration)) {
                                 cachedDuration = heroVideo.duration;
-                                
-                                // Start video playing (muted) - will be controlled by scroll direction
                                 heroVideo.currentTime = 0;
-                                heroVideo.playbackRate = 0; // Start paused, will be set by scroll
-                                
-                                // Ensure video is muted
+                                heroVideo.playbackRate = 0;
                                 heroVideo.muted = true;
-                                
+
                                 const playPromise = heroVideo.play();
-                                
                                 if (playPromise !== undefined) {
                                     playPromise.then(() => {
-                                        console.log('Hero video: ✅ Playing for scrubbing, duration:', cachedDuration, 'currentTime:', heroVideo.currentTime, 'playbackRate:', heroVideo.playbackRate, 'paused:', heroVideo.paused, 'readyState:', heroVideo.readyState);
-                                // Ensure video is visible
-                                heroVideo.style.opacity = '1';
-                                heroVideo.style.display = 'block';
-                                heroVideo.style.visibility = 'visible';
-                                        // Start update loop
+                                        heroVideo.style.opacity = '1';
+                                        heroVideo.style.display = 'block';
+                                        heroVideo.style.visibility = 'visible';
                                         if (!smoothUpdateRaf) {
                                             lastFrameTime = performance.now();
                                             smoothUpdateRaf = requestAnimationFrame(smoothVideoUpdate);
                                         }
-                                    }).catch((e) => {
-                                        console.error('Hero video: ❌ Play failed:', e);
-                                        // Try to start loop anyway - video might still work
+                                    }).catch(() => {
                                         if (!smoothUpdateRaf) {
                                             lastFrameTime = performance.now();
                                             smoothUpdateRaf = requestAnimationFrame(smoothVideoUpdate);
                                         }
                                     });
                                 } else {
-                                    // Play promise not supported, try anyway
-                                    console.log('Hero video: Play promise not supported, starting loop');
                                     if (!smoothUpdateRaf) {
                                         lastFrameTime = performance.now();
                                         smoothUpdateRaf = requestAnimationFrame(smoothVideoUpdate);
                                     }
                                 }
                             } else {
-                                // Wait for video to load
-                                console.log('Hero video: Waiting for video to load...');
                                 setTimeout(startScrubbing, 100);
                             }
                         }
-                        
-                        // Try to start immediately if ready
+
                         if (heroVideo.readyState >= 2 && heroVideo.duration && isFinite(heroVideo.duration)) {
-                            console.log('Hero video: Video ready, starting scrubbing immediately');
                             startScrubbing();
                         } else {
-                            // Wait for video events - but also check if already loaded
-                            console.log('Hero video: Waiting for video events, current readyState:', heroVideo.readyState);
-                            
-                            // If video already has metadata but not readyState 2, wait a bit
                             if (heroVideo.readyState >= 1 && heroVideo.duration) {
                                 setTimeout(() => {
                                     if (pinned && !videoEnded && heroVideo.readyState >= 2) {
@@ -1610,12 +1278,8 @@ function handleHeroVideoScroll() {
                                     }
                                 }, 100);
                             }
-                            
                             const onReady = () => {
-                                console.log('Hero video: Video ready event fired, readyState:', heroVideo.readyState);
-                                if (pinned && !videoEnded) {
-                                    startScrubbing();
-                                }
+                                if (pinned && !videoEnded) startScrubbing();
                             };
                             heroVideo.addEventListener('loadedmetadata', onReady, { once: true });
                             heroVideo.addEventListener('canplay', onReady, { once: true });
@@ -1703,11 +1367,6 @@ function handleHeroVideoScroll() {
             scrollDirection = e.deltaY > 0 ? 1 : (e.deltaY < 0 ? -1 : 0);
             lastScrollDelta = Math.abs(e.deltaY); // Store magnitude for speed calculation (always positive)
             
-            // Debug: log scroll direction (reduced frequency)
-            if (scrollDirection !== 0 && Math.random() < 0.1) {
-                console.log('Hero video: Wheel scroll', scrollDirection > 0 ? 'DOWN (forward)' : 'UP (backward)', 'deltaY:', e.deltaY, 'speed:', lastScrollDelta);
-            }
-            
             // Store scroll delta for playback rate calculation
             accumulatedScroll = Math.max(0, Math.min(duration * PIXELS_PER_SECOND, accumulatedScroll + e.deltaY));
             targetVideoTime = Math.max(0, Math.min(duration, accumulatedScroll / PIXELS_PER_SECOND));
@@ -1724,8 +1383,6 @@ function handleHeroVideoScroll() {
                 targetVideoTime = duration;
                 accumulatedScroll = maxScroll;
                 heroVideo.currentTime = duration;
-                console.log('Hero video: Completed via scroll, releasing pin');
-                // Video completed - release and scroll to next section
                 releaseAndScrollNext();
                 return;
             }
@@ -1761,7 +1418,6 @@ function handleHeroVideoScroll() {
                 if (scrollY >= sectionTop - 10) {
                     pinned = true;
                     pinStartTime = Date.now();
-                    console.log('Hero video: Pinned via touch start');
                     // Initialize video for scrubbing
                     if (heroVideo.readyState >= 2 && cachedDuration <= 0 && heroVideo.duration) {
                         cachedDuration = heroVideo.duration;
@@ -1790,7 +1446,6 @@ function handleHeroVideoScroll() {
             if (!pinned && scrollY >= sectionTop - 10) {
                 pinned = true;
                 pinStartTime = Date.now();
-                console.log('Hero video: Pinned via touch move');
                 // Initialize video if needed
                 if (heroVideo.readyState >= 2 && cachedDuration <= 0 && heroVideo.duration) {
                     cachedDuration = heroVideo.duration;
@@ -1891,41 +1546,13 @@ function handleHeroVideoScroll() {
         // Cache duration when metadata loads
         if (heroVideo.duration && isFinite(heroVideo.duration)) {
             cachedDuration = heroVideo.duration;
-            console.log('Hero video: ✅ Metadata loaded, duration:', cachedDuration, 'readyState:', heroVideo.readyState, 'src:', heroVideo.src || heroVideo.querySelector('source')?.src);
-        } else {
-            console.warn('Hero video: ⚠️ Metadata loaded but no valid duration', {
-                readyState: heroVideo.readyState,
-                duration: heroVideo.duration,
-                src: heroVideo.src || heroVideo.querySelector('source')?.src
-            });
         }
     });
-    
-    // Also listen for canplay to ensure video is ready
+
     heroVideo.addEventListener('canplay', () => {
         updateSectionTop();
         if (heroVideo.duration && isFinite(heroVideo.duration)) {
             cachedDuration = heroVideo.duration;
-            console.log('Hero video: ✅ Can play, duration:', cachedDuration, 'readyState:', heroVideo.readyState);
-        }
-    });
-
-    heroVideo.addEventListener('error', (e) => {
-        console.error('Hero video: ❌ Failed to load:', e);
-        console.error('Video error details:', {
-            error: heroVideo.error,
-            errorCode: heroVideo.error?.code,
-            errorMessage: heroVideo.error?.message,
-            networkState: heroVideo.networkState,
-            readyState: heroVideo.readyState,
-            src: heroVideo.src || heroVideo.querySelector('source')?.src,
-            currentSrc: heroVideo.currentSrc
-        });
-        
-        // Check if video file exists
-        const videoSrc = heroVideo.src || heroVideo.querySelector('source')?.src;
-        if (videoSrc) {
-            console.error('Hero video: Check if file exists at:', videoSrc);
         }
     });
 
@@ -2036,92 +1663,81 @@ function initHeroVideoSteps() {
         heroScrubArrow.style.transform = `translate(-50%, ${travel * overall}px)`;
     }
 
-    // Mobile / tablet: scrub sequence based on scroll position (no autoplay)
+    // Mobile / tablet: try autoplay; if blocked show a tap-to-play overlay and then play full sequence
     if (isTouchDevice) {
-        let mobileRaf = null;
-        let totalDuration = 0;
+        const firstVideo = heroVideos[0];
+        let mobileSequencePlaying = false;
 
-        function updateDurations() {
-            totalDuration = 0;
-            for (let i = 0; i < heroVideos.length; i++) {
-                const d = clipDurations[i] || heroVideos[i].duration || 0;
-                clipDurations[i] = d;
-                totalDuration += (isFinite(d) ? d : 0);
-            }
+        // Create overlay UI
+        function createMobileOverlay() {
+            let overlay = document.querySelector('.mobile-play-overlay');
+            if (overlay) return overlay;
+            overlay = document.createElement('div');
+            overlay.className = 'mobile-play-overlay';
+            overlay.innerHTML = '<button class=\"mobile-play-btn\" aria-label=\"Play hero videos\">Play</button>';
+            overlay.addEventListener('click', (e) => {
+                e.preventDefault();
+                overlay.style.display = 'none';
+                startMobileSequence();
+            }, { passive: false });
+            videoSection.appendChild(overlay);
+            return overlay;
         }
 
-        function mobileUpdateFromScroll() {
-            mobileRaf = null;
-            updateDurations();
-            if (!totalDuration || totalDuration <= 0) return;
-
-            updateSectionTop();
-            const scrollY = window.pageYOffset || window.scrollY || 0;
-            const viewportH = window.innerHeight || 1;
-            const sectionH = videoSection.offsetHeight || viewportH;
-            const start = sectionTop;
-            const end = Math.max(start + 1, (sectionTop + sectionH) - viewportH);
-
-            let raw = (scrollY - start) / (end - start);
-            // Amplify to make mobile scrubbing faster / require fewer swipes
-            const speedFactor = 2; // adjust: 1 = linear, 2 = faster
-            let progress = Math.max(0, Math.min(1, raw * speedFactor));
-
-            // Map progress to overall time across all clips
-            const overallTime = progress * totalDuration;
-            // Find which clip and time within that clip
-            let acc = 0;
-            let targetIndex = 0;
-            let timeInClip = 0;
-            for (let i = 0; i < heroVideos.length; i++) {
-                const d = clipDurations[i] || heroVideos[i].duration || 0;
-                if (overallTime <= acc + d || i === heroVideos.length - 1) {
-                    targetIndex = i;
-                    timeInClip = Math.max(0, Math.min(d || 0, overallTime - acc));
-                    break;
-                }
-                acc += d;
-            }
-
-            // Seek target clip and pause (so it holds frame)
-            const targetVideo = heroVideos[targetIndex];
-            try {
-                if (Math.abs((targetVideo.currentTime || 0) - timeInClip) > 0.03) {
-                    targetVideo.currentTime = timeInClip;
-                }
-            } catch (e) {}
-
-            // Ensure only target video is visible
-            fadeToVideo(targetIndex);
-            // update progress UI if present
-            updateArrow(targetIndex, timeInClip);
+        function removeMobileOverlay() {
+            const overlay = document.querySelector('.mobile-play-overlay');
+            if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
         }
 
-        function onMobileScroll() {
-            if (mobileRaf) return;
-            mobileRaf = requestAnimationFrame(mobileUpdateFromScroll);
-        }
-
-        // Observe metadata so we have durations
-        heroVideos.forEach(v => {
-            v.addEventListener('loadedmetadata', () => { updateDurations(); }, { once: true });
-            v.addEventListener('canplay', () => { updateDurations(); }, { once: true });
-        });
-
-        // Initial sync when section becomes visible
-        const io = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    // sync once
-                    setTimeout(onMobileScroll, 120);
-                }
+        function startMobileSequence() {
+            if (mobileSequencePlaying) return;
+            mobileSequencePlaying = true;
+            locked = true;
+            // Play clips sequentially; do NOT add global touch/wheel preventDefault here
+            playClip(0, () => {
+                if (!mobileSequencePlaying) return stopMobileSequence();
+                playClip(1, () => {
+                    if (!mobileSequencePlaying) return stopMobileSequence();
+                    playClip(2, () => {
+                        mobileSequencePlaying = false;
+                        locked = false;
+                        stopMobileSequence();
+                        // after sequence, scroll to next section gently
+                        setTimeout(() => { goToNextSection(); }, 500);
+                    });
+                });
             });
-        }, { threshold: 0.2 });
+        }
 
-        io.observe(videoSection);
+        function stopMobileSequence() {
+            mobileSequencePlaying = false;
+            try { heroVideos.forEach(v => { v.pause(); }); } catch (e) {}
+            locked = false;
+            removeMobileOverlay();
+        }
 
-        window.addEventListener('scroll', onMobileScroll, { passive: true });
-        window.addEventListener('resize', onMobileScroll, { passive: true });
+        // Try to autoplay muted first
+        try {
+            // Ensure muted and playsInline are set
+            heroVideos.forEach(v => { v.muted = true; v.playsInline = true; v.preload = 'auto'; });
+            const playPromise = firstVideo.play();
+            if (playPromise && playPromise.then) {
+                playPromise.then(() => {
+                    // autoplay succeeded; pause and start sequence so playClip can handle it
+                    firstVideo.pause();
+                    startMobileSequence();
+                }).catch(() => {
+                    // autoplay blocked — show overlay for user to tap
+                    createMobileOverlay();
+                });
+            } else {
+                // no promise, start sequence
+                firstVideo.pause();
+                startMobileSequence();
+            }
+        } catch (e) {
+            createMobileOverlay();
+        }
 
         return;
     }
@@ -2145,8 +1761,12 @@ function initHeroVideoSteps() {
     }
 
     function fadeToVideo(index) {
+        // Ensure the active video is on top to avoid any stacking/overlay issues (especially for first clip)
         heroVideos.forEach((video, i) => {
             video.style.opacity = i === index ? '1' : '0';
+            try {
+                video.style.zIndex = (i === index) ? '100' : '0';
+            } catch (e) {}
         });
         currentIndex = index;
     }
@@ -2264,6 +1884,49 @@ function initHeroVideoSteps() {
         }
     }
 
+    // Play a clip in reverse (smooth seek backwards) then call onDone
+    function playClipReverse(index, onDone, reverseMs = 900) {
+        const video = heroVideos[index];
+        isPlaying = true;
+
+        const startReverse = () => {
+            const duration = clipDurations[index] || video.duration || 0;
+            const startTime = Math.max(0, duration - 0.02);
+            fadeToVideo(index);
+            try {
+                video.pause();
+                video.currentTime = startTime;
+            } catch (e) {}
+
+            let lastTs = performance.now();
+            let rafId = null;
+            const step = (now) => {
+                const elapsed = now - lastTs;
+                lastTs = now;
+                const dec = (duration / Math.max(1, reverseMs)) * elapsed;
+                let newT = Math.max(0, (video.currentTime || 0) - dec);
+                try {
+                    video.currentTime = newT;
+                } catch (e) {}
+                if (newT <= 0.02) {
+                    try { video.currentTime = 0; } catch (e) {}
+                    video.pause();
+                    isPlaying = false;
+                    if (typeof onDone === 'function') onDone();
+                    return;
+                }
+                rafId = requestAnimationFrame(step);
+            };
+            rafId = requestAnimationFrame(step);
+        };
+
+        if (video.readyState >= 2) {
+            startReverse();
+        } else {
+            video.addEventListener('canplay', startReverse, { once: true });
+            video.load();
+        }
+    }
     function goToVideoTop() {
         // smooth pin to top; ignore extra wheel events while animating
         scrollingToPin = true;
@@ -2324,21 +1987,21 @@ function initHeroVideoSteps() {
                 return;
             }
         } else if (e.deltaY < 0) { // scroll up – show previous video at last frame (no play)
-            // From step 4 → show video 3 at last frame
+            // From step 4 → play video 3 in reverse smoothly, then set step to 3
             if (currentStep === 4 && !isPlaying) {
-                showLastFrame(2, () => { currentStep = 3; });
+                playClipReverse(2, () => { currentStep = 3; });
                 e.preventDefault();
                 return;
             }
-            // From step 3 → show video 2 at last frame
+            // From step 3 → play video 2 in reverse smoothly, then set step to 2
             if (currentStep === 3 && !isPlaying) {
-                showLastFrame(1, () => { currentStep = 2; });
+                playClipReverse(1, () => { currentStep = 2; });
                 e.preventDefault();
                 return;
             }
-            // From step 2 → show video 1 at last frame
+            // From step 2 → play video 1 in reverse smoothly, then set step to 1
             if (currentStep === 2 && !isPlaying) {
-                showLastFrame(0, () => { currentStep = 1; });
+                playClipReverse(0, () => { currentStep = 1; });
                 e.preventDefault();
                 return;
             }
