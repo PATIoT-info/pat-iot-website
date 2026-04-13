@@ -132,7 +132,7 @@ async function loadProducts() {
     if (!productsWrapper && !galleryWrapper) return;
     
     try {
-        const response = await fetch('data/products.json');
+        const response = await fetch('data/products.json?v=' + Date.now());
         if (!response.ok) {
             console.warn('products.json not found, using fallback');
             return;
