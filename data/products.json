@@ -20,8 +20,7 @@
       "caption": "Pulse Width Module for color control",
       "image": "images/products/pwm-module.jpg",
       "order": 3
-    }
-    ,
+    },
     {
       "id": "4",
       "name": "Curtain Module",
@@ -31,125 +30,21 @@
     }
   ],
   "gallery": [
-    {
-      "id": "1",
-      "image": "images/gallery/product-1.jpg",
-      "alt": "Product Gallery Image 1",
-      "order": 1
-    },
-    {
-      "id": "2",
-      "image": "images/gallery/product-2.jpg",
-      "alt": "Product Gallery Image 2",
-      "order": 2
-    },
-    {
-      "id": "3",
-      "image": "images/gallery/product-3.jpg",
-      "alt": "Product Gallery Image 3",
-      "order": 3
-    },
-    {
-      "id": "4",
-      "image": "images/gallery/product-4.jpg",
-      "alt": "Product Gallery Image 4",
-      "order": 4
-    },
-    {
-      "id": "5",
-      "image": "images/gallery/product-5.jpg",
-      "alt": "Product Gallery Image 5",
-      "order": 5
-    },
-    {
-      "id": "6",
-      "image": "images/gallery/product-6.jpg",
-      "alt": "Product Gallery Image 6",
-      "order": 6
-    },
-    {
-      "id": "7",
-      "image": "images/gallery/product-7.jpg",
-      "alt": "Product Gallery Image 7",
-      "order": 7
-    },
-    {
-      "id": "8",
-      "image": "images/gallery/product-8.jpg",
-      "alt": "Product Gallery Image 8",
-      "order": 8
-    },
-    {
-      "id": "9",
-      "image": "images/gallery/product-9.jpg",
-      "alt": "Product Gallery Image 9",
-      "order": 9
-    },
-    {
-      "id": "10",
-      "image": "images/gallery/product-10.jpg",
-      "alt": "Product Gallery Image 10",
-      "order": 10
-    },
-    {
-      "id": "11",
-      "image": "images/gallery/product-11.jpg",
-      "alt": "Product Gallery Image 11",
-      "order": 11
-    },
-    {
-      "id": "12",
-      "image": "images/gallery/product-12.jpg",
-      "alt": "Product Gallery Image 12",
-      "order": 12
-    },
-    {
-      "id": "13",
-      "image": "images/gallery/product-13.jpg",
-      "alt": "Product Gallery Image 13",
-      "order": 13
-    },
-    {
-      "id": "14",
-      "image": "images/gallery/product-14.jpg",
-      "alt": "Product Gallery Image 14",
-      "order": 14
-    },
-    {
-      "id": "15",
-      "image": "images/gallery/product-15.jpg",
-      "alt": "Product Gallery Image 15",
-      "order": 15
-    },
-    {
-      "id": "16",
-      "image": "images/gallery/product-16.jpg",
-      "alt": "Product Gallery Image 16",
-      "order": 16
-    },
-    {
-      "id": "17",
-      "image": "images/gallery/product-17.jpg",
-      "alt": "Product Gallery Image 17",
-      "order": 17
-    },
-    {
-      "id": "18",
-      "image": "images/gallery/product-18.jpg",
-      "alt": "Product Gallery Image 18",
-      "order": 18
-    },
-    {
-      "id": "19",
-      "image": "images/gallery/product-19.jpg",
-      "alt": "Product Gallery Image 19",
-      "order": 19
-    },
-    {
-      "id": "20",
-      "image": "images/gallery/product-20.jpg",
-      "alt": "Product Gallery Image 20",
-      "order": 20
-    }
+    { "id": "1",  "image": "images/gallery/product-1.jpg",  "alt": "Product Gallery Image 1",  "order": 1  },
+    { "id": "2",  "image": "images/gallery/product-2.jpg",  "alt": "Product Gallery Image 2",  "order": 2  },
+    { "id": "3",  "image": "images/gallery/product-3.jpg",  "alt": "Product Gallery Image 3",  "order": 3  },
+    { "id": "4",  "image": "images/gallery/product-4.jpg",  "alt": "Product Gallery Image 4",  "order": 4  },
+    { "id": "5",  "image": "images/gallery/product-5.jpg",  "alt": "Product Gallery Image 5",  "order": 5  },
+    { "id": "6",  "image": "images/gallery/product-6.jpg",  "alt": "Product Gallery Image 6",  "order": 6  },
+    { "id": "7",  "image": "images/gallery/product-7.jpg",  "alt": "Product Gallery Image 7",  "order": 7  },
+    { "id": "8",  "image": "images/gallery/product-8.jpg",  "alt": "Product Gallery Image 8",  "order": 8  },
+    { "id": "9",  "image": "images/gallery/product-9.jpg",  "alt": "Product Gallery Image 9",  "order": 9  },
+    { "id": "10", "image": "images/gallery/product-10.jpg", "alt": "Product Gallery Image 10", "order": 10 },
+    { "id": "11", "image": "images/gallery/product-11.jpg", "alt": "Product Gallery Image 11", "order": 11 },
+    { "id": "12", "image": "images/gallery/product-12.jpg", "alt": "Product Gallery Image 12", "order": 12 },
+    { "id": "13", "image": "images/gallery/product-13.jpg", "alt": "Product Gallery Image 13", "order": 13 },
+    { "id": "14", "image": "images/gallery/product-14.jpg", "alt": "Product Gallery Image 14", "order": 14 },
+    { "id": "15", "image": "images/gallery/product-15.jpg", "alt": "Product Gallery Image 15", "order": 15 },
+    { "id": "16", "image": "images/gallery/product-16.jpg", "alt": "Product Gallery Image 16", "order": 16 }
   ]
 }
