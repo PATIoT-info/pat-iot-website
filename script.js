@@ -157,17 +157,10 @@ async function loadProducts() {
         if (galleryWrapper && data.gallery) {
             const sortedGallery = [...data.gallery].sort((a, b) => (a.order || 0) - (b.order || 0));
             galleryWrapper.innerHTML = sortedGallery.map(item => `
-                <div class="gallery-item">
+                <div class="gallery-item animate">
                     <img src="${encodeURI(item.image)}" alt="${item.alt}" class="gallery-image">
                 </div>
             `).join('');
-            
-            // Add animate class to all gallery items so they are visible
-            requestAnimationFrame(() => {
-                galleryWrapper.querySelectorAll('.gallery-item').forEach(item => {
-                    item.classList.add('animate');
-                });
-            });
         }
     } catch (e) {
         console.error('Error loading products:', e);
