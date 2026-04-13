@@ -3557,6 +3557,17 @@ body {
                 inset 0 1px 0 rgba(255,255,255,1) !important;
 }
 
+/* Hero buttons — equal size, Get Demo + Brochure on row 1, Learn More below */
+.hero-buttons .btn {
+    min-width: 160px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 0.875rem 2rem !important;
+}
+.hero-buttons .hero-buttons-row:last-child .btn-secondary {
+    width: 100% !important;
+}
+
 /* Get Demo + Brochure buttons — liquid glass (gradient-based, works inside hero) */
 .btn-primary {
     background: linear-gradient(
