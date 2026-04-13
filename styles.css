@@ -3557,6 +3557,43 @@ body {
                 inset 0 1px 0 rgba(255,255,255,1) !important;
 }
 
+/* Get Demo + Brochure buttons — liquid glass */
+.btn-primary {
+    background: rgba(37, 99, 235, 0.45) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(147, 197, 253, 0.6) !important;
+    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.35),
+                inset 0 -1px 0 rgba(0,0,0,0.1) !important;
+    color: white !important;
+}
+.btn-primary:hover {
+    background: rgba(37, 99, 235, 0.65) !important;
+    border-color: rgba(191, 219, 254, 0.8) !important;
+    box-shadow: 0 12px 40px rgba(37, 99, 235, 0.45),
+                inset 0 1px 0 rgba(255,255,255,0.45) !important;
+    transform: translateY(-2px) !important;
+}
+
+.btn-brochure {
+    background: rgba(220, 38, 38, 0.45) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(252, 165, 165, 0.55) !important;
+    box-shadow: 0 8px 32px rgba(220, 38, 38, 0.28),
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                inset 0 -1px 0 rgba(0,0,0,0.1) !important;
+    color: white !important;
+}
+.btn-brochure:hover {
+    background: rgba(220, 38, 38, 0.65) !important;
+    border-color: rgba(252, 165, 165, 0.75) !important;
+    box-shadow: 0 12px 40px rgba(220, 38, 38, 0.42),
+                inset 0 1px 0 rgba(255,255,255,0.4) !important;
+    transform: translateY(-2px) !important;
+}
+
 /* Scroll arrow buttons — glass pills with visible blue icons */
 .scroll-btn, .gallery-scroll-btn {
     background: rgba(255, 255, 255, 0.68) !important;
