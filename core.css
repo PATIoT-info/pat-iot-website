@@ -1,0 +1,344 @@
+/* core.css — JS-dependent & complex animation styles only */
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+body { overflow-x: hidden; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+
+/* ── Navbar ── */
+#navbar { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.navbar-hidden { transform: translateY(-100%) !important; }
+.navbar-visible { transform: translateY(0) !important; }
+
+/* Hamburger lines */
+.hamburger { cursor: pointer; display: flex; flex-direction: column; justify-content: center; gap: 5px; width: 36px; height: 36px; padding: 4px; }
+.hamburger span { display: block; height: 2px; width: 100%; background: #374151; border-radius: 2px; transition: all 0.3s ease; }
+.hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.active span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Mobile slide-in menu */
+#navMenu {
+    position: fixed;
+    inset: 0;
+    top: 64px;
+    background: white;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 998;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 1.25rem;
+    gap: 0.25rem;
+    overflow-y: auto;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.08);
+}
+#navMenu.active { transform: translateX(0); }
+#navMenu li { width: 100%; }
+#navMenu .nav-link {
+    display: block;
+    padding: 0.85rem 1rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #374151;
+    border-radius: 0.5rem;
+    transition: background 0.2s, color 0.2s;
+}
+#navMenu .nav-link:hover,
+#navMenu .nav-link.active { background: #eff6ff; color: #2563eb; }
+
+@media (min-width: 768px) {
+    #navMenu {
+        position: static;
+        transform: none !important;
+        flex-direction: row;
+        padding: 0;
+        gap: 0;
+        background: transparent;
+        overflow: visible;
+        box-shadow: none;
+        align-items: center;
+        z-index: auto;
+        top: auto;
+        inset: auto;
+    }
+    #navMenu li { width: auto; }
+    #navMenu .nav-link {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.95rem;
+    }
+    .hamburger { display: none; }
+}
+
+/* ── Hero Video Section ── */
+.hero-video-section {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    background: #000;
+    overflow: hidden;
+}
+
+/* Stacked video layers — opacity controlled by JS */
+.hero-video-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+}
+.hero-video-layer[data-hero-index="0"] { z-index: 1; }
+.hero-video-layer[data-hero-index="1"] { z-index: 2; }
+.hero-video-layer[data-hero-index="2"] { z-index: 3; }
+
+.video-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.18);
+    z-index: 4;
+    pointer-events: none;
+}
+
+/* Scrub progress indicator */
+.hero-scrub-indicator {
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 6;
+    height: 100px;
+    width: 3px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 2px;
+}
+#heroScrubArrow {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 0.875rem;
+    transition: transform 0.1s linear;
+    line-height: 1;
+}
+
+/* Mobile: section becomes tall for scroll-scrub, video sticks */
+@media (max-width: 767px) {
+    .hero-video-section {
+        height: 200vh;
+        overflow: visible;
+        margin-top: 0;
+    }
+    .hero-video-layer {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        width: 100%;
+        object-fit: cover;
+    }
+    .hero-scrub-indicator { display: none; }
+    .video-overlay { position: sticky; top: 0; height: 100vh; }
+}
+
+/* ── Video Modes Section ── */
+.video-modes-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+}
+.mode-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    z-index: 1;
+}
+.mode-video.active  { opacity: 1; z-index: 2; }
+.mode-video.fade-out { opacity: 0; z-index: 1; }
+.mode-video.playing { opacity: 1; }
+.mode-video.fade-in { opacity: 1; z-index: 2; }
+
+.video-overlay-modes {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.18);
+    z-index: 3;
+    pointer-events: none;
+}
+
+/* Mode control wrapper */
+.video-mode-controls-wrapper {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+.mode-controls-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    color: rgba(255,255,255,0.85);
+}
+.mode-hint-text { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.05em; }
+
+@keyframes bounceDown {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(5px); }
+}
+.mode-hint-arrow { animation: bounceDown 1.5s ease infinite; display: inline-block; font-size: 0.75rem; }
+
+.video-mode-controls {
+    display: flex;
+    gap: 0.75rem;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(8px);
+    border-radius: 999px;
+    padding: 0.6rem 1.25rem;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+.mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.5rem 0.9rem;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.75);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 60px;
+}
+.mode-btn:hover { color: white; background: rgba(255,255,255,0.12); }
+.mode-btn.active { background: white; color: #2563eb; }
+.mode-btn-icon { font-size: 1.25rem; }
+.mode-btn-label { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ── Clients auto-scroll ── */
+@keyframes clientsScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+.clients-track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    gap: 2.5rem;
+    padding: 0.75rem 0;
+    animation: clientsScroll 38s linear infinite;
+}
+.clients-track:hover { animation-play-state: paused; }
+
+/* ── Products / Gallery scroll ── */
+.products-scroll-wrapper,
+.gallery-scroll-wrapper {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    gap: 1.25rem;
+    padding: 0.5rem 0 0.75rem;
+    scrollbar-width: thin;
+    scrollbar-color: #2563eb transparent;
+}
+.products-scroll-wrapper::-webkit-scrollbar,
+.gallery-scroll-wrapper::-webkit-scrollbar { height: 4px; }
+.products-scroll-wrapper::-webkit-scrollbar-thumb,
+.gallery-scroll-wrapper::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 4px; }
+
+/* ── Scroll-triggered entrance animations ── */
+.service-card,
+.warranty-card,
+.product-card,
+.section-header {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.animate,
+.service-card.animate,
+.warranty-card.animate,
+.product-card.animate,
+.section-header.animate {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+/* ── Gallery item base ── */
+.gallery-item {
+    flex-shrink: 0;
+    min-width: 260px;
+    max-width: 260px;
+    height: 260px;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #f3f4f6;
+}
+.gallery-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: default;
+    pointer-events: none;
+}
+
+/* ── Active nav highlight ── */
+.nav-link.active { color: #2563eb !important; }
+
+/* ── Hero image background ── */
+.hero-bg-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 1;
+}
+
+/* Scroll-indicator bounce */
+@keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+}
+.scroll-indicator {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 1.5rem;
+    z-index: 3;
+    animation: bounce 2s infinite;
+}
+
+/* Product image show-full for curtain switch */
+.product-image img[src*="curtain-switch"] {
+    object-fit: contain;
+    padding: 0.5rem;
+    background: #f9fafb;
+}
+
+/* Lightbox (unused but keep for JS reference) */
+#lightbox { display: none; }
+#lightbox.active { display: flex; }
