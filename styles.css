@@ -3557,17 +3557,33 @@ body {
                 inset 0 1px 0 rgba(255,255,255,1) !important;
 }
 
-/* Scroll arrow buttons — glass pills */
+/* Scroll arrow buttons — glass pills with visible blue icons */
 .scroll-btn, .gallery-scroll-btn {
     background: rgba(255, 255, 255, 0.68) !important;
     backdrop-filter: blur(14px) !important;
     -webkit-backdrop-filter: blur(14px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.92) !important;
-    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.1) !important;
+    border: 1.5px solid rgba(37, 99, 235, 0.25) !important;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12) !important;
+    color: #2563eb !important;
     transition: all 0.25s ease !important;
 }
 .scroll-btn:hover, .gallery-scroll-btn:hover {
-    background: rgba(255, 255, 255, 0.92) !important;
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.16) !important;
+    background: #2563eb !important;
+    color: white !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.28) !important;
     transform: scale(1.08) !important;
+}
+
+/* Gallery buttons — below images, not overlapping */
+.gallery-scroll-buttons {
+    position: static !important;
+    transform: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 1rem !important;
+    margin-top: 1.5rem !important;
+    padding: 0 !important;
+    pointer-events: auto !important;
+    width: auto !important;
 }
