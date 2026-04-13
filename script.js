@@ -162,8 +162,12 @@ async function loadProducts() {
                 </div>
             `).join('');
             
-            // Lightbox disabled - gallery images are not clickable
-            // No need to reinitialize lightbox
+            // Add animate class to all gallery items so they are visible
+            requestAnimationFrame(() => {
+                galleryWrapper.querySelectorAll('.gallery-item').forEach(item => {
+                    item.classList.add('animate');
+                });
+            });
         }
     } catch (e) {
         console.error('Error loading products:', e);
