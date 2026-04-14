@@ -64,6 +64,12 @@
         .navbar-hidden {
             transform: translateY(0) !important;
         }
+        /* Fix nav menu: match navbar height exactly and full-height panel */
+        #navMenu {
+            top: 60px !important;
+            background: #fff !important;
+            z-index: 998 !important;
+        }
         .nav-wrapper {
             display: flex;
             justify-content: space-between;
@@ -78,18 +84,19 @@
         .logo-iot { color: #374151; font-weight: 600; font-size: 0.6rem; letter-spacing: 0.05em; }
 
         /* ══════════════════════════════
-           HERO IMAGE — full image, no cropping, no text overlay
+           HERO IMAGE — full image visible, nothing cropped
         ══════════════════════════════ */
         #home {
+            margin-top: 60px;   /* clears the fixed navbar exactly */
             background: #0d1117;
-            margin-top: 60px; /* push below fixed navbar so full image is visible */
+            line-height: 0;     /* remove any inline gap below image */
         }
         .hero-bg-image {
             width: 100%;
-            height: auto;     /* natural proportions — full image */
+            height: auto;   /* natural aspect ratio — full image, nothing cut */
             display: block;
         }
-        /* hide overlay and content when they're over the image */
+        /* hide overlay and content — text lives in .hero-text-section below */
         .hero-overlay { display: none; }
         .hero-content { display: none; }
         .scroll-indicator { display: none; }
