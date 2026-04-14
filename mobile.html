@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>PAT IOT SOLUTIONS - Smart Home Automation</title>
-    <!-- Redirect desktop users back to desktop version -->
     <script>
         if (window.innerWidth >= 769 && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             window.location.replace('index.html');
@@ -16,6 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ── Reset ── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
         body {
@@ -27,65 +27,64 @@
         }
         :root {
             --primary: #2563eb;
-            --primary-dark: #1d4ed8;
             --text: #1f2937;
             --text-light: #6b7280;
-            --bg-light: #f9fafb;
+            --bg-light: #f8fafc;
             --border: #e5e7eb;
-            --radius: 1rem;
-            --shadow: 0 2px 12px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 28px rgba(0,0,0,0.12);
+            --radius: 0.875rem;
+            --shadow: 0 2px 12px rgba(0,0,0,0.07);
+            --shadow-lg: 0 8px 28px rgba(0,0,0,0.11);
         }
-        .container { width: 100%; padding: 0 1.25rem; }
-        section { padding: 3rem 0; }
+        .container { width: 100%; padding: 0 1.1rem; }
+        section { padding: 2.5rem 0; }
 
         /* ── Section Headers ── */
-        .section-header { text-align: center; margin-bottom: 2rem; }
-        .section-title { font-size: 1.8rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; line-height: 1.25; }
-        .section-subtitle { font-size: 0.875rem; color: var(--text-light); line-height: 1.6; }
+        .section-header { text-align: center; margin-bottom: 1.75rem; padding: 0 1.1rem; }
+        .section-title { font-size: 1.65rem; font-weight: 700; color: var(--text); margin-bottom: 0.35rem; line-height: 1.2; }
+        .section-subtitle { font-size: 0.82rem; color: var(--text-light); line-height: 1.6; }
 
-        /* ── NAVBAR (layout — behaviour handled by core.css) ── */
+        /* ══════════════════════════════
+           NAVBAR
+        ══════════════════════════════ */
         .navbar {
-            background: rgba(255,255,255,0.82) !important;
+            background: rgba(255,255,255,0.88) !important;
             backdrop-filter: blur(24px) saturate(180%) !important;
             -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-            border-bottom: 1px solid rgba(255,255,255,0.5) !important;
+            border-bottom: 1px solid rgba(0,0,0,0.07) !important;
         }
         .nav-wrapper {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 64px;
-            padding: 0 1.25rem;
+            height: 60px;
+            padding: 0 1.1rem;
         }
         .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
-        .logo-img { height: 48px; width: auto; }
+        .logo-img { height: 44px; width: auto; }
         .logo-text { display: flex; flex-direction: column; line-height: 1.2; }
-        .logo-pat { color: #2563eb; font-weight: 700; font-size: 1.1rem; }
-        .logo-iot { color: #374151; font-weight: 600; font-size: 0.65rem; letter-spacing: 0.05em; }
+        .logo-pat { color: #2563eb; font-weight: 700; font-size: 1rem; }
+        .logo-iot { color: #374151; font-weight: 600; font-size: 0.6rem; letter-spacing: 0.05em; }
 
-        /* ── HERO ── */
+        /* ══════════════════════════════
+           HERO — full screen image
+        ══════════════════════════════ */
         #home {
             position: relative;
-            min-height: 100vh;
-            min-height: 100svh;
+            height: 100vh;
+            height: 100svh;
             overflow: hidden;
             background: #0d1117;
-            display: flex;
-            flex-direction: column;
         }
         .hero-bg-image {
-            position: relative;
-            width: 100%;
-            height: auto;
-            display: block;
-            object-fit: contain;
-            object-position: center top;
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            object-position: center center;
         }
         .hero-overlay {
             position: absolute; inset: 0;
-            background: rgba(0,0,0,0.42); z-index: 1;
-            pointer-events: none;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.55) 100%);
+            z-index: 1;
         }
         .hero-content {
             position: absolute; inset: 0; z-index: 2;
@@ -93,62 +92,61 @@
             align-items: center; justify-content: center;
             text-align: center;
             padding: 0 1.5rem;
-            padding-top: 64px;
+            padding-top: 60px;
         }
         .hero-title {
-            font-size: 2.4rem; font-weight: 700;
-            color: white; line-height: 1.15;
-            margin-bottom: 1rem;
+            font-size: 2.2rem; font-weight: 700;
+            color: #fff; line-height: 1.15;
+            margin-bottom: 0.875rem;
         }
         .hero-subtitle {
-            font-size: 0.975rem; color: rgba(255,255,255,0.88);
+            font-size: 0.95rem; color: rgba(255,255,255,0.88);
             line-height: 1.65; margin-bottom: 2rem;
-            max-width: 320px;
+            max-width: 300px;
         }
-        .hero-buttons {
-            display: flex; flex-direction: column;
-            gap: 0.75rem; width: 100%; max-width: 290px;
-        }
-        .hero-buttons-row { display: flex; gap: 0.75rem; }
+        .hero-buttons { display: flex; flex-direction: column; gap: 0.7rem; width: 100%; max-width: 280px; }
+        .hero-buttons-row { display: flex; gap: 0.7rem; }
         .btn {
-            padding: 0.875rem 1.25rem;
+            padding: 0.8rem 1.1rem;
             border-radius: 0.5rem; font-weight: 600;
             font-family: 'Inter', sans-serif;
-            text-decoration: none;
+            text-decoration: none; font-size: 0.875rem;
             display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
-            transition: all 0.25s ease; cursor: pointer;
-            border: none; font-size: 0.9rem; flex: 1; min-height: 48px;
+            transition: all 0.22s ease; cursor: pointer;
+            border: none; flex: 1; min-height: 46px;
         }
         .btn-primary {
-            background: linear-gradient(160deg, rgba(96,165,250,0.55) 0%, rgba(37,99,235,0.4) 100%);
+            background: linear-gradient(160deg, rgba(96,165,250,0.6) 0%, rgba(37,99,235,0.45) 100%);
             border: 1px solid rgba(147,197,253,0.65) !important;
-            box-shadow: 0 8px 24px rgba(37,99,235,0.35), inset 0 1px 0 rgba(255,255,255,0.4);
-            color: white;
+            box-shadow: 0 6px 20px rgba(37,99,235,0.3), inset 0 1px 0 rgba(255,255,255,0.35);
+            color: #fff;
         }
         .btn-secondary {
-            background: rgba(255,255,255,0.18);
-            border: 1.5px solid rgba(255,255,255,0.55) !important;
-            color: white; width: 100%;
+            background: rgba(255,255,255,0.15);
+            border: 1.5px solid rgba(255,255,255,0.5) !important;
+            color: #fff; width: 100%;
         }
         .btn-brochure {
-            background: linear-gradient(160deg, rgba(248,113,113,0.55) 0%, rgba(220,38,38,0.4) 100%);
+            background: linear-gradient(160deg, rgba(248,113,113,0.6) 0%, rgba(220,38,38,0.45) 100%);
             border: 1px solid rgba(252,165,165,0.6) !important;
-            box-shadow: 0 8px 24px rgba(220,38,38,0.32), inset 0 1px 0 rgba(255,255,255,0.38);
-            color: white;
+            box-shadow: 0 6px 20px rgba(220,38,38,0.28), inset 0 1px 0 rgba(255,255,255,0.35);
+            color: #fff;
         }
         .scroll-indicator {
-            position: absolute; bottom: 1.5rem; left: 50%;
+            position: absolute; bottom: 1.25rem; left: 50%;
             transform: translateX(-50%);
-            color: white; font-size: 1.25rem; z-index: 3;
+            color: rgba(255,255,255,0.75); font-size: 1.1rem; z-index: 3;
             animation: bounce 2s infinite;
         }
         @keyframes bounce {
             0%,100% { transform: translateX(-50%) translateY(0); }
-            50%      { transform: translateX(-50%) translateY(7px); }
+            50%      { transform: translateX(-50%) translateY(6px); }
         }
 
-        /* ── HERO VIDEO — 16:9 like YouTube ── */
-        /* !important needed to beat core.css @media (max-width:767px) rules */
+        /* ══════════════════════════════
+           HERO VIDEO — 16:9 YouTube style
+           !important beats core.css @media(max-width:767px)
+        ══════════════════════════════ */
         .hero-video-section {
             position: relative !important;
             width: 100% !important;
@@ -159,10 +157,8 @@
         }
         .hero-video-layer {
             position: absolute !important;
-            inset: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
+            inset: 0 !important; top: 0 !important;
+            width: 100% !important; height: 100% !important;
             object-fit: contain !important;
             opacity: 0 !important;
             transition: opacity 0.45s ease;
@@ -172,65 +168,108 @@
         .hero-video-layer[data-hero-index="2"] { z-index: 3 !important; }
         .video-overlay {
             position: absolute !important; inset: 0 !important;
-            background: rgba(0,0,0,0.18); z-index: 4; pointer-events: none;
+            background: rgba(0,0,0,0.12); z-index: 4; pointer-events: none;
         }
 
-        /* ── PRODUCTS ── */
+        /* ══════════════════════════════
+           PRODUCTS
+        ══════════════════════════════ */
         #products { background: var(--bg-light); }
         .products-scroll-wrapper {
-            display: flex; overflow-x: auto; gap: 1rem;
-            padding: 0.5rem 0 1rem;
+            display: flex !important;
+            overflow-x: auto !important;
+            gap: 1rem !important;
+            padding: 0.5rem 1.1rem 1rem !important;
             -webkit-overflow-scrolling: touch;
-            scrollbar-width: thin; scrollbar-color: #2563eb transparent;
+            scrollbar-width: none;
         }
-        .products-scroll-wrapper::-webkit-scrollbar { height: 4px; }
-        .products-scroll-wrapper::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 4px; }
-        /* Override JS-rendered product card size for mobile */
-        .product-card { min-width: 230px !important; max-width: 230px !important; }
-        .product-image { height: 175px !important; }
-        .scroll-indicators { display: flex; justify-content: center; gap: 0.75rem; margin-top: 1rem; }
+        .products-scroll-wrapper::-webkit-scrollbar { display: none; }
+        /* Product cards — override JS-injected size */
+        .product-card {
+            flex-shrink: 0 !important;
+            min-width: 200px !important;
+            max-width: 200px !important;
+            border-radius: var(--radius) !important;
+            overflow: hidden !important;
+            background: #fff !important;
+            box-shadow: var(--shadow) !important;
+            border: 1px solid var(--border) !important;
+            cursor: pointer;
+        }
+        .product-image {
+            width: 100% !important;
+            height: 150px !important;
+            object-fit: cover !important;
+            display: block !important;
+        }
+        .product-info {
+            padding: 0.75rem !important;
+        }
+        .product-label {
+            font-size: 0.82rem !important;
+            font-weight: 600 !important;
+            color: var(--text) !important;
+            margin-bottom: 0.2rem !important;
+            line-height: 1.3 !important;
+            display: block !important;
+        }
+        .product-caption {
+            font-size: 0.72rem !important;
+            color: var(--text-light) !important;
+            line-height: 1.4 !important;
+            display: block !important;
+        }
+        .scroll-indicators { display: flex; justify-content: center; gap: 0.75rem; margin-top: 0.875rem; }
         .scroll-btn {
-            width: 44px; height: 44px; border-radius: 50%;
-            background: rgba(255,255,255,0.78); color: #2563eb;
-            border: 1.5px solid rgba(37,99,235,0.3);
-            box-shadow: 0 4px 14px rgba(37,99,235,0.12);
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,0.9); color: #2563eb;
+            border: 1.5px solid rgba(37,99,235,0.25);
+            box-shadow: 0 3px 10px rgba(37,99,235,0.1);
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-size: 0.9rem; transition: all 0.2s ease;
+            cursor: pointer; font-size: 0.85rem; transition: all 0.2s ease;
         }
-        .scroll-btn:hover { background: #2563eb; color: white; }
+        .scroll-btn:active { background: #2563eb; color: #fff; }
 
-        /* ── SERVICES ── */
-        #services { background: linear-gradient(140deg, #f0f4ff 0%, #e8effd 55%, #f0f9ff 100%); }
-        .services-grid { display: flex; flex-direction: column; gap: 0.875rem; }
+        /* ══════════════════════════════
+           SERVICES
+        ══════════════════════════════ */
+        #services { background: linear-gradient(145deg, #eef2ff 0%, #e8effd 60%, #f0f9ff 100%); }
+        .services-grid { display: flex; flex-direction: column; gap: 0.75rem; }
         .service-card {
-            background: rgba(255,255,255,0.62);
+            background: rgba(255,255,255,0.72);
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.88);
-            border-radius: 0.875rem; box-shadow: var(--shadow);
-            display: flex; align-items: center; gap: 1rem;
-            padding: 0.875rem 1rem; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.9);
+            border-radius: var(--radius); box-shadow: var(--shadow);
+            display: flex; align-items: center; gap: 0.875rem;
+            padding: 0.875rem; overflow: hidden;
         }
         .service-thumb {
-            width: 68px; height: 68px; flex-shrink: 0;
-            border-radius: 0.625rem; overflow: hidden; background: #e8f0fe;
+            width: 62px; height: 62px; flex-shrink: 0;
+            border-radius: 0.5rem; overflow: hidden; background: #dbeafe;
         }
         .service-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .service-card h3 { font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
-        .service-card p  { font-size: 0.78rem; color: var(--text-light); line-height: 1.5; margin: 0; }
+        .service-card h3 { font-size: 0.875rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
+        .service-card p  { font-size: 0.775rem; color: var(--text-light); line-height: 1.5; margin: 0; }
 
-        /* ── PAT APP ── */
-        #pat-app { background: white; }
-        .pat-app-content { display: flex; flex-direction: column; gap: 1.5rem; align-items: center; }
+        /* ══════════════════════════════
+           PAT APP
+        ══════════════════════════════ */
+        #pat-app { background: #fff; }
+        .pat-app-content { display: flex; flex-direction: column; gap: 1.25rem; align-items: center; }
         .pat-app-img {
-            width: 100%; max-width: 300px;
+            width: 100%;
             border-radius: var(--radius);
-            box-shadow: 0 16px 40px rgba(37,99,235,0.13);
-            object-fit: cover; display: block;
+            box-shadow: var(--shadow-lg);
+            display: block;
+            height: auto;
         }
-        .pat-app-text h2 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.875rem; }
-        .pat-app-text p  { font-size: 0.875rem; color: var(--text-light); line-height: 1.7; margin-bottom: 0.75rem; }
+        .pat-app-text { padding: 0 0.25rem; }
+        .pat-app-text h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text); }
+        .pat-app-text p  { font-size: 0.85rem; color: var(--text-light); line-height: 1.7; margin-bottom: 0.625rem; }
 
-        /* ── VIDEO MODES — 16:9 like YouTube ── */
+        /* ══════════════════════════════
+           VIDEO MODES — 16:9 YouTube style
+        ══════════════════════════════ */
         .video-modes-section {
             position: relative !important;
             width: 100% !important;
@@ -242,211 +281,245 @@
         .video-modes-section .video-modes-container {
             position: absolute !important;
             inset: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
+            width: 100% !important; height: 100% !important;
         }
-        /* Override core.css object-fit:cover so full video is visible */
         .video-modes-section .mode-video {
             position: absolute !important;
-            inset: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
+            inset: 0 !important; top: 0 !important;
+            width: 100% !important; height: 100% !important;
             object-fit: contain !important;
         }
         .video-modes-section .video-mode-controls-wrapper {
             position: absolute !important;
-            bottom: 0.75rem !important;
+            bottom: 0.5rem !important;
             z-index: 10 !important;
         }
 
-        /* ── ABOUT ── */
+        /* ══════════════════════════════
+           ABOUT
+        ══════════════════════════════ */
         #about { background: var(--bg-light); }
-        .about-content { display: flex; flex-direction: column; gap: 1.5rem; align-items: center; }
+        .about-content { display: flex; flex-direction: column; gap: 1.5rem; }
+        .about-video-wrap {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: #111;
+            box-shadow: var(--shadow-lg);
+        }
         .about-video {
-            width: 100%; max-width: 320px; height: 210px;
-            object-fit: cover; border-radius: var(--radius);
-            box-shadow: 0 16px 40px rgba(37,99,235,0.12);
+            width: 100%; height: 100%;
+            object-fit: cover;
             display: block;
         }
-        .about-text h2 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.875rem; }
-        .about-text p  { font-size: 0.875rem; color: var(--text-light); line-height: 1.7; margin-bottom: 0.75rem; }
+        .about-text h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text); }
+        .about-text p  { font-size: 0.85rem; color: var(--text-light); line-height: 1.7; margin-bottom: 0.625rem; }
 
-        /* ── CLIENTS ── */
-        #clients { background: white; overflow: hidden; }
+        /* ══════════════════════════════
+           CLIENTS
+        ══════════════════════════════ */
+        #clients { background: #fff; overflow: hidden; }
         .clients-scroll-wrap { overflow: hidden; }
         .client-logo {
             display: flex; align-items: center; justify-content: center;
-            height: 56px; min-width: 110px; padding: 0 0.75rem;
+            height: 52px; min-width: 100px; padding: 0 0.75rem;
         }
         .client-logo img {
-            max-height: 44px; max-width: 100px; object-fit: contain;
-            filter: grayscale(75%); transition: filter 0.3s;
+            max-height: 40px; max-width: 90px;
+            object-fit: contain; filter: grayscale(70%);
         }
-        .client-logo.placeholder { background: #f3f4f6; border-radius: 0.5rem; }
+        .client-logo.placeholder {
+            background: #f3f4f6; border-radius: 0.5rem;
+            min-width: 80px;
+        }
 
-        /* ── GALLERY ── */
+        /* ══════════════════════════════
+           GALLERY
+        ══════════════════════════════ */
         .product-gallery-section { background: var(--bg-light); }
         .gallery-scroll-wrapper {
-            display: flex; overflow-x: auto; gap: 0.875rem;
-            padding: 0.5rem 0 1rem;
+            display: flex; overflow-x: auto; gap: 0.75rem;
+            padding: 0.5rem 1.1rem 1rem;
             -webkit-overflow-scrolling: touch;
-            scrollbar-width: thin; scrollbar-color: #2563eb transparent;
+            scrollbar-width: none;
         }
-        .gallery-scroll-wrapper::-webkit-scrollbar { height: 4px; }
-        .gallery-scroll-wrapper::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 4px; }
+        .gallery-scroll-wrapper::-webkit-scrollbar { display: none; }
         .gallery-item {
-            flex-shrink: 0; width: 210px; height: 210px;
-            border-radius: 0.75rem; overflow: hidden; background: #e5e7eb;
+            flex-shrink: 0; width: 185px; height: 185px;
+            border-radius: 0.75rem; overflow: hidden;
+            background: #e5e7eb;
         }
         .gallery-image { width: 100%; height: 100%; object-fit: cover; display: block; }
         .gallery-scroll-buttons {
             display: flex; justify-content: center;
-            gap: 0.75rem; margin-top: 1rem;
+            gap: 0.75rem; margin-top: 0.875rem;
         }
         .gallery-scroll-btn {
-            width: 44px; height: 44px; border-radius: 50%;
-            background: rgba(255,255,255,0.78); color: #2563eb;
-            border: 1.5px solid rgba(37,99,235,0.3);
-            box-shadow: 0 4px 14px rgba(37,99,235,0.12);
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,0.9); color: #2563eb;
+            border: 1.5px solid rgba(37,99,235,0.25);
+            box-shadow: 0 3px 10px rgba(37,99,235,0.1);
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-size: 0.9rem; transition: all 0.2s ease;
+            cursor: pointer; font-size: 0.85rem; transition: all 0.2s ease;
         }
-        .gallery-scroll-btn:hover { background: #2563eb; color: white; }
+        .gallery-scroll-btn:active { background: #2563eb; color: #fff; }
 
-        /* ── WARRANTY ── */
-        .warranty-section { background: linear-gradient(140deg, #f0f4ff 0%, #e8effd 55%, #f0f9ff 100%); }
-        .warranty-info { display: flex; flex-direction: column; gap: 0.875rem; margin-bottom: 1rem; }
+        /* ══════════════════════════════
+           WARRANTY
+        ══════════════════════════════ */
+        .warranty-section { background: linear-gradient(145deg, #eef2ff 0%, #e8effd 60%, #f0f9ff 100%); }
+        .warranty-info { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem; }
         .warranty-card {
-            background: rgba(255,255,255,0.62);
+            background: rgba(255,255,255,0.72);
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.88);
-            border-radius: var(--radius); padding: 1.25rem;
+            border: 1px solid rgba(255,255,255,0.9);
+            border-radius: var(--radius); padding: 1.1rem;
             box-shadow: var(--shadow);
         }
         .warranty-icon {
-            width: 42px; height: 42px;
+            width: 38px; height: 38px;
             background: linear-gradient(135deg, #2563eb, #1d4ed8);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 1rem; margin-bottom: 0.75rem;
+            color: #fff; font-size: 0.875rem; margin-bottom: 0.625rem;
         }
-        .warranty-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.2rem; }
-        .warranty-period { color: #2563eb; font-size: 0.82rem; margin-bottom: 0.4rem; }
-        .warranty-card p { font-size: 0.8rem; color: var(--text-light); line-height: 1.6; }
+        .warranty-card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.15rem; color: var(--text); }
+        .warranty-period { color: #2563eb; font-size: 0.78rem; margin-bottom: 0.35rem; }
+        .warranty-card p { font-size: 0.775rem; color: var(--text-light); line-height: 1.55; }
         .warranty-terms {
-            background: rgba(255,255,255,0.62);
+            background: rgba(255,255,255,0.72);
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.88);
-            border-radius: var(--radius); padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.9);
+            border-radius: var(--radius); padding: 1.25rem;
             box-shadow: var(--shadow);
         }
-        .warranty-terms h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
-        .warranty-terms ul { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
-        .warranty-terms li { display: flex; gap: 0.6rem; font-size: 0.8rem; color: var(--text-light); line-height: 1.5; }
-        .warranty-terms li i { color: #2563eb; flex-shrink: 0; margin-top: 2px; }
+        .warranty-terms h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.875rem; color: var(--text); }
+        .warranty-terms ul { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; margin-bottom: 1rem; }
+        .warranty-terms li { display: flex; gap: 0.55rem; font-size: 0.775rem; color: var(--text-light); line-height: 1.5; }
+        .warranty-terms li i { color: #2563eb; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; }
         .warranty-contact {
-            background: #2563eb; color: white;
-            border-radius: 0.75rem; padding: 0.875rem 1rem; font-size: 0.8rem;
+            background: #2563eb; color: #fff;
+            border-radius: 0.625rem; padding: 0.875rem 1rem; font-size: 0.775rem;
         }
         .warranty-contact p { margin-bottom: 0.2rem; }
-        .warranty-contact p:last-child { margin: 0; color: rgba(255,255,255,0.85); }
+        .warranty-contact p:last-child { margin: 0; color: rgba(255,255,255,0.82); }
 
-        /* ── CONTACT ── */
-        #contact { background: linear-gradient(140deg, #f0f4ff 0%, #e8effd 55%, #f0f9ff 100%); }
+        /* ══════════════════════════════
+           CONTACT
+        ══════════════════════════════ */
+        #contact { background: linear-gradient(145deg, #eef2ff 0%, #e8effd 60%, #f0f9ff 100%); }
         .contact-content { display: flex; flex-direction: column; gap: 1.5rem; }
-        .contact-form { display: flex; flex-direction: column; gap: 0.875rem; }
+        .contact-form { display: flex; flex-direction: column; gap: 0.75rem; }
         .form-group { display: flex; flex-direction: column; }
         .contact-form input,
         .contact-form textarea {
-            padding: 0.875rem 1rem; font-size: 0.925rem;
+            padding: 0.825rem 0.95rem; font-size: 0.9rem;
             font-family: 'Inter', sans-serif;
-            border: 1.5px solid rgba(255,255,255,0.82);
-            border-radius: 0.625rem; outline: none;
-            background: rgba(255,255,255,0.72);
+            border: 1.5px solid rgba(255,255,255,0.85);
+            border-radius: 0.575rem; outline: none;
+            background: rgba(255,255,255,0.8);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             transition: border-color 0.2s, box-shadow 0.2s;
             color: var(--text);
         }
         .contact-form input:focus, .contact-form textarea:focus {
-            border-color: rgba(37,99,235,0.5);
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-            background: rgba(255,255,255,0.9);
+            border-color: rgba(37,99,235,0.45);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.09);
+            background: rgba(255,255,255,0.95);
         }
         .contact-form .btn-primary {
             background: #2563eb !important; border: none !important;
             box-shadow: 0 4px 14px rgba(37,99,235,0.35) !important;
-            width: 100%;
+            width: 100%; border-radius: 0.575rem; min-height: 46px;
         }
         .contact-box {
-            background: rgba(255,255,255,0.68);
+            background: rgba(255,255,255,0.78);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.88);
+            border: 1px solid rgba(255,255,255,0.9);
             border-radius: var(--radius); overflow: hidden;
             box-shadow: var(--shadow-lg);
         }
         .contact-box-header {
             background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            padding: 1rem 1.25rem;
+            padding: 0.875rem 1.1rem;
         }
-        .contact-box-header h3 { color: white; font-size: 1rem; font-weight: 600; }
-        .contact-box-content { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+        .contact-box-header h3 { color: #fff; font-size: 0.95rem; font-weight: 600; }
+        .contact-box-content { padding: 1.1rem; display: flex; flex-direction: column; gap: 0.875rem; }
         .info-item-compact {
-            display: flex; gap: 0.75rem; align-items: flex-start;
-            padding-bottom: 0.875rem; border-bottom: 1px solid var(--border);
+            display: flex; gap: 0.7rem; align-items: flex-start;
+            padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);
         }
         .info-item-compact:last-of-type { border-bottom: none; padding-bottom: 0; }
         .info-icon-compact {
-            width: 34px; height: 34px; flex-shrink: 0;
-            background: #2563eb; color: white; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+            width: 32px; height: 32px; flex-shrink: 0;
+            background: #2563eb; color: #fff; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 0.75rem;
         }
-        .info-text-compact h4 { font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
-        .info-text-compact p  { font-size: 0.78rem; color: var(--text-light); line-height: 1.5; }
+        .info-text-compact h4 { font-size: 0.78rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
+        .info-text-compact p  { font-size: 0.75rem; color: var(--text-light); line-height: 1.5; }
         .info-text-compact a  { color: #2563eb; text-decoration: none; }
-        .qr-code-box { text-align: center; padding-top: 0.5rem; }
-        .qr-code-image-compact { width: 88px; height: 88px; object-fit: contain; }
-        .qr-code-label { font-size: 0.72rem; color: var(--text-light); margin-top: 0.35rem; }
+        .qr-code-box { text-align: center; padding-top: 0.35rem; }
+        .qr-code-image-compact { width: 84px; height: 84px; object-fit: contain; }
+        .qr-code-label { font-size: 0.7rem; color: var(--text-light); margin-top: 0.3rem; }
 
-        /* ── FOOTER ── */
+        /* ══════════════════════════════
+           FOOTER
+        ══════════════════════════════ */
         footer {
             background: #111827; color: #d1d5db;
-            padding: 3rem 1.25rem 1.5rem;
+            padding: 2.5rem 1.1rem 1.5rem;
         }
-        .footer-content { display: flex; flex-direction: column; gap: 2rem; margin-bottom: 2rem; }
-        .footer-section h4 { color: white; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.875rem; }
-        .footer-section p { font-size: 0.8rem; color: #9ca3af; line-height: 1.7; margin-bottom: 1rem; }
-        .footer-section ul { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
-        .footer-section ul a { font-size: 0.8rem; color: #9ca3af; text-decoration: none; }
-        .footer-logo { height: 38px; width: auto; filter: brightness(0) invert(1); margin-bottom: 0.875rem; display: block; }
-        .social-links { display: flex; gap: 0.6rem; }
+        .footer-content { display: flex; flex-direction: column; gap: 1.75rem; margin-bottom: 1.75rem; }
+        .footer-section h4 { color: #fff; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem; }
+        .footer-section p { font-size: 0.775rem; color: #9ca3af; line-height: 1.65; margin-bottom: 0.875rem; }
+        .footer-section ul { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+        .footer-section ul a { font-size: 0.775rem; color: #9ca3af; text-decoration: none; }
+        .footer-logo { height: 36px; width: auto; filter: brightness(0) invert(1); margin-bottom: 0.75rem; display: block; }
+        .social-links { display: flex; gap: 0.55rem; }
         .social-links a {
-            width: 34px; height: 34px; border-radius: 50%;
+            width: 32px; height: 32px; border-radius: 50%;
             background: #374151; color: #d1d5db;
             display: flex; align-items: center; justify-content: center;
-            text-decoration: none; font-size: 0.82rem; transition: background 0.2s;
+            text-decoration: none; font-size: 0.78rem;
         }
-        .social-links a:hover { background: #2563eb; color: white; }
-        .newsletter-form { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+        .social-links a:active { background: #2563eb; color: #fff; }
+        .newsletter-form { display: flex; gap: 0.5rem; margin-top: 0.625rem; }
         .newsletter-form input {
-            flex: 1; padding: 0.6rem 0.875rem;
+            flex: 1; padding: 0.55rem 0.75rem;
             border: 1px solid #374151; border-radius: 0.375rem;
-            background: transparent; color: white;
-            font-family: 'Inter', sans-serif; font-size: 0.8rem; outline: none;
+            background: transparent; color: #fff;
+            font-family: 'Inter', sans-serif; font-size: 0.775rem; outline: none;
         }
         .newsletter-form input::placeholder { color: #6b7280; }
         .newsletter-form button {
-            padding: 0.6rem 0.875rem; border-radius: 0.375rem;
-            background: #2563eb; color: white; border: none;
-            font-size: 0.8rem; font-family: 'Inter', sans-serif;
-            font-weight: 600; cursor: pointer; white-space: nowrap;
+            padding: 0.55rem 0.75rem; border-radius: 0.375rem;
+            background: #2563eb; color: #fff; border: none;
+            font-size: 0.775rem; font-family: 'Inter', sans-serif;
+            font-weight: 600; cursor: pointer;
         }
         .footer-bottom {
             border-top: 1px solid #1f2937;
-            padding-top: 1.25rem; text-align: center;
+            padding-top: 1.1rem; text-align: center;
         }
-        .footer-bottom p { font-size: 0.75rem; color: #6b7280; }
-        .desktop-link { text-align: center; margin-top: 0.75rem; }
-        .desktop-link a { font-size: 0.75rem; color: #60a5fa; text-decoration: none; }
+        .footer-bottom p { font-size: 0.72rem; color: #6b7280; }
+        .desktop-link { text-align: center; margin-top: 0.625rem; }
+        .desktop-link a { font-size: 0.72rem; color: #60a5fa; text-decoration: none; }
+
+        /* ══════════════════════════════
+           VIDEO LABEL STRIP
+        ══════════════════════════════ */
+        .video-label-strip {
+            background: #0d1117;
+            padding: 0.6rem 1.1rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .video-label-strip span {
+            font-size: 0.78rem; color: rgba(255,255,255,0.65);
+            font-weight: 500;
+        }
+        .video-label-strip i {
+            font-size: 0.7rem; color: #60a5fa;
+        }
     </style>
 </head>
 <body>
@@ -478,7 +551,7 @@
 
     <!-- ── Hero ── -->
     <section id="home">
-        <img src="images/hero-image.jpg" alt="Transform Your Living"
+        <img src="images/hero-image.jpg" alt="Smart Home by PAT IOT"
              class="hero-bg-image" loading="eager" decoding="async">
         <div class="hero-overlay"></div>
         <div class="hero-content">
@@ -499,7 +572,11 @@
         <div class="scroll-indicator"><i class="fas fa-chevron-down"></i></div>
     </section>
 
-    <!-- ── Hero Video ── -->
+    <!-- ── Hero Video — full width 16:9 ── -->
+    <div class="video-label-strip">
+        <i class="fas fa-play-circle"></i>
+        <span>Home Automation Showcase</span>
+    </div>
     <section class="hero-video-section">
         <video class="hero-video hero-video-layer" id="heroVideo1"
                muted playsinline preload="auto" data-hero-index="0" autoplay loop>
@@ -518,36 +595,35 @@
 
     <!-- ── Products ── -->
     <section id="products">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Our Products</h2>
-                <p class="section-subtitle">Premium quality smart home products by PAT IOT SOLUTIONS</p>
-            </div>
-            <div class="products-scroll-wrapper" id="productsScrollWrapper">
-                <!-- Loaded from data/products.json -->
-            </div>
-            <div class="scroll-indicators">
-                <button class="scroll-btn scroll-left"  aria-label="Scroll left">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="scroll-btn scroll-right" aria-label="Scroll right">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
+        <div class="section-header">
+            <h2 class="section-title">Our Products</h2>
+            <p class="section-subtitle">Premium smart home products by PAT IOT SOLUTIONS</p>
+        </div>
+        <div class="products-scroll-wrapper" id="productsScrollWrapper">
+            <!-- Loaded from data/products.json -->
+        </div>
+        <div class="scroll-indicators">
+            <button class="scroll-btn scroll-left" aria-label="Scroll left">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="scroll-btn scroll-right" aria-label="Scroll right">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
     </section>
 
     <!-- ── Services ── -->
     <section id="services">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header" style="padding:0;">
                 <h2 class="section-title">Our Services</h2>
                 <p class="section-subtitle">Comprehensive smart home solutions tailored to your needs</p>
             </div>
             <div class="services-grid">
                 <div class="service-card">
                     <div class="service-thumb">
-                        <img src="images/services/motorised-curtains.jpg" alt="Motorised Curtains">
+                        <img src="images/services/motorised-curtains.jpg" alt="Motorised Curtains"
+                             onerror="this.parentElement.style.background='#dbeafe';">
                     </div>
                     <div>
                         <h3>Motorised Curtains</h3>
@@ -556,7 +632,8 @@
                 </div>
                 <div class="service-card">
                     <div class="service-thumb">
-                        <img src="images/services/smart-door-locks.jpg" alt="Smart Door Locks">
+                        <img src="images/services/smart-door-locks.jpg" alt="Smart Door Locks"
+                             onerror="this.parentElement.style.background='#dbeafe';">
                     </div>
                     <div>
                         <h3>Smart Door Locks</h3>
@@ -565,7 +642,8 @@
                 </div>
                 <div class="service-card">
                     <div class="service-thumb">
-                        <img src="images/services/ir-blasters.jpg" alt="IR Blasters">
+                        <img src="images/services/ir-blasters.jpg" alt="IR Blasters"
+                             onerror="this.parentElement.style.background='#dbeafe';">
                     </div>
                     <div>
                         <h3>IR Blasters</h3>
@@ -574,7 +652,8 @@
                 </div>
                 <div class="service-card">
                     <div class="service-thumb">
-                        <img src="images/services/smart-door-bell.jpg" alt="Smart Door Bell">
+                        <img src="images/services/smart-door-bell.jpg" alt="Smart Door Bell"
+                             onerror="this.parentElement.style.background='#dbeafe';">
                     </div>
                     <div>
                         <h3>Smart Door Bell</h3>
@@ -583,7 +662,8 @@
                 </div>
                 <div class="service-card">
                     <div class="service-thumb">
-                        <img src="images/services/motion-sensors.jpg" alt="Motion Sensors">
+                        <img src="images/services/motion-sensors.jpg" alt="Motion Sensors"
+                             onerror="this.parentElement.style.background='#dbeafe';">
                     </div>
                     <div>
                         <h3>Motion Sensors</h3>
@@ -592,7 +672,8 @@
                 </div>
                 <div class="service-card">
                     <div class="service-thumb">
-                        <img src="images/services/voice-control.jpg" alt="Voice Control">
+                        <img src="images/services/voice-control.jpg" alt="Voice Control"
+                             onerror="this.parentElement.style.background='#dbeafe';">
                     </div>
                     <div>
                         <h3>Voice Control</h3>
@@ -606,10 +687,14 @@
     <!-- ── PAT App ── -->
     <section id="pat-app">
         <div class="container">
+            <div class="section-header" style="padding:0;">
+                <h2 class="section-title">PAT IoT App</h2>
+                <p class="section-subtitle">Control your entire home from your phone</p>
+            </div>
             <div class="pat-app-content">
-                <img src="images/pat-home-app.jpg" alt="PAT Home App" class="pat-app-img">
+                <img src="images/pat-home-app.jpg" alt="PAT Home App" class="pat-app-img"
+                     onerror="this.style.display='none';">
                 <div class="pat-app-text">
-                    <h2>PAT IoT App</h2>
                     <p>Control and personalize your entire home from anywhere. Manage lights, fans, curtains, and smart devices in real time through a single intuitive interface.</p>
                     <p>Use across multiple devices, add real photos of each room, and enjoy full end-to-end encryption for total peace of mind.</p>
                 </div>
@@ -617,16 +702,20 @@
         </div>
     </section>
 
-    <!-- ── Video Modes ── -->
+    <!-- ── Video Modes — 16:9 ── -->
+    <div class="video-label-strip">
+        <i class="fas fa-sliders-h"></i>
+        <span>Smart Lighting Modes — Tap to switch</span>
+    </div>
     <section class="video-modes-section">
         <div class="video-modes-container">
-            <video class="mode-video" id="morningVideo" muted playsinline>
+            <video class="mode-video" id="morningVideo" muted playsinline preload="auto">
                 <source src="videos/morning-mode.mp4" type="video/mp4">
             </video>
-            <video class="mode-video" id="movieVideo" muted playsinline>
+            <video class="mode-video" id="movieVideo" muted playsinline preload="auto">
                 <source src="videos/movie-mode.mp4" type="video/mp4">
             </video>
-            <video class="mode-video" id="nightVideo" muted playsinline>
+            <video class="mode-video" id="nightVideo" muted playsinline preload="auto">
                 <source src="videos/night-mode.mp4" type="video/mp4">
             </video>
             <div class="video-overlay-modes"></div>
@@ -656,11 +745,17 @@
     <!-- ── About ── -->
     <section id="about">
         <div class="container">
+            <div class="section-header" style="padding:0;">
+                <h2 class="section-title">About Us</h2>
+                <p class="section-subtitle">Leading smart home automation in India</p>
+            </div>
             <div class="about-content">
-                <video src="videos/intro.mp4" class="about-video"
-                       autoplay muted loop playsinline></video>
+                <div class="about-video-wrap">
+                    <video class="about-video" autoplay muted loop playsinline preload="auto">
+                        <source src="videos/intro.mp4" type="video/mp4">
+                    </video>
+                </div>
                 <div class="about-text">
-                    <h2>About Us</h2>
                     <p>PAT IoT Solutions Pvt. Ltd. is a leading home automation company transforming ordinary homes into intelligent living spaces. We manufacture premium smart touch switch boards, DALI touch dimming systems, and PWM modules.</p>
                     <p>Based in Hyderabad, Telangana, our team designs customized automation systems that match your lifestyle and budget.</p>
                     <p>Quality, innovation, and customer satisfaction make us a trusted name in Indian smart home automation.</p>
@@ -672,7 +767,7 @@
     <!-- ── Clients ── -->
     <section id="clients">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header" style="padding:0;">
                 <h2 class="section-title">Our Clients</h2>
                 <p class="section-subtitle">Trusted by leading brands and homeowners</p>
             </div>
@@ -703,29 +798,27 @@
 
     <!-- ── Gallery ── -->
     <section class="product-gallery-section">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Product Gallery</h2>
-                <p class="section-subtitle">Browse through different views and angles</p>
-            </div>
-            <div class="gallery-scroll-wrapper" id="galleryScrollWrapper">
-                <!-- Loaded from data/products.json -->
-            </div>
-            <div class="gallery-scroll-buttons">
-                <button class="gallery-scroll-btn gallery-scroll-left"  aria-label="Scroll left">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="gallery-scroll-btn gallery-scroll-right" aria-label="Scroll right">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
+        <div class="section-header">
+            <h2 class="section-title">Product Gallery</h2>
+            <p class="section-subtitle">Browse through different views and angles</p>
+        </div>
+        <div class="gallery-scroll-wrapper" id="galleryScrollWrapper">
+            <!-- Loaded from data/products.json -->
+        </div>
+        <div class="gallery-scroll-buttons">
+            <button class="gallery-scroll-btn gallery-scroll-left" aria-label="Scroll left">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="gallery-scroll-btn gallery-scroll-right" aria-label="Scroll right">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
     </section>
 
     <!-- ── Warranty ── -->
     <section class="warranty-section">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header" style="padding:0;">
                 <h2 class="section-title">Product Warranty</h2>
                 <p class="section-subtitle">Quality assurance for our manufactured products</p>
             </div>
@@ -770,7 +863,7 @@
     <!-- ── Contact ── -->
     <section id="contact">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header" style="padding:0;">
                 <h2 class="section-title">Get In Touch</h2>
                 <p class="section-subtitle">Contact us today for a free consultation.</p>
             </div>
@@ -804,7 +897,8 @@
                             </div>
                         </div>
                         <div class="qr-code-box">
-                            <img src="images/qr-code.png" alt="Scan QR Code" class="qr-code-image-compact">
+                            <img src="images/qr-code.png" alt="Scan QR Code" class="qr-code-image-compact"
+                                 onerror="this.parentElement.style.display='none';">
                             <p class="qr-code-label">Scan for More Info</p>
                         </div>
                     </div>
