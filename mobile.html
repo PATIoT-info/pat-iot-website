@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>PAT IOT SOLUTIONS - Smart Home Automation</title>
+    <!-- Redirect desktop users back to desktop version -->
+    <script>
+        if (window.innerWidth >= 769 && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            window.location.replace('index.html');
+        }
+    </script>
+    <link rel="stylesheet" href="core.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            color: #1f2937;
+            background: #fff;
+            -webkit-font-smoothing: antialiased;
+        }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg-light: #f9fafb;
+            --border: #e5e7eb;
+            --radius: 1rem;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 28px rgba(0,0,0,0.12);
+        }
+        .container { width: 100%; padding: 0 1.25rem; }
+        section { padding: 3rem 0; }
+
+        /* ── Section Headers ── */
+        .section-header { text-align: center; margin-bottom: 2rem; }
+        .section-title { font-size: 1.8rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; line-height: 1.25; }
+        .section-subtitle { font-size: 0.875rem; color: var(--text-light); line-height: 1.6; }
+
+        /* ── NAVBAR (layout — behaviour handled by core.css) ── */
+        .navbar {
+            background: rgba(255,255,255,0.82) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.5) !important;
+        }
+        .nav-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+            padding: 0 1.25rem;
+        }
+        .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .logo-img { height: 48px; width: auto; }
+        .logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+        .logo-pat { color: #2563eb; font-weight: 700; font-size: 1.1rem; }
+        .logo-iot { color: #374151; font-weight: 600; font-size: 0.65rem; letter-spacing: 0.05em; }
+
+        /* ── HERO ── */
+        #home {
+            position: relative;
+            height: 100vh;
+            height: 100svh;
+            overflow: hidden;
+        }
+        .hero-bg-image {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: cover; object-position: center;
+        }
+        .hero-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.42); z-index: 1;
+        }
+        .hero-content {
+            position: relative; z-index: 2;
+            height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center;
+            padding: 0 1.5rem;
+            padding-top: 64px;
+        }
+        .hero-title {
+            font-size: 2.4rem; font-weight: 700;
+            color: white; line-height: 1.15;
+            margin-bottom: 1rem;
+        }
+        .hero-subtitle {
+            font-size: 0.975rem; color: rgba(255,255,255,0.88);
+            line-height: 1.65; margin-bottom: 2rem;
+            max-width: 320px;
+        }
+        .hero-buttons {
+            display: flex; flex-direction: column;
+            gap: 0.75rem; width: 100%; max-width: 290px;
+        }
+        .hero-buttons-row { display: flex; gap: 0.75rem; }
+        .btn {
+            padding: 0.875rem 1.25rem;
+            border-radius: 0.5rem; font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+            transition: all 0.25s ease; cursor: pointer;
+            border: none; font-size: 0.9rem; flex: 1; min-height: 48px;
+        }
+        .btn-primary {
+            background: linear-gradient(160deg, rgba(96,165,250,0.55) 0%, rgba(37,99,235,0.4) 100%);
+            border: 1px solid rgba(147,197,253,0.65) !important;
+            box-shadow: 0 8px 24px rgba(37,99,235,0.35), inset 0 1px 0 rgba(255,255,255,0.4);
+            color: white;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.18);
+            border: 1.5px solid rgba(255,255,255,0.55) !important;
+            color: white; width: 100%;
+        }
+        .btn-brochure {
+            background: linear-gradient(160deg, rgba(248,113,113,0.55) 0%, rgba(220,38,38,0.4) 100%);
+            border: 1px solid rgba(252,165,165,0.6) !important;
+            box-shadow: 0 8px 24px rgba(220,38,38,0.32), inset 0 1px 0 rgba(255,255,255,0.38);
+            color: white;
+        }
+        .scroll-indicator {
+            position: absolute; bottom: 1.5rem; left: 50%;
+            transform: translateX(-50%);
+            color: white; font-size: 1.25rem; z-index: 3;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%,100% { transform: translateX(-50%) translateY(0); }
+            50%      { transform: translateX(-50%) translateY(7px); }
+        }
+
+        /* ── HERO VIDEO (single full-screen video on mobile) ── */
+        .hero-video-section {
+            position: relative;
+            height: 100vh; height: 100svh;
+            overflow: hidden; background: #000;
+        }
+        .hero-video-layer {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: cover; opacity: 0;
+            transition: opacity 0.45s ease;
+        }
+        .hero-video-layer[data-hero-index="0"] { z-index: 1; opacity: 1; }
+        .hero-video-layer[data-hero-index="1"] { z-index: 2; }
+        .hero-video-layer[data-hero-index="2"] { z-index: 3; }
+        .video-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.18); z-index: 4; pointer-events: none;
+        }
+
+        /* ── PRODUCTS ── */
+        #products { background: var(--bg-light); }
+        .products-scroll-wrapper {
+            display: flex; overflow-x: auto; gap: 1rem;
+            padding: 0.5rem 0 1rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin; scrollbar-color: #2563eb transparent;
+        }
+        .products-scroll-wrapper::-webkit-scrollbar { height: 4px; }
+        .products-scroll-wrapper::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 4px; }
+        /* Override JS-rendered product card size for mobile */
+        .product-card { min-width: 230px !important; max-width: 230px !important; }
+        .product-image { height: 175px !important; }
+        .scroll-indicators { display: flex; justify-content: center; gap: 0.75rem; margin-top: 1rem; }
+        .scroll-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(255,255,255,0.78); color: #2563eb;
+            border: 1.5px solid rgba(37,99,235,0.3);
+            box-shadow: 0 4px 14px rgba(37,99,235,0.12);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 0.9rem; transition: all 0.2s ease;
+        }
+        .scroll-btn:hover { background: #2563eb; color: white; }
+
+        /* ── SERVICES ── */
+        #services { background: linear-gradient(140deg, #f0f4ff 0%, #e8effd 55%, #f0f9ff 100%); }
+        .services-grid { display: flex; flex-direction: column; gap: 0.875rem; }
+        .service-card {
+            background: rgba(255,255,255,0.62);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.88);
+            border-radius: 0.875rem; box-shadow: var(--shadow);
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0.875rem 1rem; overflow: hidden;
+        }
+        .service-thumb {
+            width: 68px; height: 68px; flex-shrink: 0;
+            border-radius: 0.625rem; overflow: hidden; background: #e8f0fe;
+        }
+        .service-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .service-card h3 { font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
+        .service-card p  { font-size: 0.78rem; color: var(--text-light); line-height: 1.5; margin: 0; }
+
+        /* ── PAT APP ── */
+        #pat-app { background: white; }
+        .pat-app-content { display: flex; flex-direction: column; gap: 1.5rem; align-items: center; }
+        .pat-app-img {
+            width: 100%; max-width: 300px;
+            border-radius: var(--radius);
+            box-shadow: 0 16px 40px rgba(37,99,235,0.13);
+            object-fit: cover; display: block;
+        }
+        .pat-app-text h2 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.875rem; }
+        .pat-app-text p  { font-size: 0.875rem; color: var(--text-light); line-height: 1.7; margin-bottom: 0.75rem; }
+
+        /* ── VIDEO MODES ── */
+        .video-modes-section {
+            height: 100vh; height: 100svh;
+            position: relative; overflow: hidden; background: #000;
+        }
+
+        /* ── ABOUT ── */
+        #about { background: var(--bg-light); }
+        .about-content { display: flex; flex-direction: column; gap: 1.5rem; align-items: center; }
+        .about-video {
+            width: 100%; max-width: 320px; height: 210px;
+            object-fit: cover; border-radius: var(--radius);
+            box-shadow: 0 16px 40px rgba(37,99,235,0.12);
+            display: block;
+        }
+        .about-text h2 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.875rem; }
+        .about-text p  { font-size: 0.875rem; color: var(--text-light); line-height: 1.7; margin-bottom: 0.75rem; }
+
+        /* ── CLIENTS ── */
+        #clients { background: white; overflow: hidden; }
+        .clients-scroll-wrap { overflow: hidden; }
+        .client-logo {
+            display: flex; align-items: center; justify-content: center;
+            height: 56px; min-width: 110px; padding: 0 0.75rem;
+        }
+        .client-logo img {
+            max-height: 44px; max-width: 100px; object-fit: contain;
+            filter: grayscale(75%); transition: filter 0.3s;
+        }
+        .client-logo.placeholder { background: #f3f4f6; border-radius: 0.5rem; }
+
+        /* ── GALLERY ── */
+        .product-gallery-section { background: var(--bg-light); }
+        .gallery-scroll-wrapper {
+            display: flex; overflow-x: auto; gap: 0.875rem;
+            padding: 0.5rem 0 1rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin; scrollbar-color: #2563eb transparent;
+        }
+        .gallery-scroll-wrapper::-webkit-scrollbar { height: 4px; }
+        .gallery-scroll-wrapper::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 4px; }
+        .gallery-item {
+            flex-shrink: 0; width: 210px; height: 210px;
+            border-radius: 0.75rem; overflow: hidden; background: #e5e7eb;
+        }
+        .gallery-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .gallery-scroll-buttons {
+            display: flex; justify-content: center;
+            gap: 0.75rem; margin-top: 1rem;
+        }
+        .gallery-scroll-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(255,255,255,0.78); color: #2563eb;
+            border: 1.5px solid rgba(37,99,235,0.3);
+            box-shadow: 0 4px 14px rgba(37,99,235,0.12);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 0.9rem; transition: all 0.2s ease;
+        }
+        .gallery-scroll-btn:hover { background: #2563eb; color: white; }
+
+        /* ── WARRANTY ── */
+        .warranty-section { background: linear-gradient(140deg, #f0f4ff 0%, #e8effd 55%, #f0f9ff 100%); }
+        .warranty-info { display: flex; flex-direction: column; gap: 0.875rem; margin-bottom: 1rem; }
+        .warranty-card {
+            background: rgba(255,255,255,0.62);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.88);
+            border-radius: var(--radius); padding: 1.25rem;
+            box-shadow: var(--shadow);
+        }
+        .warranty-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1rem; margin-bottom: 0.75rem;
+        }
+        .warranty-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.2rem; }
+        .warranty-period { color: #2563eb; font-size: 0.82rem; margin-bottom: 0.4rem; }
+        .warranty-card p { font-size: 0.8rem; color: var(--text-light); line-height: 1.6; }
+        .warranty-terms {
+            background: rgba(255,255,255,0.62);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.88);
+            border-radius: var(--radius); padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+        .warranty-terms h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
+        .warranty-terms ul { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
+        .warranty-terms li { display: flex; gap: 0.6rem; font-size: 0.8rem; color: var(--text-light); line-height: 1.5; }
+        .warranty-terms li i { color: #2563eb; flex-shrink: 0; margin-top: 2px; }
+        .warranty-contact {
+            background: #2563eb; color: white;
+            border-radius: 0.75rem; padding: 0.875rem 1rem; font-size: 0.8rem;
+        }
+        .warranty-contact p { margin-bottom: 0.2rem; }
+        .warranty-contact p:last-child { margin: 0; color: rgba(255,255,255,0.85); }
+
+        /* ── CONTACT ── */
+        #contact { background: linear-gradient(140deg, #f0f4ff 0%, #e8effd 55%, #f0f9ff 100%); }
+        .contact-content { display: flex; flex-direction: column; gap: 1.5rem; }
+        .contact-form { display: flex; flex-direction: column; gap: 0.875rem; }
+        .form-group { display: flex; flex-direction: column; }
+        .contact-form input,
+        .contact-form textarea {
+            padding: 0.875rem 1rem; font-size: 0.925rem;
+            font-family: 'Inter', sans-serif;
+            border: 1.5px solid rgba(255,255,255,0.82);
+            border-radius: 0.625rem; outline: none;
+            background: rgba(255,255,255,0.72);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            color: var(--text);
+        }
+        .contact-form input:focus, .contact-form textarea:focus {
+            border-color: rgba(37,99,235,0.5);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            background: rgba(255,255,255,0.9);
+        }
+        .contact-form .btn-primary {
+            background: #2563eb !important; border: none !important;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.35) !important;
+            width: 100%;
+        }
+        .contact-box {
+            background: rgba(255,255,255,0.68);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.88);
+            border-radius: var(--radius); overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+        .contact-box-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            padding: 1rem 1.25rem;
+        }
+        .contact-box-header h3 { color: white; font-size: 1rem; font-weight: 600; }
+        .contact-box-content { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+        .info-item-compact {
+            display: flex; gap: 0.75rem; align-items: flex-start;
+            padding-bottom: 0.875rem; border-bottom: 1px solid var(--border);
+        }
+        .info-item-compact:last-of-type { border-bottom: none; padding-bottom: 0; }
+        .info-icon-compact {
+            width: 34px; height: 34px; flex-shrink: 0;
+            background: #2563eb; color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+        }
+        .info-text-compact h4 { font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
+        .info-text-compact p  { font-size: 0.78rem; color: var(--text-light); line-height: 1.5; }
+        .info-text-compact a  { color: #2563eb; text-decoration: none; }
+        .qr-code-box { text-align: center; padding-top: 0.5rem; }
+        .qr-code-image-compact { width: 88px; height: 88px; object-fit: contain; }
+        .qr-code-label { font-size: 0.72rem; color: var(--text-light); margin-top: 0.35rem; }
+
+        /* ── FOOTER ── */
+        footer {
+            background: #111827; color: #d1d5db;
+            padding: 3rem 1.25rem 1.5rem;
+        }
+        .footer-content { display: flex; flex-direction: column; gap: 2rem; margin-bottom: 2rem; }
+        .footer-section h4 { color: white; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.875rem; }
+        .footer-section p { font-size: 0.8rem; color: #9ca3af; line-height: 1.7; margin-bottom: 1rem; }
+        .footer-section ul { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+        .footer-section ul a { font-size: 0.8rem; color: #9ca3af; text-decoration: none; }
+        .footer-logo { height: 38px; width: auto; filter: brightness(0) invert(1); margin-bottom: 0.875rem; display: block; }
+        .social-links { display: flex; gap: 0.6rem; }
+        .social-links a {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: #374151; color: #d1d5db;
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; font-size: 0.82rem; transition: background 0.2s;
+        }
+        .social-links a:hover { background: #2563eb; color: white; }
+        .newsletter-form { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+        .newsletter-form input {
+            flex: 1; padding: 0.6rem 0.875rem;
+            border: 1px solid #374151; border-radius: 0.375rem;
+            background: transparent; color: white;
+            font-family: 'Inter', sans-serif; font-size: 0.8rem; outline: none;
+        }
+        .newsletter-form input::placeholder { color: #6b7280; }
+        .newsletter-form button {
+            padding: 0.6rem 0.875rem; border-radius: 0.375rem;
+            background: #2563eb; color: white; border: none;
+            font-size: 0.8rem; font-family: 'Inter', sans-serif;
+            font-weight: 600; cursor: pointer; white-space: nowrap;
+        }
+        .footer-bottom {
+            border-top: 1px solid #1f2937;
+            padding-top: 1.25rem; text-align: center;
+        }
+        .footer-bottom p { font-size: 0.75rem; color: #6b7280; }
+        .desktop-link { text-align: center; margin-top: 0.75rem; }
+        .desktop-link a { font-size: 0.75rem; color: #60a5fa; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <!-- ── Navbar ── -->
+    <nav id="navbar" class="navbar">
+        <div class="nav-wrapper">
+            <a href="#home" class="logo">
+                <img src="images/logo.png" alt="PAT IOT SOLUTIONS" class="logo-img"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="logo-text" style="display:none;">
+                    <span class="logo-pat">PAT</span>
+                    <span class="logo-iot">IOT SOLUTIONS</span>
+                </div>
+            </a>
+            <ul id="navMenu">
+                <li><a href="#home"     class="nav-link">Home</a></li>
+                <li><a href="#services" class="nav-link">Services</a></li>
+                <li><a href="#about"    class="nav-link">About</a></li>
+                <li><a href="#products" class="nav-link">Products</a></li>
+                <li><a href="blog.html" class="nav-link">Blogs</a></li>
+                <li><a href="#contact"  class="nav-link">Contact</a></li>
+            </ul>
+            <div id="hamburger" class="hamburger">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── Hero ── -->
+    <section id="home">
+        <img src="images/hero-image.jpg" alt="Transform Your Living"
+             class="hero-bg-image" loading="eager" decoding="async">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">Transform Your Living</h1>
+            <p class="hero-subtitle">Experience the future of home automation with technology that makes life easier, safer, and smarter.</p>
+            <div class="hero-buttons">
+                <div class="hero-buttons-row">
+                    <a href="#contact" class="btn btn-primary">Get Demo</a>
+                    <a href="brochure/brochure.pdf" target="_blank" class="btn btn-brochure">
+                        <i class="fas fa-file-pdf"></i> Brochure
+                    </a>
+                </div>
+                <div class="hero-buttons-row">
+                    <a href="#services" class="btn btn-secondary">Learn More</a>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator"><i class="fas fa-chevron-down"></i></div>
+    </section>
+
+    <!-- ── Hero Video ── -->
+    <section class="hero-video-section">
+        <video class="hero-video hero-video-layer" id="heroVideo1"
+               muted playsinline preload="auto" data-hero-index="0" autoplay loop>
+            <source src="videos/hero-video-1.mp4" type="video/mp4">
+        </video>
+        <video class="hero-video hero-video-layer" id="heroVideo2"
+               muted playsinline preload="auto" data-hero-index="1">
+            <source src="videos/hero-video-2.mp4" type="video/mp4">
+        </video>
+        <video class="hero-video hero-video-layer" id="heroVideo3"
+               muted playsinline preload="auto" data-hero-index="2">
+            <source src="videos/hero-video-3.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </section>
+
+    <!-- ── Products ── -->
+    <section id="products">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Products</h2>
+                <p class="section-subtitle">Premium quality smart home products by PAT IOT SOLUTIONS</p>
+            </div>
+            <div class="products-scroll-wrapper" id="productsScrollWrapper">
+                <!-- Loaded from data/products.json -->
+            </div>
+            <div class="scroll-indicators">
+                <button class="scroll-btn scroll-left"  aria-label="Scroll left">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="scroll-btn scroll-right" aria-label="Scroll right">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Services ── -->
+    <section id="services">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Services</h2>
+                <p class="section-subtitle">Comprehensive smart home solutions tailored to your needs</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-thumb">
+                        <img src="images/services/motorised-curtains.jpg" alt="Motorised Curtains">
+                    </div>
+                    <div>
+                        <h3>Motorised Curtains</h3>
+                        <p>Remote control, scheduling, and silent operation.</p>
+                    </div>
+                </div>
+                <div class="service-card">
+                    <div class="service-thumb">
+                        <img src="images/services/smart-door-locks.jpg" alt="Smart Door Locks">
+                    </div>
+                    <div>
+                        <h3>Smart Door Locks</h3>
+                        <p>Keyless entry with mobile app control and logs.</p>
+                    </div>
+                </div>
+                <div class="service-card">
+                    <div class="service-thumb">
+                        <img src="images/services/ir-blasters.jpg" alt="IR Blasters">
+                    </div>
+                    <div>
+                        <h3>IR Blasters</h3>
+                        <p>Universal IR device control, multi-device support.</p>
+                    </div>
+                </div>
+                <div class="service-card">
+                    <div class="service-thumb">
+                        <img src="images/services/smart-door-bell.jpg" alt="Smart Door Bell">
+                    </div>
+                    <div>
+                        <h3>Smart Door Bell</h3>
+                        <p>Live video feed, notifications, two-way audio.</p>
+                    </div>
+                </div>
+                <div class="service-card">
+                    <div class="service-thumb">
+                        <img src="images/services/motion-sensors.jpg" alt="Motion Sensors">
+                    </div>
+                    <div>
+                        <h3>Motion Sensors</h3>
+                        <p>Auto-lighting and security alert system.</p>
+                    </div>
+                </div>
+                <div class="service-card">
+                    <div class="service-thumb">
+                        <img src="images/services/voice-control.jpg" alt="Voice Control">
+                    </div>
+                    <div>
+                        <h3>Voice Control</h3>
+                        <p>Smart assistant integration for hands-free control.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── PAT App ── -->
+    <section id="pat-app">
+        <div class="container">
+            <div class="pat-app-content">
+                <img src="images/pat-home-app.jpg" alt="PAT Home App" class="pat-app-img">
+                <div class="pat-app-text">
+                    <h2>PAT IoT App</h2>
+                    <p>Control and personalize your entire home from anywhere. Manage lights, fans, curtains, and smart devices in real time through a single intuitive interface.</p>
+                    <p>Use across multiple devices, add real photos of each room, and enjoy full end-to-end encryption for total peace of mind.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Video Modes ── -->
+    <section class="video-modes-section">
+        <div class="video-modes-container">
+            <video class="mode-video" id="morningVideo" muted playsinline>
+                <source src="videos/morning-mode.mp4" type="video/mp4">
+            </video>
+            <video class="mode-video" id="movieVideo" muted playsinline>
+                <source src="videos/movie-mode.mp4" type="video/mp4">
+            </video>
+            <video class="mode-video" id="nightVideo" muted playsinline>
+                <source src="videos/night-mode.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-modes"></div>
+            <div class="video-mode-controls-wrapper">
+                <div class="mode-controls-hint" id="modeControlsHint">
+                    <span class="mode-hint-text">Tap to switch mode</span>
+                    <i class="fas fa-chevron-down mode-hint-arrow"></i>
+                </div>
+                <div class="video-mode-controls">
+                    <button class="mode-btn" id="morningBtn" data-mode="morning">
+                        <i class="fas fa-sun mode-btn-icon"></i>
+                        <span class="mode-btn-label">Morning</span>
+                    </button>
+                    <button class="mode-btn" id="movieBtn" data-mode="movie">
+                        <i class="fas fa-video mode-btn-icon"></i>
+                        <span class="mode-btn-label">Movie</span>
+                    </button>
+                    <button class="mode-btn" id="nightBtn" data-mode="night">
+                        <i class="fas fa-moon mode-btn-icon"></i>
+                        <span class="mode-btn-label">Night</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── About ── -->
+    <section id="about">
+        <div class="container">
+            <div class="about-content">
+                <video src="videos/intro.mp4" class="about-video"
+                       autoplay muted loop playsinline></video>
+                <div class="about-text">
+                    <h2>About Us</h2>
+                    <p>PAT IoT Solutions Pvt. Ltd. is a leading home automation company transforming ordinary homes into intelligent living spaces. We manufacture premium smart touch switch boards, DALI touch dimming systems, and PWM modules.</p>
+                    <p>Based in Hyderabad, Telangana, our team designs customized automation systems that match your lifestyle and budget.</p>
+                    <p>Quality, innovation, and customer satisfaction make us a trusted name in Indian smart home automation.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Clients ── -->
+    <section id="clients">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Clients</h2>
+                <p class="section-subtitle">Trusted by leading brands and homeowners</p>
+            </div>
+        </div>
+        <div class="clients-scroll-wrap">
+            <div class="clients-track">
+                <div class="client-logo"><img src="images/clients/client-1.png" alt="Client 1" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-2.png" alt="Client 2" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-3.png" alt="Client 3" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-4.png" alt="Client 4" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-5.png" alt="Client 5" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-6.png" alt="Client 6" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-7.png" alt="Client 7" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-8.png" alt="Client 8" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-9.png" alt="Client 9" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-1.png" alt="Client 1" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-2.png" alt="Client 2" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-3.png" alt="Client 3" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-4.png" alt="Client 4" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-5.png" alt="Client 5" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-6.png" alt="Client 6" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-7.png" alt="Client 7" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-8.png" alt="Client 8" onerror="this.parentElement.classList.add('placeholder')"></div>
+                <div class="client-logo"><img src="images/clients/client-9.png" alt="Client 9" onerror="this.parentElement.classList.add('placeholder')"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Gallery ── -->
+    <section class="product-gallery-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Product Gallery</h2>
+                <p class="section-subtitle">Browse through different views and angles</p>
+            </div>
+            <div class="gallery-scroll-wrapper" id="galleryScrollWrapper">
+                <!-- Loaded from data/products.json -->
+            </div>
+            <div class="gallery-scroll-buttons">
+                <button class="gallery-scroll-btn gallery-scroll-left"  aria-label="Scroll left">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="gallery-scroll-btn gallery-scroll-right" aria-label="Scroll right">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Warranty ── -->
+    <section class="warranty-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Product Warranty</h2>
+                <p class="section-subtitle">Quality assurance for our manufactured products</p>
+            </div>
+            <div class="warranty-info">
+                <div class="warranty-card">
+                    <div class="warranty-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Smart Touch Switch Boards</h3>
+                    <p class="warranty-period"><strong>Warranty:</strong> 2 Years</p>
+                    <p>Covering manufacturing defects, material quality, and workmanship.</p>
+                </div>
+                <div class="warranty-card">
+                    <div class="warranty-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>DALI Touch Dimming</h3>
+                    <p class="warranty-period"><strong>Warranty:</strong> 2 Years</p>
+                    <p>Full warranty on touch panels, dimming modules, and control systems.</p>
+                </div>
+                <div class="warranty-card">
+                    <div class="warranty-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>PWM Module</h3>
+                    <p class="warranty-period"><strong>Warranty:</strong> 2 Years</p>
+                    <p>Complete coverage for circuit boards and connectors.</p>
+                </div>
+            </div>
+            <div class="warranty-terms">
+                <h3>Terms &amp; Conditions</h3>
+                <ul>
+                    <li><i class="fas fa-check"></i> Warranty starts from date of purchase</li>
+                    <li><i class="fas fa-check"></i> Covers manufacturing defects and component failures</li>
+                    <li><i class="fas fa-check"></i> Free replacement or repair for defective products</li>
+                    <li><i class="fas fa-check"></i> Professional installation recommended</li>
+                    <li><i class="fas fa-check"></i> Does not cover misuse or unauthorized modifications</li>
+                    <li><i class="fas fa-check"></i> Contact support for claims and service requests</li>
+                </ul>
+                <div class="warranty-contact">
+                    <p><strong>For warranty claims:</strong></p>
+                    <p>+91 83746 63171 &nbsp;|&nbsp; marketing@patiot.in</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Contact ── -->
+    <section id="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Get In Touch</h2>
+                <p class="section-subtitle">Contact us today for a free consultation.</p>
+            </div>
+            <div class="contact-content">
+                <form id="contactForm" class="contact-form">
+                    <div class="form-group"><input type="text"  id="name"    name="name"    placeholder="Your Name"    required></div>
+                    <div class="form-group"><input type="email" id="email"   name="email"   placeholder="Your Email"   required></div>
+                    <div class="form-group"><input type="tel"   id="phone"   name="phone"   placeholder="Your Phone"></div>
+                    <div class="form-group"><textarea           id="message" name="message" rows="4" placeholder="Your Message" required></textarea></div>
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </form>
+                <aside class="contact-box">
+                    <div class="contact-box-header"><h3>Contact Information</h3></div>
+                    <div class="contact-box-content">
+                        <div class="info-item-compact">
+                            <div class="info-icon-compact"><i class="fas fa-map-marker-alt"></i></div>
+                            <div class="info-text-compact">
+                                <h4>Address</h4>
+                                <p>D-2, 3rd Floor, CMC layout, Kondapur, Hyderabad, Telangana 500084</p>
+                            </div>
+                        </div>
+                        <div class="info-item-compact">
+                            <div class="info-icon-compact"><i class="fas fa-phone"></i></div>
+                            <div class="info-text-compact"><h4>Phone</h4><p>+91 83746 63171</p></div>
+                        </div>
+                        <div class="info-item-compact">
+                            <div class="info-icon-compact"><i class="fas fa-envelope"></i></div>
+                            <div class="info-text-compact">
+                                <h4>Email</h4>
+                                <p><a href="mailto:marketing@patiot.in">marketing@patiot.in</a></p>
+                            </div>
+                        </div>
+                        <div class="qr-code-box">
+                            <img src="images/qr-code.png" alt="Scan QR Code" class="qr-code-image-compact">
+                            <p class="qr-code-label">Scan for More Info</p>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Footer ── -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <img src="images/logo.png" alt="PAT IOT SOLUTIONS" class="footer-logo"
+                     onerror="this.style.display='none';">
+                <p>Transforming homes into intelligent living spaces with IoT and automation technology.</p>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/share/182eKatbLq/" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook"></i></a>
+                    <a href="https://www.instagram.com/patiot.solutions?igsh=MWFiZjkxdm1nNnRjdg==" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.linkedin.com/in/pat-iot-solutions-65b1a4375" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#products">Products</a></li>
+                    <li><a href="blog.html">Blogs</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Newsletter</h4>
+                <p>Subscribe for updates on new products and offers.</p>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your Email">
+                    <button type="submit">Subscribe</button>
+                </form>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 PAT IOT SOLUTIONS. All rights reserved.</p>
+        </div>
+        <div class="desktop-link">
+            <a href="index.html?desktop=1">View Desktop Version &rarr;</a>
+        </div>
+    </footer>
+
+    <div id="lightbox"></div>
+    <script src="script.js"></script>
+</body>
+</html>
