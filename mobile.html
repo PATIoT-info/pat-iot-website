@@ -84,38 +84,29 @@
         .logo-iot { color: #374151; font-weight: 600; font-size: 0.6rem; letter-spacing: 0.05em; }
 
         /* ══════════════════════════════
-           HERO IMAGE — full image visible, nothing cropped
+           HERO — image + text in one container, pure normal flow
         ══════════════════════════════ */
         #home {
-            margin-top: 68px;   /* 60px navbar + 8px breathing room */
-            padding: 0 !important;  /* override section { padding: 2.5rem 0 } — no gaps around image */
-            background: #0d1117;
-            line-height: 0;
+            margin-top: 68px;
+            padding: 0 !important;
+            background: #0f172a;
+            display: block;
         }
         .hero-bg-image {
             width: 100%;
-            height: auto;   /* natural aspect ratio — full image, nothing cut */
+            height: auto;
+            display: block;
+            vertical-align: top;
+        }
+        .hero-text-section {
+            padding: 2rem 1.5rem 2.25rem;
+            text-align: center;
+            background: linear-gradient(160deg, #0f172a 0%, #1a2e4a 60%, #0f172a 100%);
             display: block;
         }
-        /* hide overlay and content — text lives in .hero-text-section below */
         .hero-overlay { display: none; }
         .hero-content { display: none; }
         .scroll-indicator { display: none; }
-
-        /* ══════════════════════════════
-           HERO TEXT SECTION — sits below hero image, no overlap
-           Simple solid dark-blue gradient — no filter/transform bleed
-        ══════════════════════════════ */
-        .hero-text-section {
-            padding: 2.25rem 1.5rem 2.5rem;
-            text-align: center;
-            background: linear-gradient(160deg, #0f172a 0%, #1a2e4a 60%, #0f172a 100%);
-            /* No position:relative, no ::before/::after, no filter — zero bleed */
-        }
-        .hero-text-inner {
-            display: flex; flex-direction: column;
-            align-items: center;
-        }
         .hero-title {
             font-size: 2rem; font-weight: 700;
             color: #fff; line-height: 1.15;
@@ -567,15 +558,13 @@
         </div>
     </nav>
 
-    <!-- ── Hero Image (full, no crop) ── -->
+    <!-- ── Hero: image on top, text block directly below, one container ── -->
     <section id="home">
+        <!-- Full image — natural width/height, nothing cut -->
         <img src="images/hero-image-mobile.jpg" alt="Smart Home by PAT IOT"
              class="hero-bg-image" loading="eager" decoding="async">
-    </section>
-
-    <!-- ── Hero Text (below image, blurred bg) ── -->
-    <div class="hero-text-section">
-        <div class="hero-text-inner">
+        <!-- Text block — sits flush below image in normal document flow -->
+        <div class="hero-text-section">
             <h1 class="hero-title">Transform Your Living</h1>
             <p class="hero-subtitle">Experience the future of home automation with technology that makes life easier, safer, and smarter.</p>
             <div class="hero-buttons">
@@ -590,7 +579,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- ── Hero Video — full width 16:9 ── -->
     <div class="video-label-strip">
