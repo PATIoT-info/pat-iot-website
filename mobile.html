@@ -66,46 +66,64 @@
         .logo-iot { color: #374151; font-weight: 600; font-size: 0.6rem; letter-spacing: 0.05em; }
 
         /* ══════════════════════════════
-           HERO — full screen image
+           HERO — full image visible, text overlaid
+           Image displays at natural proportions (no cropping).
+           Overlay + content sit on top using absolute positioning.
         ══════════════════════════════ */
         #home {
             position: relative;
-            height: 100vh;
-            height: 100svh;
-            overflow: hidden;
             background: #0d1117;
+            /* height = natural image height — no fixed height = no cropping */
         }
         .hero-bg-image {
-            position: absolute; inset: 0;
-            width: 100%; height: 100%;
-            object-fit: cover;
-            object-position: center center;
+            width: 100%;
+            height: auto;        /* natural height — full image shown */
+            display: block;
+            position: relative;
         }
         .hero-overlay {
             position: absolute; inset: 0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.55) 100%);
+            /* stronger bottom gradient so buttons/text are readable */
+            background: linear-gradient(
+                to bottom,
+                rgba(0,0,0,0.18) 0%,
+                rgba(0,0,0,0.38) 35%,
+                rgba(0,0,0,0.70) 100%
+            );
             z-index: 1;
         }
         .hero-content {
             position: absolute; inset: 0; z-index: 2;
             display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            align-items: center; justify-content: flex-end;
             text-align: center;
-            padding: 0 1.5rem;
-            padding-top: 60px;
+            padding: 0 1.5rem 2rem;   /* text sits in the lower third */
         }
-        .hero-title {
-            font-size: 2.2rem; font-weight: 700;
-            color: #fff; line-height: 1.15;
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 2rem;
+            padding: 0.3rem 0.85rem;
+            font-size: 0.72rem; font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            letter-spacing: 0.04em;
             margin-bottom: 0.875rem;
         }
+        .hero-badge i { color: #60a5fa; font-size: 0.65rem; }
+        .hero-title {
+            font-size: 2rem; font-weight: 700;
+            color: #fff; line-height: 1.15;
+            margin-bottom: 0.75rem;
+        }
         .hero-subtitle {
-            font-size: 0.95rem; color: rgba(255,255,255,0.88);
-            line-height: 1.65; margin-bottom: 2rem;
+            font-size: 0.875rem; color: rgba(255,255,255,0.85);
+            line-height: 1.65; margin-bottom: 1.5rem;
             max-width: 300px;
         }
-        .hero-buttons { display: flex; flex-direction: column; gap: 0.7rem; width: 100%; max-width: 280px; }
-        .hero-buttons-row { display: flex; gap: 0.7rem; }
+        .hero-buttons { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; max-width: 300px; }
+        .hero-buttons-row { display: flex; gap: 0.6rem; }
         .btn {
             padding: 0.8rem 1.1rem;
             border-radius: 0.5rem; font-weight: 600;
@@ -116,28 +134,24 @@
             border: none; flex: 1; min-height: 46px;
         }
         .btn-primary {
-            background: linear-gradient(160deg, rgba(96,165,250,0.6) 0%, rgba(37,99,235,0.45) 100%);
+            background: linear-gradient(160deg, rgba(96,165,250,0.65) 0%, rgba(37,99,235,0.5) 100%);
             border: 1px solid rgba(147,197,253,0.65) !important;
             box-shadow: 0 6px 20px rgba(37,99,235,0.3), inset 0 1px 0 rgba(255,255,255,0.35);
             color: #fff;
         }
         .btn-secondary {
             background: rgba(255,255,255,0.15);
-            border: 1.5px solid rgba(255,255,255,0.5) !important;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(255,255,255,0.45) !important;
             color: #fff; width: 100%;
         }
         .btn-brochure {
-            background: linear-gradient(160deg, rgba(248,113,113,0.6) 0%, rgba(220,38,38,0.45) 100%);
+            background: linear-gradient(160deg, rgba(248,113,113,0.65) 0%, rgba(220,38,38,0.5) 100%);
             border: 1px solid rgba(252,165,165,0.6) !important;
             box-shadow: 0 6px 20px rgba(220,38,38,0.28), inset 0 1px 0 rgba(255,255,255,0.35);
             color: #fff;
         }
-        .scroll-indicator {
-            position: absolute; bottom: 1.25rem; left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.75); font-size: 1.1rem; z-index: 3;
-            animation: bounce 2s infinite;
-        }
+        .scroll-indicator { display: none; } /* not needed — hero height is natural */
         @keyframes bounce {
             0%,100% { transform: translateX(-50%) translateY(0); }
             50%      { transform: translateX(-50%) translateY(6px); }
@@ -555,6 +569,9 @@
              class="hero-bg-image" loading="eager" decoding="async">
         <div class="hero-overlay"></div>
         <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fas fa-bolt"></i> Smart Home Automation
+            </div>
             <h1 class="hero-title">Transform Your Living</h1>
             <p class="hero-subtitle">Experience the future of home automation with technology that makes life easier, safer, and smarter.</p>
             <div class="hero-buttons">
@@ -569,7 +586,6 @@
                 </div>
             </div>
         </div>
-        <div class="scroll-indicator"><i class="fas fa-chevron-down"></i></div>
     </section>
 
     <!-- ── Hero Video — full width 16:9 ── -->
