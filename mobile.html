@@ -44,13 +44,19 @@
         .section-subtitle { font-size: 0.82rem; color: var(--text-light); line-height: 1.6; }
 
         /* ══════════════════════════════
-           NAVBAR
+           NAVBAR — fixed at top
         ══════════════════════════════ */
         .navbar {
-            background: rgba(255,255,255,0.88) !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            z-index: 999 !important;
+            background: rgba(255,255,255,0.92) !important;
             backdrop-filter: blur(24px) saturate(180%) !important;
             -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-            border-bottom: 1px solid rgba(0,0,0,0.07) !important;
+            border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06) !important;
         }
         .nav-wrapper {
             display: flex;
@@ -70,6 +76,7 @@
         ══════════════════════════════ */
         #home {
             background: #0d1117;
+            margin-top: 60px; /* push below fixed navbar so full image is visible */
         }
         .hero-bg-image {
             width: 100%;
