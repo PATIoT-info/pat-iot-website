@@ -87,9 +87,9 @@
            HERO IMAGE — full image visible, nothing cropped
         ══════════════════════════════ */
         #home {
-            margin-top: 60px;   /* clears the fixed navbar exactly */
+            margin-top: 68px;   /* 60px navbar + 8px breathing room so top of image is fully clear */
             background: #0d1117;
-            line-height: 0;     /* remove any inline gap below image */
+            line-height: 0;
         }
         .hero-bg-image {
             width: 100%;
@@ -111,6 +111,7 @@
             overflow: hidden;
             padding: 2.25rem 1.5rem 2.5rem;
             text-align: center;
+            margin-top: 0;   /* sits flush below hero image — no overlap */
         }
         /* background: hero image blurred + darkened */
         .hero-text-section::before {
@@ -546,8 +547,9 @@
         ══════════════════════════════ */
         .video-label-strip {
             background: #0d1117;
-            padding: 0.6rem 1.1rem;
+            padding: 0.75rem 1.1rem;
             display: flex; align-items: center; gap: 0.5rem;
+            margin-top: 1.5rem;   /* gap between text section and video showcase */
         }
         .video-label-strip span {
             font-size: 0.78rem; color: rgba(255,255,255,0.65);
