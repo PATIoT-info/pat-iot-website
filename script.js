@@ -2422,7 +2422,8 @@ document.querySelectorAll('video').forEach(video => {
         }
     });
     // Hero video is scroll-to-scrub; don't loop it
-    if (video.id === 'heroVideo') return;
+    // Mobile hero videos are scrub-controlled; don't loop them either
+    if (video.id === 'heroVideo' || video.classList.contains('mobile-hero-video')) return;
     video.addEventListener('ended', () => {
         video.currentTime = 0;
         video.play().catch(e => console.log('Video replay prevented:', e));
