@@ -1077,20 +1077,19 @@
             vids.forEach(function(v, i) { v.classList.toggle('v-active', i === idx); });
             activeIdx = idx;
         }
+        var bwTimer = null;  /* backward playback setTimeout id */
+
         function stopAll() {
-            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            if (rafId)   { cancelAnimationFrame(rafId); rafId = null; }
+            if (bwTimer) { clearTimeout(bwTimer); bwTimer = null; }
             playing = false; playDir = 0; lastTs = 0;
-            var v = vids[activeIdx];
-            v.pause();
-            v.playbackRate = 1;
+            vids[activeIdx].pause();
         }
 
         /* ── Forward: native play(), RAF syncs handle ── */
         function startForward() {
             playing = true; playDir = 1;
-            var v = vids[activeIdx];
-            v.playbackRate = 1;
-            v.play().catch(function() { playing = false; });
+            vids[activeIdx].play().catch(function() { playing = false; });
             (function loop() {
                 syncHandle();
                 if (playing && playDir === 1) rafId = requestAnimationFrame(loop);
@@ -1098,33 +1097,32 @@
             })();
         }
 
-        /* ── Backward: keep video "playing" at near-zero rate so mobile
-           browser renders frames on each currentTime seek ── */
+        /* ── Backward: setTimeout at 20fps so browser has time to decode
+           and display each frame — RAF is too fast for mobile seeks ── */
         function startBackward() {
-            playing = true; playDir = -1; lastTs = 0;
+            playing = true; playDir = -1;
             var v = vids[activeIdx];
-            /* playbackRate 0.001 keeps the decode pipeline active
-               so seeking backward actually updates the visible frame */
-            v.playbackRate = 0.001;
-            v.play().catch(function() {});
-            (function loop(ts) {
-                if (!lastTs) { lastTs = ts; rafId = requestAnimationFrame(loop); return; }
-                var dt = (ts - lastTs) / 1000;
-                lastTs = ts;
-                var t = (v.currentTime || 0) - dt;  /* subtract real time → backward */
+            var STEP = 1 / 20;   /* seek back 50ms each tick = 1× real-time */
+            var TICK = 50;       /* ms between ticks = 20 fps              */
+
+            v.pause();
+
+            function tick() {
+                if (!playing || playDir !== -1) return;
+                var t = (v.currentTime || 0) - STEP;
                 if (t <= 0.001) {
-                    v.pause(); v.playbackRate = 1;
                     try { v.currentTime = 0.001; } catch(e){}
                     setPos(segStartRatio(activeIdx));
                     playing = false; playDir = 0; atStart = true; atEnd = false;
-                    rafId = null;
+                    bwTimer = null;
                     return;
                 }
                 try { v.currentTime = t; } catch(e){}
                 syncHandle();
-                if (playing && playDir === -1) rafId = requestAnimationFrame(loop);
-                else rafId = null;
-            })();
+                bwTimer = setTimeout(tick, TICK);
+            }
+
+            bwTimer = setTimeout(tick, TICK);
         }
 
         /* ── Video ended → stop at last frame, do NOT auto-advance ── */
