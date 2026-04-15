@@ -183,7 +183,7 @@
             inset: 0 !important;
             opacity: 0;
             z-index: 1;
-            transition: opacity 0.25s ease;
+            transition: opacity 0.5s ease;
         }
         .mobile-hero-video.v-active {
             opacity: 1;
@@ -1020,7 +1020,7 @@
     <div id="lightbox"></div>
     <script src="script.js"></script>
     <script>
-    /* ── Hero Video 3-Video Scrub Bar ── */
+    /* ── Hero Video — 3-video smooth scrub player ── */
     (function () {
         var vids   = [
             document.getElementById('mhv1'),
@@ -1032,94 +1032,138 @@
         var handle = document.getElementById('heroScrubHandle');
         if (!track || vids.some(function(v){ return !v; })) return;
 
-        var durations  = [0, 0, 0];
-        var dragging   = false;
-        var activeIdx  = 0;
+        var durations = [0, 0, 0];
+        var activeIdx = 0;
+        var playing   = false;
+        var rafId     = null;
 
-        /* Load metadata for all three videos */
+        /* ── Load metadata & show first frame ── */
         vids.forEach(function(v, i) {
             v.addEventListener('loadedmetadata', function() {
                 durations[i] = v.duration || 0;
-                /* Show first frame of video 1 */
                 if (i === 0) { try { v.currentTime = 0.001; } catch(e){} }
             });
             v.load();
         });
 
-        function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-
+        /* ── Helpers ── */
         function totalDur() {
             var t = durations[0] + durations[1] + durations[2];
-            return t > 0 ? t : 3; /* fallback so bar is always draggable */
+            return t > 0 ? t : 3;
         }
-
-        /* Switch which video is visible */
-        function setActive(idx) {
-            if (idx === activeIdx) return;
-            vids[activeIdx].classList.remove('v-active');
-            activeIdx = idx;
-            vids[activeIdx].classList.add('v-active');
+        function segStartRatio(i) {
+            var total = totalDur(), elapsed = 0;
+            for (var j = 0; j < i; j++) elapsed += durations[j] > 0 ? durations[j] : total / 3;
+            return elapsed / total;
         }
-
-        /* Seek all three videos based on 0-1 ratio across full bar */
-        function seekAll(ratio) {
-            ratio = clamp(ratio, 0, 1);
+        function setPos(ratio) {
+            ratio = Math.max(0, Math.min(1, ratio));
             bar.style.width   = (ratio * 100) + '%';
             handle.style.left = (ratio * 100) + '%';
+        }
+        function switchTo(idx) {
+            vids.forEach(function(v, i) { v.classList.toggle('v-active', i === idx); });
+            activeIdx = idx;
+        }
 
-            var total   = totalDur();
-            var target  = ratio * total;
-            var elapsed = 0;
-
-            for (var i = 0; i < 3; i++) {
-                /* Use actual duration if known, else divide total equally */
-                var d = durations[i] > 0 ? durations[i] : total / 3;
-                if (target <= elapsed + d || i === 2) {
-                    setActive(i);
-                    var localTime = clamp(target - elapsed, 0, d);
-                    try { vids[i].currentTime = localTime; } catch(e){}
-                    break;
+        /* ── RAF loop: sync handle while video plays ── */
+        function startRaf() {
+            if (rafId) return;
+            (function loop() {
+                var v = vids[activeIdx];
+                if (v.duration && totalDur() > 0) {
+                    var elapsed = 0;
+                    for (var j = 0; j < activeIdx; j++) elapsed += durations[j] > 0 ? durations[j] : totalDur() / 3;
+                    setPos((elapsed + v.currentTime) / totalDur());
                 }
-                elapsed += d;
-            }
+                if (playing) rafId = requestAnimationFrame(loop);
+                else          rafId = null;
+            })();
+        }
+        function stopRaf() {
+            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
         }
 
-        function getX(e) {
-            return e.touches ? e.touches[0].clientX : e.clientX;
+        /* ── Play current video forward ── */
+        function playForward() {
+            if (playing) return;
+            var v = vids[activeIdx];
+            playing = true;
+            v.play().catch(function() { playing = false; });
+            startRaf();
         }
 
-        function onMove(e) {
-            if (!dragging) return;
+        /* ── When a video ends → fade to next video & stop ── */
+        vids.forEach(function(v, i) {
+            v.addEventListener('ended', function() {
+                if (activeIdx !== i) return;
+                playing = false;
+                stopRaf();
+                v.pause();
+                if (i < 2) {
+                    /* Cross-fade to next video */
+                    var next = i + 1;
+                    try { vids[next].currentTime = 0.001; } catch(e){}
+                    switchTo(next);
+                    setTimeout(function() { setPos(segStartRatio(next)); }, 50);
+                } else {
+                    setPos(1); /* End of all videos */
+                }
+            });
+        });
+
+        /* ── Drag detection: swipe right = play forward, left = rewind ── */
+        var touchStartX = null;
+        var moved       = false;
+
+        function onTouchStart(e) {
+            touchStartX = e.touches ? e.touches[0].clientX : e.clientX;
+            moved = false;
             e.preventDefault();
-            var rect  = track.getBoundingClientRect();
-            seekAll((getX(e) - rect.left) / rect.width);
         }
+        function onTouchMove(e) {
+            if (touchStartX === null) return;
+            var x  = e.touches ? e.touches[0].clientX : e.clientX;
+            var dx = x - touchStartX;
+            if (!moved && Math.abs(dx) > 10) {
+                moved = true;
+                if (dx > 0) {
+                    /* Swipe right → play */
+                    playForward();
+                } else {
+                    /* Swipe left → rewind current video to start */
+                    playing = false;
+                    stopRaf();
+                    vids[activeIdx].pause();
+                    try { vids[activeIdx].currentTime = 0.001; } catch(e){}
+                    if (activeIdx > 0) {
+                        /* If at the very start, go back to previous video */
+                        switchTo(activeIdx - 1);
+                        try { vids[activeIdx].currentTime = 0.001; } catch(e){}
+                    }
+                    setPos(segStartRatio(activeIdx));
+                }
+                touchStartX = null;
+            }
+            e.preventDefault();
+        }
+        function onTouchEnd() { touchStartX = null; }
 
         /* Touch */
-        handle.addEventListener('touchstart', function(e) {
-            dragging = true; e.preventDefault();
-        }, { passive: false });
-        track.addEventListener('touchstart', function(e) {
-            dragging = true;
-            var rect = track.getBoundingClientRect();
-            seekAll((e.touches[0].clientX - rect.left) / rect.width);
-            e.preventDefault();
-        }, { passive: false });
-        document.addEventListener('touchmove',  onMove, { passive: false });
-        document.addEventListener('touchend',   function() { dragging = false; });
+        handle.addEventListener('touchstart', onTouchStart, { passive: false });
+        track.addEventListener('touchstart',  onTouchStart, { passive: false });
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend',  onTouchEnd);
 
-        /* Mouse */
-        handle.addEventListener('mousedown', function() { dragging = true; });
-        track.addEventListener('mousedown', function(e) {
-            dragging = true;
-            var rect = track.getBoundingClientRect();
-            seekAll((e.clientX - rect.left) / rect.width);
-        });
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup',   function() { dragging = false; });
+        /* Mouse (desktop preview) */
+        handle.addEventListener('mousedown', onTouchStart);
+        track.addEventListener('mousedown',  onTouchStart);
+        document.addEventListener('mousemove', onTouchMove);
+        document.addEventListener('mouseup',   onTouchEnd);
 
-        /* Init: show bar at position 0 */
-        seekAll(0);
+        /* ── Init ── */
+        switchTo(0);
+        setPos(0);
     })();
     </script>
 </body>
