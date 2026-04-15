@@ -327,10 +327,45 @@
             width: 100% !important; height: 100% !important;
             object-fit: contain !important;
         }
+        /* Controls moved BELOW the video — no longer overlapping */
         .video-modes-section .video-mode-controls-wrapper {
-            position: absolute !important;
-            bottom: 0.5rem !important;
-            z-index: 10 !important;
+            display: none !important;
+        }
+        .mode-controls-below {
+            background: #0d1117;
+            padding: 0.85rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+        .mode-controls-below .mode-btn {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 0.3rem !important;
+            background: rgba(255,255,255,0.07) !important;
+            border: 1.5px solid rgba(255,255,255,0.15) !important;
+            border-radius: 12px !important;
+            padding: 0.6rem 1.1rem !important;
+            color: rgba(255,255,255,0.7) !important;
+            cursor: pointer !important;
+            min-width: 80px !important;
+            transition: all 0.2s ease !important;
+        }
+        .mode-controls-below .mode-btn.active,
+        .mode-controls-below .mode-btn:active {
+            background: rgba(37,99,235,0.35) !important;
+            border-color: #60a5fa !important;
+            color: #fff !important;
+        }
+        .mode-controls-below .mode-btn-icon {
+            font-size: 1.1rem !important;
+        }
+        .mode-controls-below .mode-btn-label {
+            font-size: 0.7rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.03em !important;
         }
 
         /* ══════════════════════════════
@@ -848,11 +883,8 @@
                 <source src="videos/night-mode.mp4" type="video/mp4">
             </video>
             <div class="video-overlay-modes"></div>
+            <!-- original controls kept for JS compatibility but hidden via CSS -->
             <div class="video-mode-controls-wrapper">
-                <div class="mode-controls-hint" id="modeControlsHint">
-                    <span class="mode-hint-text">Tap to switch mode</span>
-                    <i class="fas fa-chevron-down mode-hint-arrow"></i>
-                </div>
                 <div class="video-mode-controls">
                     <button class="mode-btn" id="morningBtn" data-mode="morning">
                         <i class="fas fa-sun mode-btn-icon"></i>
@@ -870,6 +902,21 @@
             </div>
         </div>
     </section>
+    <!-- ── Mode buttons below video ── -->
+    <div class="mode-controls-below">
+        <button class="mode-btn active" data-mode="morning" onclick="document.getElementById('morningBtn').click()">
+            <i class="fas fa-sun mode-btn-icon"></i>
+            <span class="mode-btn-label">Morning</span>
+        </button>
+        <button class="mode-btn" data-mode="movie" onclick="document.getElementById('movieBtn').click()">
+            <i class="fas fa-video mode-btn-icon"></i>
+            <span class="mode-btn-label">Movie</span>
+        </button>
+        <button class="mode-btn" data-mode="night" onclick="document.getElementById('nightBtn').click()">
+            <i class="fas fa-moon mode-btn-icon"></i>
+            <span class="mode-btn-label">Night</span>
+        </button>
+    </div>
 
     <!-- ── About ── -->
     <section id="about">
@@ -1268,6 +1315,26 @@
         /* ── Init ── */
         setActive(fwd[0]);
         setPos(0);
+    })();
+
+    /* ── Sync visible mode buttons active state with hidden original buttons ── */
+    (function () {
+        var visibleBtns = document.querySelectorAll('.mode-controls-below .mode-btn');
+        /* Watch the hidden original buttons for class changes */
+        var observer = new MutationObserver(function() {
+            var activeMode = '';
+            ['morningBtn','movieBtn','nightBtn'].forEach(function(id) {
+                var btn = document.getElementById(id);
+                if (btn && btn.classList.contains('active')) activeMode = btn.dataset.mode;
+            });
+            visibleBtns.forEach(function(b) {
+                b.classList.toggle('active', b.dataset.mode === activeMode);
+            });
+        });
+        ['morningBtn','movieBtn','nightBtn'].forEach(function(id) {
+            var btn = document.getElementById(id);
+            if (btn) observer.observe(btn, { attributes: true, attributeFilter: ['class'] });
+        });
     })();
     </script>
 </body>
