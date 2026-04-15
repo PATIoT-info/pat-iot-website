@@ -91,11 +91,14 @@
             padding: 0 !important;
             background: #0f172a;
         }
-        /* Image: full width, natural height, nothing cut */
+        /* Image: full width, natural height, nothing cut.
+           core.css sets position:absolute on .hero-bg-image — override it. */
         .hero-bg-image {
-            width: 100%;
-            height: auto;
-            display: block;
+            position: static !important;
+            inset: auto !important;
+            width: 100% !important;
+            height: auto !important;
+            display: block !important;
         }
         /* Text: plain block below the image */
         .hero-text-section {
