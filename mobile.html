@@ -548,6 +548,7 @@
             padding: 1rem 1.5rem 1.2rem;
             display: flex;
             align-items: center;
+            position: relative;
         }
         .scrub-track {
             position: relative;
@@ -587,6 +588,36 @@
             cursor: grabbing;
             box-shadow: 0 4px 18px rgba(59,130,246,0.55);
             transform: translate(-50%, -50%) scale(1.18);
+        }
+        /* ── Scrub hint pill ── */
+        .scrub-hint {
+            position: absolute;
+            bottom: calc(100% + 10px);
+            right: 1rem;
+            background: rgba(15,23,42,0.88);
+            border: 1px solid rgba(96,165,250,0.35);
+            color: #93c5fd;
+            font-size: 0.72rem;
+            font-weight: 500;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            white-space: nowrap;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            backdrop-filter: blur(6px);
+            animation: hintPulse 2s ease-in-out infinite;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .scrub-hint.hide {
+            opacity: 0 !important;
+            transform: translateY(6px);
+            pointer-events: none;
+        }
+        @keyframes hintPulse {
+            0%, 100% { opacity: 0.9; }
+            50%       { opacity: 0.5; }
         }
     </style>
 </head>
@@ -668,6 +699,9 @@
             <div class="scrub-handle" id="heroScrubHandle">
                 <i class="fas fa-arrows-alt-h"></i>
             </div>
+        </div>
+        <div class="scrub-hint" id="scrubHint">
+            <i class="fas fa-hand-point-up"></i> Swipe to play
         </div>
     </div>
 
@@ -1178,8 +1212,17 @@
             }
         }
 
+        var hint = document.getElementById('scrubHint');
+        function dismissHint() {
+            if (hint && !hint.classList.contains('hide')) {
+                hint.classList.add('hide');
+                setTimeout(function() { if (hint) hint.style.display = 'none'; }, 450);
+            }
+        }
+
         function onStart(e) {
             if (playing) return;
+            dismissHint();
             startX = e.touches ? e.touches[0].clientX : e.clientX;
             moved = false;
             e.preventDefault();
