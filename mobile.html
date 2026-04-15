@@ -103,9 +103,11 @@
         /* Text: plain block below the image */
         .hero-text-section {
             width: 100%;
-            padding: 2rem 1.5rem 2.25rem;
+            padding: 2rem 1.5rem 2.5rem;
             background: linear-gradient(160deg, #0f172a 0%, #1a2e4a 55%, #0f172a 100%);
             box-sizing: border-box;
+            border-bottom: 1.5px solid rgba(96,165,250,0.25);
+            box-shadow: 0 4px 18px rgba(0,0,0,0.45);
         }
         .hero-overlay { display: none; }
         .hero-content { display: none; }
@@ -173,6 +175,7 @@
             aspect-ratio: 16 / 9 !important;
             background: #000 !important;
             overflow: hidden !important;
+            margin-top: 6px !important;
         }
         .mobile-hero-video {
             display: block !important;
@@ -333,11 +336,36 @@
         }
         .mode-controls-below {
             background: #0d1117;
-            padding: 0.85rem 1rem;
+            padding: 0.85rem 1rem 0.65rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .mode-controls-btns {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.75rem;
+        }
+        .mode-hint {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(37,99,235,0.18);
+            border: 1px solid rgba(96,165,250,0.3);
+            color: #93c5fd;
+            font-size: 0.72rem;
+            font-weight: 500;
+            padding: 0.28rem 0.85rem;
+            border-radius: 20px;
+            animation: hintPulse 1.8s ease-in-out infinite;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .mode-hint.hide {
+            opacity: 0 !important;
+            transform: translateY(-4px);
+            pointer-events: none;
         }
         .mode-controls-below .mode-btn {
             display: flex !important;
@@ -867,10 +895,6 @@
     </section>
 
     <!-- ── Video Modes — 16:9 ── -->
-    <div class="video-label-strip">
-        <i class="fas fa-sliders-h"></i>
-        <span>Smart Lighting Modes — Tap to switch</span>
-    </div>
     <section class="video-modes-section">
         <div class="video-modes-container">
             <video class="mode-video" id="morningVideo" muted playsinline preload="auto">
@@ -904,18 +928,23 @@
     </section>
     <!-- ── Mode buttons below video ── -->
     <div class="mode-controls-below">
-        <button class="mode-btn active" data-mode="morning" onclick="document.getElementById('morningBtn').click()">
-            <i class="fas fa-sun mode-btn-icon"></i>
-            <span class="mode-btn-label">Morning</span>
-        </button>
-        <button class="mode-btn" data-mode="movie" onclick="document.getElementById('movieBtn').click()">
-            <i class="fas fa-video mode-btn-icon"></i>
-            <span class="mode-btn-label">Movie</span>
-        </button>
-        <button class="mode-btn" data-mode="night" onclick="document.getElementById('nightBtn').click()">
-            <i class="fas fa-moon mode-btn-icon"></i>
-            <span class="mode-btn-label">Night</span>
-        </button>
+        <div class="mode-hint" id="modeHint">
+            <i class="fas fa-hand-point-up"></i> Tap to switch
+        </div>
+        <div class="mode-controls-btns">
+            <button class="mode-btn active" data-mode="morning" onclick="document.getElementById('morningBtn').click()">
+                <i class="fas fa-sun mode-btn-icon"></i>
+                <span class="mode-btn-label">Morning</span>
+            </button>
+            <button class="mode-btn" data-mode="movie" onclick="document.getElementById('movieBtn').click()">
+                <i class="fas fa-video mode-btn-icon"></i>
+                <span class="mode-btn-label">Movie</span>
+            </button>
+            <button class="mode-btn" data-mode="night" onclick="document.getElementById('nightBtn').click()">
+                <i class="fas fa-moon mode-btn-icon"></i>
+                <span class="mode-btn-label">Night</span>
+            </button>
+        </div>
     </div>
 
     <!-- ── About ── -->
@@ -1334,6 +1363,21 @@
         ['morningBtn','movieBtn','nightBtn'].forEach(function(id) {
             var btn = document.getElementById(id);
             if (btn) observer.observe(btn, { attributes: true, attributeFilter: ['class'] });
+        });
+    })();
+
+    /* ── Dismiss "Tap to switch" hint on first mode button tap ── */
+    (function () {
+        var hint = document.getElementById('modeHint');
+        if (!hint) return;
+        var dismissed = false;
+        document.querySelectorAll('.mode-controls-below .mode-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (dismissed) return;
+                dismissed = true;
+                hint.classList.add('hide');
+                setTimeout(function() { hint.style.display = 'none'; }, 450);
+            });
         });
     })();
     </script>
