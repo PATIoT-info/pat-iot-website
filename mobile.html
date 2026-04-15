@@ -699,6 +699,223 @@
             0%, 100% { opacity: 1; }
             50%       { opacity: 0.4; }
         }
+
+        /* ══════════════════════════════════════════════════
+           LIQUID GLASS — translucent blur surfaces with
+           specular highlights and physical depth
+        ══════════════════════════════════════════════════ */
+
+        /* ── Glass token (reused via custom properties) ── */
+        :root {
+            --glass-dark-bg:      rgba(255,255,255,0.08);
+            --glass-dark-border:  rgba(255,255,255,0.18);
+            --glass-light-bg:     rgba(255,255,255,0.62);
+            --glass-light-border: rgba(255,255,255,0.88);
+            --glass-blur:         blur(22px) saturate(180%);
+            --glass-specular:     inset 0 1px 0 rgba(255,255,255,0.45);
+            --glass-shadow:       0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.45);
+            --glass-shadow-sm:    0 4px 16px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5);
+        }
+
+        /* ── Navbar — stronger glass ── */
+        .navbar {
+            background: rgba(255,255,255,0.72) !important;
+            backdrop-filter: var(--glass-blur) !important;
+            -webkit-backdrop-filter: var(--glass-blur) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.55) !important;
+            box-shadow: 0 2px 24px rgba(0,0,0,0.08), inset 0 -1px 0 rgba(0,0,0,0.04) !important;
+        }
+        /* ── Nav menu — glass panel ── */
+        #navMenu {
+            background: rgba(255,255,255,0.82) !important;
+            backdrop-filter: var(--glass-blur) !important;
+            -webkit-backdrop-filter: var(--glass-blur) !important;
+            border-top: 1px solid rgba(255,255,255,0.55) !important;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.1) !important;
+        }
+
+        /* ── Hero buttons ── */
+        .btn-primary {
+            background: linear-gradient(160deg, rgba(96,165,250,0.45) 0%, rgba(37,99,235,0.38) 100%) !important;
+            backdrop-filter: var(--glass-blur) !important;
+            -webkit-backdrop-filter: var(--glass-blur) !important;
+            border: 1px solid rgba(147,197,253,0.55) !important;
+            box-shadow: 0 6px 24px rgba(37,99,235,0.28), var(--glass-specular) !important;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.12) !important;
+            backdrop-filter: var(--glass-blur) !important;
+            -webkit-backdrop-filter: var(--glass-blur) !important;
+            border: 1.5px solid rgba(255,255,255,0.35) !important;
+            box-shadow: var(--glass-specular) !important;
+        }
+        .btn-brochure {
+            background: linear-gradient(160deg, rgba(248,113,113,0.45) 0%, rgba(220,38,38,0.38) 100%) !important;
+            backdrop-filter: var(--glass-blur) !important;
+            -webkit-backdrop-filter: var(--glass-blur) !important;
+            border: 1px solid rgba(252,165,165,0.5) !important;
+            box-shadow: 0 6px 24px rgba(220,38,38,0.22), var(--glass-specular) !important;
+        }
+
+        /* ── Scrub bar ── */
+        .hero-scrub-wrap {
+            background: rgba(13,17,23,0.75) !important;
+            backdrop-filter: blur(16px) saturate(160%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+            border-top: 1px solid rgba(255,255,255,0.1) !important;
+        }
+        .scrub-track {
+            background: rgba(255,255,255,0.12) !important;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.4) !important;
+        }
+        .scrub-handle {
+            background: rgba(255,255,255,0.92) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255,255,255,0.6) !important;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+        }
+
+        /* ── Product cards — glass tile on light bg ── */
+        .product-card {
+            background: rgba(255,255,255,0.72) !important;
+            backdrop-filter: var(--glass-blur) !important;
+            -webkit-backdrop-filter: var(--glass-blur) !important;
+            border: 1px solid rgba(255,255,255,0.88) !important;
+            box-shadow: var(--glass-shadow-sm) !important;
+        }
+
+        /* ── Service cards — enhance existing glass ── */
+        .service-card {
+            background: rgba(255,255,255,0.58) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            border: 1px solid rgba(255,255,255,0.88) !important;
+            box-shadow: var(--glass-shadow-sm) !important;
+        }
+
+        /* ── Mode controls ── */
+        .mode-controls-below {
+            background: rgba(13,17,23,0.8) !important;
+            backdrop-filter: blur(16px) saturate(160%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+            border-top: 1px solid rgba(255,255,255,0.08) !important;
+        }
+        .mode-controls-below .mode-btn {
+            background: rgba(255,255,255,0.08) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            box-shadow: var(--glass-specular) !important;
+        }
+        .mode-controls-below .mode-btn.active,
+        .mode-controls-below .mode-btn:active {
+            background: rgba(37,99,235,0.32) !important;
+            border-color: rgba(96,165,250,0.55) !important;
+            box-shadow: 0 0 18px rgba(37,99,235,0.35), var(--glass-specular) !important;
+        }
+
+        /* ── Warranty cards — enhance existing glass ── */
+        .warranty-card {
+            background: rgba(255,255,255,0.62) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            border: 1px solid rgba(255,255,255,0.88) !important;
+            box-shadow: var(--glass-shadow-sm) !important;
+        }
+        .warranty-terms {
+            background: rgba(255,255,255,0.62) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            border: 1px solid rgba(255,255,255,0.88) !important;
+            box-shadow: var(--glass-shadow-sm) !important;
+        }
+
+        /* ── Contact form inputs ── */
+        .contact-form input,
+        .contact-form textarea {
+            background: rgba(255,255,255,0.65) !important;
+            backdrop-filter: blur(16px) saturate(160%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+            border: 1.5px solid rgba(255,255,255,0.82) !important;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.04), var(--glass-specular) !important;
+        }
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            background: rgba(255,255,255,0.88) !important;
+            border-color: rgba(37,99,235,0.45) !important;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1), inset 0 1px 0 rgba(255,255,255,0.8) !important;
+        }
+
+        /* ── Contact info box ── */
+        .contact-box {
+            background: rgba(255,255,255,0.68) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            border: 1px solid rgba(255,255,255,0.88) !important;
+            box-shadow: var(--glass-shadow) !important;
+        }
+
+        /* ── Scroll buttons (products + gallery) ── */
+        .scroll-btn,
+        .gallery-scroll-btn {
+            background: rgba(255,255,255,0.72) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1.5px solid rgba(255,255,255,0.88) !important;
+            box-shadow: var(--glass-shadow-sm) !important;
+        }
+        .scroll-btn:active,
+        .gallery-scroll-btn:active {
+            background: rgba(37,99,235,0.85) !important;
+        }
+
+        /* ── Gallery items — glass frame ── */
+        .gallery-item {
+            background: rgba(229,231,235,0.55) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            border: 1px solid rgba(255,255,255,0.75) !important;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6) !important;
+        }
+
+        /* ── About video wrap — glass bezel ── */
+        .about-video-wrap {
+            border: 1px solid rgba(255,255,255,0.7) !important;
+            box-shadow: var(--glass-shadow) !important;
+        }
+
+        /* ── Hint pills ── */
+        .scrub-hint,
+        .mode-hint {
+            background: rgba(37,99,235,0.15) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(96,165,250,0.28) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.2) !important;
+        }
+
+        /* ── Social links in footer ── */
+        .social-links a {
+            background: rgba(55,65,81,0.75) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1) !important;
+        }
+
+        /* ── Section headers on light backgrounds — glass pill ── */
+        .section-header {
+            position: relative;
+        }
+        .section-title::after {
+            content: '';
+            display: block;
+            margin: 0.45rem auto 0;
+            width: 38px; height: 3px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, rgba(37,99,235,0.55), rgba(96,165,250,0.35));
+        }
     </style>
 </head>
 <body>
