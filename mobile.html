@@ -1080,13 +1080,17 @@
         function stopAll() {
             if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
             playing = false; playDir = 0; lastTs = 0;
-            vids[activeIdx].pause();
+            var v = vids[activeIdx];
+            v.pause();
+            v.playbackRate = 1;
         }
 
         /* ── Forward: native play(), RAF syncs handle ── */
         function startForward() {
             playing = true; playDir = 1;
-            vids[activeIdx].play().catch(function() { playing = false; });
+            var v = vids[activeIdx];
+            v.playbackRate = 1;
+            v.play().catch(function() { playing = false; });
             (function loop() {
                 syncHandle();
                 if (playing && playDir === 1) rafId = requestAnimationFrame(loop);
@@ -1094,17 +1098,22 @@
             })();
         }
 
-        /* ── Backward: manual seek via RAF ── */
+        /* ── Backward: keep video "playing" at near-zero rate so mobile
+           browser renders frames on each currentTime seek ── */
         function startBackward() {
             playing = true; playDir = -1; lastTs = 0;
-            vids[activeIdx].pause();
+            var v = vids[activeIdx];
+            /* playbackRate 0.001 keeps the decode pipeline active
+               so seeking backward actually updates the visible frame */
+            v.playbackRate = 0.001;
+            v.play().catch(function() {});
             (function loop(ts) {
                 if (!lastTs) { lastTs = ts; rafId = requestAnimationFrame(loop); return; }
                 var dt = (ts - lastTs) / 1000;
                 lastTs = ts;
-                var v = vids[activeIdx];
-                var t = (v.currentTime || 0) - dt;
+                var t = (v.currentTime || 0) - dt;  /* subtract real time → backward */
                 if (t <= 0.001) {
+                    v.pause(); v.playbackRate = 1;
                     try { v.currentTime = 0.001; } catch(e){}
                     setPos(segStartRatio(activeIdx));
                     playing = false; playDir = 0; atStart = true; atEnd = false;
