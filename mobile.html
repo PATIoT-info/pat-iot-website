@@ -100,20 +100,19 @@
         .hamburger.active span:nth-child(2) { opacity: 0 !important; transform: scaleX(0) !important; }
         .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg) !important; }
 
-        /* ── Nav menu overlay backdrop ── */
+        /* ── Nav overlay — pure dark tint, NO blur (prevents double-blur on Android) ── */
         #navOverlay {
             display: none;
             position: fixed;
             inset: 0;
             top: 60px;
             z-index: 10000;
-            background: rgba(0,0,0,0.38);
-            backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(2px);
+            background: rgba(0,0,0,0.45);
+            /* NO backdrop-filter — avoids stacking blur with menu */
         }
         #navOverlay.active { display: block; }
 
-        /* ── Nav menu — drops down from top, above everything ── */
+        /* ── Nav menu — solid glass panel, drops down ── */
         #navMenu {
             position: fixed !important;
             top: 60px !important;
@@ -121,24 +120,26 @@
             right: 0 !important;
             bottom: auto !important;
             z-index: 10001 !important;
-            /* Liquid glass */
-            background: rgba(235,242,255,0.88) !important;
-            backdrop-filter: blur(36px) saturate(220%) !important;
-            -webkit-backdrop-filter: blur(36px) saturate(220%) !important;
-            border-bottom: 1px solid rgba(255,255,255,0.65) !important;
-            box-shadow: 0 16px 48px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.7) !important;
+            /* Opaque enough to not need heavy blur — readable on all devices */
+            background: rgba(225,235,255,0.97) !important;
+            backdrop-filter: blur(16px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+            border-bottom: 1.5px solid rgba(255,255,255,0.8) !important;
+            box-shadow:
+                0 12px 40px rgba(0,0,0,0.22),
+                inset 0 1px 0 rgba(255,255,255,0.9) !important;
             /* Drop down animation */
-            transform: translateY(-10px) !important;
+            transform: translateY(-8px) !important;
             opacity: 0 !important;
             pointer-events: none !important;
-            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.28s ease !important;
+            transition: transform 0.26s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease !important;
             /* Layout */
             display: flex !important;
             flex-direction: column !important;
-            padding: 1rem 1rem 1.25rem !important;
-            gap: 0.3rem !important;
+            padding: 0.85rem 0.9rem 1.1rem !important;
+            gap: 0.25rem !important;
             overflow-y: auto !important;
-            max-height: calc(100dvh - 60px) !important;
+            max-height: calc(100svh - 60px) !important;
         }
         #navMenu.active {
             transform: translateY(0) !important;
@@ -152,25 +153,23 @@
         #navMenu .nav-link {
             display: flex !important;
             align-items: center !important;
-            padding: 0.88rem 1.1rem !important;
+            padding: 0.85rem 1rem !important;
             font-size: 1rem !important;
             font-weight: 500 !important;
-            color: #1e3a5f !important;
-            border-radius: 14px !important;
+            color: #1a3060 !important;
+            border-radius: 12px !important;
             text-decoration: none !important;
-            background: rgba(255,255,255,0.52) !important;
-            border: 1px solid rgba(255,255,255,0.8) !important;
-            backdrop-filter: blur(10px) !important;
-            -webkit-backdrop-filter: blur(10px) !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7) !important;
-            transition: background 0.18s ease, color 0.18s ease !important;
-            margin-bottom: 0.2rem !important;
+            /* Subtle glass tile per row */
+            background: rgba(255,255,255,0.6) !important;
+            border: 1px solid rgba(255,255,255,0.85) !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8) !important;
+            transition: background 0.15s ease !important;
         }
         #navMenu .nav-link:active,
         #navMenu .nav-link.active {
-            background: rgba(37,99,235,0.15) !important;
+            background: rgba(37,99,235,0.12) !important;
             color: #2563eb !important;
-            border-color: rgba(96,165,250,0.5) !important;
+            border-color: rgba(96,165,250,0.45) !important;
         }
 
         .nav-wrapper {
