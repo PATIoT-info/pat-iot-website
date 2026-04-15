@@ -191,6 +191,18 @@
         }
 
         /* ══════════════════════════════
+           DISABLE ENTRANCE ANIMATIONS
+           core.css hides cards until IntersectionObserver fires,
+           but on mobile cards load dynamically after observer runs —
+           so force all of them visible immediately.
+        ══════════════════════════════ */
+        .product-card, .service-card, .gallery-item,
+        .warranty-card, .section-header, .about-content {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+        /* ══════════════════════════════
            PRODUCTS
         ══════════════════════════════ */
         #products { background: var(--bg-light); }
