@@ -164,8 +164,7 @@
         }
 
         /* ══════════════════════════════
-           HERO VIDEO — 16:9 YouTube style
-           !important beats core.css @media(max-width:767px)
+           HERO VIDEO — single 16:9 video
         ══════════════════════════════ */
         .hero-video-section {
             position: relative !important;
@@ -175,20 +174,13 @@
             background: #000 !important;
             overflow: hidden !important;
         }
-        .hero-video-layer {
-            position: absolute !important;
-            inset: 0 !important; top: 0 !important;
-            width: 100% !important; height: 100% !important;
+        .mobile-hero-video {
+            display: block !important;
+            width: 100% !important;
+            height: 100% !important;
             object-fit: contain !important;
-            opacity: 0 !important;
-            transition: opacity 0.45s ease;
-        }
-        .hero-video-layer[data-hero-index="0"] { z-index: 1 !important; opacity: 1 !important; }
-        .hero-video-layer[data-hero-index="1"] { z-index: 2 !important; }
-        .hero-video-layer[data-hero-index="2"] { z-index: 3 !important; }
-        .video-overlay {
-            position: absolute !important; inset: 0 !important;
-            background: rgba(0,0,0,0.12); z-index: 4; pointer-events: none;
+            position: absolute !important;
+            inset: 0 !important;
         }
 
         /* ══════════════════════════════
@@ -641,21 +633,12 @@
         </div>
     </section>
 
-    <!-- ── Hero Video — full width 16:9 ── -->
+    <!-- ── Hero Video — single 16:9 ── -->
     <section class="hero-video-section">
-        <video class="hero-video hero-video-layer" id="heroVideo1"
-               muted playsinline preload="auto" data-hero-index="0" autoplay loop>
+        <video class="mobile-hero-video" id="mobileHeroVideo"
+               autoplay muted loop playsinline preload="auto">
             <source src="videos/hero-video-1.mp4" type="video/mp4">
         </video>
-        <video class="hero-video hero-video-layer" id="heroVideo2"
-               muted playsinline preload="auto" data-hero-index="1">
-            <source src="videos/hero-video-2.mp4" type="video/mp4">
-        </video>
-        <video class="hero-video hero-video-layer" id="heroVideo3"
-               muted playsinline preload="auto" data-hero-index="2">
-            <source src="videos/hero-video-3.mp4" type="video/mp4">
-        </video>
-        <div class="video-overlay"></div>
     </section>
     <!-- ── Hero Video Scrub Bar ── -->
     <div class="hero-scrub-wrap">
@@ -1030,7 +1013,7 @@
         const track    = document.getElementById('heroScrubTrack');
         const bar      = document.getElementById('heroScrubProgress');
         const handle   = document.getElementById('heroScrubHandle');
-        const video    = document.getElementById('heroVideo1');
+        const video    = document.getElementById('mobileHeroVideo');
         if (!track || !video) return;
 
         let dragging = false;
