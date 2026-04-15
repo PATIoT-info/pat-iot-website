@@ -541,6 +541,54 @@
         .video-label-strip i {
             font-size: 0.7rem; color: #60a5fa;
         }
+        /* ══════════════════════════════
+           HERO VIDEO SCRUB BAR
+        ══════════════════════════════ */
+        .hero-scrub-wrap {
+            background: #0d1117;
+            padding: 1rem 1.5rem 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+        .scrub-track {
+            position: relative;
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 4px;
+            cursor: pointer;
+            touch-action: none;
+        }
+        .scrub-progress {
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        .scrub-handle {
+            position: absolute;
+            top: 50%;
+            left: 0%;
+            transform: translate(-50%, -50%);
+            width: 36px; height: 36px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; color: #1e40af;
+            cursor: grab;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            user-select: none;
+            touch-action: none;
+            z-index: 2;
+        }
+        .scrub-handle:active {
+            cursor: grabbing;
+            box-shadow: 0 4px 18px rgba(59,130,246,0.55);
+            transform: translate(-50%, -50%) scale(1.18);
+        }
     </style>
 </head>
 <body>
@@ -594,10 +642,6 @@
     </section>
 
     <!-- ── Hero Video — full width 16:9 ── -->
-    <div class="video-label-strip">
-        <i class="fas fa-play-circle"></i>
-        <span>Home Automation Showcase</span>
-    </div>
     <section class="hero-video-section">
         <video class="hero-video hero-video-layer" id="heroVideo1"
                muted playsinline preload="auto" data-hero-index="0" autoplay loop>
@@ -613,6 +657,15 @@
         </video>
         <div class="video-overlay"></div>
     </section>
+    <!-- ── Hero Video Scrub Bar ── -->
+    <div class="hero-scrub-wrap">
+        <div class="scrub-track" id="heroScrubTrack">
+            <div class="scrub-progress" id="heroScrubProgress"></div>
+            <div class="scrub-handle" id="heroScrubHandle">
+                <i class="fas fa-arrows-alt-h"></i>
+            </div>
+        </div>
+    </div>
 
     <!-- ── Products ── -->
     <section id="products">
@@ -971,5 +1024,62 @@
 
     <div id="lightbox"></div>
     <script src="script.js"></script>
+    <script>
+    /* ── Hero Video Scrub Bar ── */
+    (function () {
+        const track    = document.getElementById('heroScrubTrack');
+        const bar      = document.getElementById('heroScrubProgress');
+        const handle   = document.getElementById('heroScrubHandle');
+        const video    = document.getElementById('heroVideo1');
+        if (!track || !video) return;
+
+        let dragging = false;
+
+        function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+        function seekTo(clientX) {
+            const rect  = track.getBoundingClientRect();
+            const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
+            bar.style.width   = (ratio * 100) + '%';
+            handle.style.left = (ratio * 100) + '%';
+            if (video.duration) video.currentTime = ratio * video.duration;
+        }
+
+        /* Touch */
+        handle.addEventListener('touchstart', function(e) {
+            dragging = true;
+            video.pause();
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function(e) {
+            if (!dragging) return;
+            seekTo(e.touches[0].clientX);
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchend', function() {
+            if (!dragging) return;
+            dragging = false;
+            video.play();
+        });
+
+        /* Mouse (desktop) */
+        handle.addEventListener('mousedown', function() { dragging = true; video.pause(); });
+        document.addEventListener('mousemove', function(e) { if (dragging) seekTo(e.clientX); });
+        document.addEventListener('mouseup',   function() { if (dragging) { dragging = false; video.play(); } });
+
+        /* Tap anywhere on track to seek */
+        track.addEventListener('click', function(e) { seekTo(e.clientX); });
+
+        /* Keep handle in sync while video plays */
+        video.addEventListener('timeupdate', function() {
+            if (dragging || !video.duration) return;
+            var ratio = video.currentTime / video.duration;
+            bar.style.width   = (ratio * 100) + '%';
+            handle.style.left = (ratio * 100) + '%';
+        });
+    })();
+    </script>
 </body>
 </html>
