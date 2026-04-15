@@ -640,16 +640,25 @@
         </div>
     </section>
 
-    <!-- ── Hero Video — 3 videos, scrub-controlled ── -->
+    <!-- ── Hero Video — 3 forward + 3 reverse (preload=none until needed) ── -->
     <section class="hero-video-section">
-        <video class="mobile-hero-video v-active" id="mhv1" muted playsinline preload="metadata">
-            <source src="videos/hero-video-1.mp4" type="video/mp4">
+        <video class="mobile-hero-video v-active" id="mhv1"  muted playsinline preload="metadata">
+            <source src="videos/hero-video-1.mp4"     type="video/mp4">
         </video>
-        <video class="mobile-hero-video" id="mhv2" muted playsinline preload="metadata">
-            <source src="videos/hero-video-2.mp4" type="video/mp4">
+        <video class="mobile-hero-video"              id="mhv2"  muted playsinline preload="metadata">
+            <source src="videos/hero-video-2.mp4"     type="video/mp4">
         </video>
-        <video class="mobile-hero-video" id="mhv3" muted playsinline preload="metadata">
-            <source src="videos/hero-video-3.mp4" type="video/mp4">
+        <video class="mobile-hero-video"              id="mhv3"  muted playsinline preload="metadata">
+            <source src="videos/hero-video-3.mp4"     type="video/mp4">
+        </video>
+        <video class="mobile-hero-video"              id="mhv1r" muted playsinline preload="none">
+            <source src="videos/hero-video-1-rev.mp4" type="video/mp4">
+        </video>
+        <video class="mobile-hero-video"              id="mhv2r" muted playsinline preload="none">
+            <source src="videos/hero-video-2-rev.mp4" type="video/mp4">
+        </video>
+        <video class="mobile-hero-video"              id="mhv3r" muted playsinline preload="none">
+            <source src="videos/hero-video-3-rev.mp4" type="video/mp4">
         </video>
     </section>
     <!-- ── Hero Video Scrub Bar ── -->
@@ -1020,29 +1029,33 @@
     <div id="lightbox"></div>
     <script src="script.js"></script>
     <script>
-    /* ── Hero Video — 3-video directional player ── */
+    /* ── Hero Video — 6-video smooth forward+reverse player ── */
     (function () {
-        var vids   = [
+        var fwd = [
             document.getElementById('mhv1'),
             document.getElementById('mhv2'),
             document.getElementById('mhv3')
         ];
+        var rev = [
+            document.getElementById('mhv1r'),
+            document.getElementById('mhv2r'),
+            document.getElementById('mhv3r')
+        ];
         var track  = document.getElementById('heroScrubTrack');
         var bar    = document.getElementById('heroScrubProgress');
         var handle = document.getElementById('heroScrubHandle');
-        if (!track || vids.some(function(v){ return !v; })) return;
+        if (!track || fwd.some(function(v){return !v;}) || rev.some(function(v){return !v;})) return;
 
         var durations = [0, 0, 0];
-        var activeIdx = 0;
-        var playing   = false;
-        var playDir   = 0;   /* 1=forward  -1=backward */
-        var rafId     = null;
-        var lastTs    = 0;
-        var atEnd     = false;  /* current video stopped at last frame  */
-        var atStart   = true;   /* current video stopped at first frame */
+        var slot    = 0;      /* which of the 3 clips (0/1/2) */
+        var playing = false;
+        var isRev   = false;  /* are we currently playing a reverse clip? */
+        var rafId   = null;
+        var atEnd   = false;  /* fwd clip ended → at right boundary  */
+        var atStart = true;   /* rev clip ended or init → at left boundary */
 
-        /* ── Load metadata & show first frame ── */
-        vids.forEach(function(v, i) {
+        /* ── Load forward metadata & show first frame ── */
+        fwd.forEach(function(v, i) {
             v.addEventListener('loadedmetadata', function() {
                 durations[i] = v.duration || 0;
                 if (i === 0) { try { v.currentTime = 0.001; } catch(e){} }
@@ -1055,94 +1068,120 @@
             var t = durations[0] + durations[1] + durations[2];
             return t > 0 ? t : 3;
         }
-        function segStartRatio(i) {
+        function segS(i) {   /* segment start ratio */
             var total = totalDur(), el = 0;
             for (var j = 0; j < i; j++) el += durations[j] > 0 ? durations[j] : total / 3;
             return el / total;
         }
-        function segEndRatio(i) { return i < 2 ? segStartRatio(i + 1) : 1; }
-        function setPos(ratio) {
-            ratio = Math.max(0, Math.min(1, ratio));
-            bar.style.width   = (ratio * 100) + '%';
-            handle.style.left = (ratio * 100) + '%';
+        function segE(i) { return i < 2 ? segS(i + 1) : 1; }  /* segment end ratio */
+        function setPos(r) {
+            r = Math.max(0, Math.min(1, r));
+            bar.style.width = (r * 100) + '%';
+            handle.style.left = (r * 100) + '%';
+        }
+        function cur() { return isRev ? rev[slot] : fwd[slot]; }
+        function setActive(v) {
+            fwd.concat(rev).forEach(function(x) { x.classList.remove('v-active'); });
+            v.classList.add('v-active');
         }
         function syncHandle() {
-            var v = vids[activeIdx];
-            if (!v.duration || totalDur() <= 0) return;
-            var el = 0;
-            for (var j = 0; j < activeIdx; j++) el += durations[j] > 0 ? durations[j] : totalDur() / 3;
-            setPos((el + v.currentTime) / totalDur());
+            var v = cur(), d = durations[slot] > 0 ? durations[slot] : totalDur() / 3;
+            if (!d) return;
+            var frac = Math.max(0, Math.min(1, v.currentTime / d));
+            /* reverse plays forward in time but maps to bar going right→left */
+            setPos(isRev ? segE(slot) - frac * (segE(slot) - segS(slot))
+                         : segS(slot) + frac * (segE(slot) - segS(slot)));
         }
-        function switchTo(idx) {
-            vids.forEach(function(v, i) { v.classList.toggle('v-active', i === idx); });
-            activeIdx = idx;
-        }
-        var bwTimer = null;  /* backward playback setTimeout id */
-
         function stopAll() {
-            if (rafId)   { cancelAnimationFrame(rafId); rafId = null; }
-            if (bwTimer) { clearTimeout(bwTimer); bwTimer = null; }
-            playing = false; playDir = 0; lastTs = 0;
-            vids[activeIdx].pause();
+            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            playing = false;
+            fwd.forEach(function(v) { v.pause(); });
+            rev.forEach(function(v) { v.pause(); });
         }
 
-        /* ── Forward: native play(), RAF syncs handle ── */
-        function startForward() {
-            playing = true; playDir = 1;
-            vids[activeIdx].play().catch(function() { playing = false; });
+        /* ── Play v using native play() — RAF syncs handle ── */
+        function playVid(v) {
+            playing = true;
+            v.play().catch(function() { playing = false; });
             (function loop() {
                 syncHandle();
-                if (playing && playDir === 1) rafId = requestAnimationFrame(loop);
+                if (playing) rafId = requestAnimationFrame(loop);
                 else rafId = null;
             })();
         }
 
-        /* ── Backward: setTimeout at 20fps so browser has time to decode
-           and display each frame — RAF is too fast for mobile seeks ── */
-        function startBackward() {
-            playing = true; playDir = -1;
-            var v = vids[activeIdx];
-            var STEP = 1 / 20;   /* seek back 50ms each tick = 1× real-time */
-            var TICK = 50;       /* ms between ticks = 20 fps              */
-
-            v.pause();
-
-            function tick() {
-                if (!playing || playDir !== -1) return;
-                var t = (v.currentTime || 0) - STEP;
-                if (t <= 0.001) {
-                    try { v.currentTime = 0.001; } catch(e){}
-                    setPos(segStartRatio(activeIdx));
-                    playing = false; playDir = 0; atStart = true; atEnd = false;
-                    bwTimer = null;
-                    return;
-                }
-                try { v.currentTime = t; } catch(e){}
-                syncHandle();
-                bwTimer = setTimeout(tick, TICK);
-            }
-
-            bwTimer = setTimeout(tick, TICK);
-        }
-
-        /* ── Video ended → stop at last frame, do NOT auto-advance ── */
-        vids.forEach(function(v, i) {
+        /* ── ended handlers ── */
+        fwd.forEach(function(v, i) {
             v.addEventListener('ended', function() {
-                if (activeIdx !== i) return;
-                playing = false; playDir = 0;
+                if (slot !== i || isRev) return;
+                playing = false;
                 if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
                 atEnd = true; atStart = false;
-                setPos(segEndRatio(i));  /* snap handle to segment boundary */
+                setPos(segE(i));
+            });
+        });
+        rev.forEach(function(v, i) {
+            v.addEventListener('ended', function() {
+                if (slot !== i || !isRev) return;
+                playing = false;
+                if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+                atStart = true; atEnd = false;
+                setPos(segS(i));
             });
         });
 
-        /* ── Swipe detection ── */
+        /* ── Swipe ── */
         var startX = null, moved = false;
+
+        function doFwd() {
+            if (atEnd && slot < 2) {
+                /* crossfade to next slot's first frame, then play */
+                slot++; atEnd = false; atStart = false; isRev = false;
+                try { fwd[slot].currentTime = 0.001; } catch(e){}
+                setActive(fwd[slot]);
+                setTimeout(function() { playVid(fwd[slot]); }, 520);
+            } else if (!atEnd) {
+                atStart = false; isRev = false;
+                try { fwd[slot].currentTime = 0; } catch(e){}
+                setActive(fwd[slot]);
+                playVid(fwd[slot]);
+            }
+        }
+
+        function doRev() {
+            function startRev() {
+                atEnd = false; isRev = true;
+                /* load rev clip on first use (preload=none) then play */
+                var v = rev[slot];
+                try { v.currentTime = 0.001; } catch(e){}
+                setActive(v);
+                if (v.readyState < 1) {
+                    v.load();
+                    v.addEventListener('canplay', function once() {
+                        v.removeEventListener('canplay', once);
+                        playVid(v);
+                    });
+                } else {
+                    playVid(v);
+                }
+            }
+            if (atEnd) {
+                /* just finished forward → play current slot's reverse */
+                startRev();
+            } else if (atStart && slot > 0) {
+                /* at left boundary → crossfade to previous slot's reverse */
+                slot--; atStart = false; atEnd = false;
+                setPos(segE(slot));
+                try { rev[slot].currentTime = 0.001; } catch(e){}
+                setActive(rev[slot]);
+                setTimeout(startRev, 520);
+            }
+        }
 
         function onStart(e) {
             if (playing) return;
             startX = e.touches ? e.touches[0].clientX : e.clientX;
-            moved  = false;
+            moved = false;
             e.preventDefault();
         }
         function onMove(e) {
@@ -1151,54 +1190,23 @@
             if (!moved && Math.abs(dx) > 10) {
                 moved = true; startX = null;
                 stopAll();
-
-                if (dx > 0) {
-                    /* ─ SWIPE RIGHT: play forward ─ */
-                    if (atEnd && activeIdx < 2) {
-                        /* crossfade to next video first frame, then play */
-                        var next = activeIdx + 1;
-                        try { vids[next].currentTime = 0.001; } catch(e){}
-                        switchTo(next);
-                        atEnd = false; atStart = false;
-                        setTimeout(startForward, 520);
-                    } else if (!atEnd) {
-                        atStart = false;
-                        startForward();
-                    }
-                } else {
-                    /* ─ SWIPE LEFT: play backward ─ */
-                    if (atStart && activeIdx > 0) {
-                        /* crossfade to prev video last frame, then play backward */
-                        var prev = activeIdx - 1;
-                        var pd   = durations[prev] > 0 ? durations[prev] : totalDur() / 3;
-                        try { vids[prev].currentTime = pd - 0.05; } catch(e){}
-                        switchTo(prev);
-                        atStart = false; atEnd = false;
-                        setPos(segEndRatio(prev));
-                        setTimeout(startBackward, 520);
-                    } else if (!atStart) {
-                        atEnd = false;
-                        startBackward();
-                    }
-                }
+                if (dx > 0) doFwd(); else doRev();
             }
             e.preventDefault();
         }
         function onEnd() { startX = null; }
 
-        /* Touch */
         handle.addEventListener('touchstart', onStart, { passive: false });
         track.addEventListener('touchstart',  onStart, { passive: false });
         document.addEventListener('touchmove',  onMove, { passive: false });
         document.addEventListener('touchend',   onEnd);
-        /* Mouse */
         handle.addEventListener('mousedown', onStart);
         track.addEventListener('mousedown',  onStart);
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup',   onEnd);
 
         /* ── Init ── */
-        switchTo(0);
+        setActive(fwd[0]);
         setPos(0);
     })();
     </script>
