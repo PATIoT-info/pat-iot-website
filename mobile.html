@@ -104,11 +104,8 @@
         .hero-text-section {
             width: 100%;
             padding: 2rem 1.5rem 2.25rem;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             background: linear-gradient(160deg, #0f172a 0%, #1a2e4a 55%, #0f172a 100%);
+            box-sizing: border-box;
         }
         .hero-overlay { display: none; }
         .hero-content { display: none; }
@@ -116,15 +113,24 @@
         .hero-title {
             font-size: 2rem; font-weight: 700;
             color: #fff; line-height: 1.15;
-            margin-bottom: 0.75rem;
+            margin: 0 auto 0.75rem auto;
+            text-align: center;
+            display: block; width: 100%;
         }
         .hero-subtitle {
             font-size: 0.9rem; color: rgba(255,255,255,0.85);
-            line-height: 1.65; margin-bottom: 1.75rem;
-            max-width: 320px; text-align: center;
+            line-height: 1.65; margin: 0 auto 1.75rem auto;
+            max-width: 320px; text-align: center; display: block;
         }
-        .hero-buttons { display: flex; flex-direction: column; gap: 0.65rem; width: 100%; max-width: 320px; align-items: center; }
-        .hero-buttons-row { display: flex; gap: 0.65rem; width: 100%; justify-content: center; }
+        .hero-buttons {
+            display: flex; flex-direction: column; gap: 0.65rem;
+            width: 100%; max-width: 320px;
+            margin: 0 auto;
+        }
+        .hero-buttons-row {
+            display: flex; gap: 0.65rem; width: 100%;
+            justify-content: center;
+        }
         .btn {
             padding: 0.8rem 1.1rem;
             border-radius: 0.5rem; font-weight: 600;
