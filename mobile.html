@@ -164,7 +164,7 @@
         }
 
         /* ══════════════════════════════
-           HERO VIDEO — single 16:9 video
+           HERO VIDEO — 3 videos, scrub-controlled
         ══════════════════════════════ */
         .hero-video-section {
             position: relative !important;
@@ -181,6 +181,13 @@
             object-fit: contain !important;
             position: absolute !important;
             inset: 0 !important;
+            opacity: 0;
+            z-index: 1;
+            transition: opacity 0.25s ease;
+        }
+        .mobile-hero-video.v-active {
+            opacity: 1;
+            z-index: 2;
         }
 
         /* ══════════════════════════════
@@ -633,11 +640,16 @@
         </div>
     </section>
 
-    <!-- ── Hero Video — single 16:9 ── -->
+    <!-- ── Hero Video — 3 videos, scrub-controlled ── -->
     <section class="hero-video-section">
-        <video class="mobile-hero-video" id="mobileHeroVideo"
-               autoplay muted loop playsinline preload="auto">
+        <video class="mobile-hero-video v-active" id="mhv1" muted playsinline preload="metadata">
             <source src="videos/hero-video-1.mp4" type="video/mp4">
+        </video>
+        <video class="mobile-hero-video" id="mhv2" muted playsinline preload="metadata">
+            <source src="videos/hero-video-2.mp4" type="video/mp4">
+        </video>
+        <video class="mobile-hero-video" id="mhv3" muted playsinline preload="metadata">
+            <source src="videos/hero-video-3.mp4" type="video/mp4">
         </video>
     </section>
     <!-- ── Hero Video Scrub Bar ── -->
@@ -1008,60 +1020,106 @@
     <div id="lightbox"></div>
     <script src="script.js"></script>
     <script>
-    /* ── Hero Video Scrub Bar ── */
+    /* ── Hero Video 3-Video Scrub Bar ── */
     (function () {
-        const track    = document.getElementById('heroScrubTrack');
-        const bar      = document.getElementById('heroScrubProgress');
-        const handle   = document.getElementById('heroScrubHandle');
-        const video    = document.getElementById('mobileHeroVideo');
-        if (!track || !video) return;
+        var vids   = [
+            document.getElementById('mhv1'),
+            document.getElementById('mhv2'),
+            document.getElementById('mhv3')
+        ];
+        var track  = document.getElementById('heroScrubTrack');
+        var bar    = document.getElementById('heroScrubProgress');
+        var handle = document.getElementById('heroScrubHandle');
+        if (!track || vids.some(function(v){ return !v; })) return;
 
-        let dragging = false;
+        var durations  = [0, 0, 0];
+        var dragging   = false;
+        var activeIdx  = 0;
+
+        /* Load metadata for all three videos */
+        vids.forEach(function(v, i) {
+            v.addEventListener('loadedmetadata', function() {
+                durations[i] = v.duration || 0;
+                /* Show first frame of video 1 */
+                if (i === 0) { try { v.currentTime = 0.001; } catch(e){} }
+            });
+            v.load();
+        });
 
         function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-        function seekTo(clientX) {
-            const rect  = track.getBoundingClientRect();
-            const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
+        function totalDur() {
+            var t = durations[0] + durations[1] + durations[2];
+            return t > 0 ? t : 3; /* fallback so bar is always draggable */
+        }
+
+        /* Switch which video is visible */
+        function setActive(idx) {
+            if (idx === activeIdx) return;
+            vids[activeIdx].classList.remove('v-active');
+            activeIdx = idx;
+            vids[activeIdx].classList.add('v-active');
+        }
+
+        /* Seek all three videos based on 0-1 ratio across full bar */
+        function seekAll(ratio) {
+            ratio = clamp(ratio, 0, 1);
             bar.style.width   = (ratio * 100) + '%';
             handle.style.left = (ratio * 100) + '%';
-            if (video.duration) video.currentTime = ratio * video.duration;
+
+            var total   = totalDur();
+            var target  = ratio * total;
+            var elapsed = 0;
+
+            for (var i = 0; i < 3; i++) {
+                /* Use actual duration if known, else divide total equally */
+                var d = durations[i] > 0 ? durations[i] : total / 3;
+                if (target <= elapsed + d || i === 2) {
+                    setActive(i);
+                    var localTime = clamp(target - elapsed, 0, d);
+                    try { vids[i].currentTime = localTime; } catch(e){}
+                    break;
+                }
+                elapsed += d;
+            }
+        }
+
+        function getX(e) {
+            return e.touches ? e.touches[0].clientX : e.clientX;
+        }
+
+        function onMove(e) {
+            if (!dragging) return;
+            e.preventDefault();
+            var rect  = track.getBoundingClientRect();
+            seekAll((getX(e) - rect.left) / rect.width);
         }
 
         /* Touch */
         handle.addEventListener('touchstart', function(e) {
+            dragging = true; e.preventDefault();
+        }, { passive: false });
+        track.addEventListener('touchstart', function(e) {
             dragging = true;
-            video.pause();
+            var rect = track.getBoundingClientRect();
+            seekAll((e.touches[0].clientX - rect.left) / rect.width);
             e.preventDefault();
         }, { passive: false });
+        document.addEventListener('touchmove',  onMove, { passive: false });
+        document.addEventListener('touchend',   function() { dragging = false; });
 
-        document.addEventListener('touchmove', function(e) {
-            if (!dragging) return;
-            seekTo(e.touches[0].clientX);
-            e.preventDefault();
-        }, { passive: false });
-
-        document.addEventListener('touchend', function() {
-            if (!dragging) return;
-            dragging = false;
-            video.play();
+        /* Mouse */
+        handle.addEventListener('mousedown', function() { dragging = true; });
+        track.addEventListener('mousedown', function(e) {
+            dragging = true;
+            var rect = track.getBoundingClientRect();
+            seekAll((e.clientX - rect.left) / rect.width);
         });
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   function() { dragging = false; });
 
-        /* Mouse (desktop) */
-        handle.addEventListener('mousedown', function() { dragging = true; video.pause(); });
-        document.addEventListener('mousemove', function(e) { if (dragging) seekTo(e.clientX); });
-        document.addEventListener('mouseup',   function() { if (dragging) { dragging = false; video.play(); } });
-
-        /* Tap anywhere on track to seek */
-        track.addEventListener('click', function(e) { seekTo(e.clientX); });
-
-        /* Keep handle in sync while video plays */
-        video.addEventListener('timeupdate', function() {
-            if (dragging || !video.duration) return;
-            var ratio = video.currentTime / video.duration;
-            bar.style.width   = (ratio * 100) + '%';
-            handle.style.left = (ratio * 100) + '%';
-        });
+        /* Init: show bar at position 0 */
+        seekAll(0);
     })();
     </script>
 </body>
