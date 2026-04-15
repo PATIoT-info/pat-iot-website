@@ -100,33 +100,50 @@
         .hamburger.active span:nth-child(2) { opacity: 0 !important; transform: scaleX(0) !important; }
         .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg) !important; }
 
-        /* ── Nav menu — full-height liquid glass slide-in ── */
+        /* ── Nav menu overlay backdrop ── */
+        #navOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            top: 60px;
+            z-index: 10000;
+            background: rgba(0,0,0,0.38);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+        }
+        #navOverlay.active { display: block; }
+
+        /* ── Nav menu — drops down from top, above everything ── */
         #navMenu {
             position: fixed !important;
             top: 60px !important;
             left: 0 !important;
             right: 0 !important;
-            bottom: 0 !important;
-            z-index: 998 !important;
+            bottom: auto !important;
+            z-index: 10001 !important;
             /* Liquid glass */
-            background: rgba(240,246,255,0.82) !important;
-            backdrop-filter: blur(32px) saturate(200%) !important;
-            -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
-            border-top: 1px solid rgba(255,255,255,0.7) !important;
-            border-right: none !important;
-            box-shadow: 4px 0 32px rgba(0,0,0,0.12), inset 1px 0 0 rgba(255,255,255,0.6) !important;
-            /* Slide in/out */
-            transform: translateX(-100%) !important;
-            transition: transform 0.32s cubic-bezier(0.4,0,0.2,1) !important;
+            background: rgba(235,242,255,0.88) !important;
+            backdrop-filter: blur(36px) saturate(220%) !important;
+            -webkit-backdrop-filter: blur(36px) saturate(220%) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.65) !important;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.7) !important;
+            /* Drop down animation */
+            transform: translateY(-10px) !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.28s ease !important;
             /* Layout */
             display: flex !important;
             flex-direction: column !important;
-            padding: 1.75rem 1.25rem !important;
+            padding: 1rem 1rem 1.25rem !important;
             gap: 0.3rem !important;
             overflow-y: auto !important;
+            max-height: calc(100dvh - 60px) !important;
         }
         #navMenu.active {
-            transform: translateX(0) !important;
+            transform: translateY(0) !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
         }
         #navMenu li {
             width: 100% !important;
@@ -135,25 +152,25 @@
         #navMenu .nav-link {
             display: flex !important;
             align-items: center !important;
-            padding: 0.9rem 1.1rem !important;
-            font-size: 1.05rem !important;
+            padding: 0.88rem 1.1rem !important;
+            font-size: 1rem !important;
             font-weight: 500 !important;
             color: #1e3a5f !important;
-            border-radius: 12px !important;
+            border-radius: 14px !important;
             text-decoration: none !important;
-            /* glass tile per item */
-            background: rgba(255,255,255,0.45) !important;
-            border: 1px solid rgba(255,255,255,0.75) !important;
-            backdrop-filter: blur(8px) !important;
-            -webkit-backdrop-filter: blur(8px) !important;
-            transition: background 0.2s ease, color 0.2s ease !important;
-            margin-bottom: 0.15rem !important;
+            background: rgba(255,255,255,0.52) !important;
+            border: 1px solid rgba(255,255,255,0.8) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7) !important;
+            transition: background 0.18s ease, color 0.18s ease !important;
+            margin-bottom: 0.2rem !important;
         }
         #navMenu .nav-link:active,
         #navMenu .nav-link.active {
-            background: rgba(37,99,235,0.14) !important;
+            background: rgba(37,99,235,0.15) !important;
             color: #2563eb !important;
-            border-color: rgba(96,165,250,0.45) !important;
+            border-color: rgba(96,165,250,0.5) !important;
         }
 
         .nav-wrapper {
@@ -1073,6 +1090,9 @@
         </div>
     </nav>
 
+    <!-- ── Nav overlay backdrop (dims page behind open menu) ── -->
+    <div id="navOverlay"></div>
+
     <!-- ── Hero: image on top, text block directly below, one container ── -->
     <section id="home">
         <!-- Full image — natural width/height, nothing cut -->
@@ -1726,35 +1746,41 @@
         });
     })();
 
-    /* ── Hamburger menu — self-contained failsafe ── */
+    /* ── Hamburger menu — self-contained, above all content ── */
     (function () {
-        var btn  = document.getElementById('hamburger');
-        var menu = document.getElementById('navMenu');
+        var btn     = document.getElementById('hamburger');
+        var menu    = document.getElementById('navMenu');
+        var overlay = document.getElementById('navOverlay');
         if (!btn || !menu) return;
 
-        /* Remove any listeners script.js may have added, rebind fresh */
+        /* Replace button to drop any stale listeners from script.js */
         var fresh = btn.cloneNode(true);
         btn.parentNode.replaceChild(fresh, btn);
         btn = document.getElementById('hamburger');
 
-        function openMenu()  { menu.classList.add('active');    btn.classList.add('active'); }
-        function closeMenu() { menu.classList.remove('active'); btn.classList.remove('active'); }
-        function toggle()    { menu.classList.contains('active') ? closeMenu() : openMenu(); }
+        function openMenu() {
+            menu.classList.add('active');
+            btn.classList.add('active');
+            if (overlay) overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMenu() {
+            menu.classList.remove('active');
+            btn.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        function toggle() { menu.classList.contains('active') ? closeMenu() : openMenu(); }
 
-        btn.addEventListener('click',       toggle);
-        btn.addEventListener('touchend',    function(e){ e.preventDefault(); toggle(); }, { passive: false });
+        btn.addEventListener('click', toggle);
 
-        /* Close when any nav-link is tapped */
+        /* Close on nav-link tap */
         menu.querySelectorAll('.nav-link').forEach(function(l) {
             l.addEventListener('click', closeMenu);
         });
 
-        /* Close when tapping outside the menu */
-        document.addEventListener('click', function(e) {
-            if (menu.classList.contains('active') && !menu.contains(e.target) && !btn.contains(e.target)) {
-                closeMenu();
-            }
-        });
+        /* Close on overlay tap */
+        if (overlay) overlay.addEventListener('click', closeMenu);
     })();
     </script>
 </body>
