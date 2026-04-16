@@ -37,12 +37,6 @@
       "order": 1
     },
     {
-      "id": "2",
-      "image": "images/gallery/product-2.jpg",
-      "alt": "Product Gallery Image 2",
-      "order": 2
-    },
-    {
       "id": "3",
       "image": "images/gallery/product-3.jpg",
       "alt": "Product Gallery Image 3",
@@ -71,12 +65,6 @@
       "image": "images/gallery/product-7.jpg",
       "alt": "Product Gallery Image 7",
       "order": 7
-    },
-    {
-      "id": "8",
-      "image": "images/gallery/product-8.jpg",
-      "alt": "Product Gallery Image 8",
-      "order": 8
     },
     {
       "id": "9",
