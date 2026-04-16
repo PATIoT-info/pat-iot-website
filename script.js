@@ -156,15 +156,88 @@ async function loadProducts() {
         // Render gallery
         if (galleryWrapper && data.gallery) {
             const sortedGallery = [...data.gallery].sort((a, b) => (a.order || 0) - (b.order || 0));
-            galleryWrapper.innerHTML = sortedGallery.map(item => `
-                <div class="gallery-item animate">
+            galleryWrapper.innerHTML = sortedGallery.map((item, idx) => `
+                <div class="gallery-item animate" data-gallery-index="${idx}" style="cursor:pointer;">
                     <img src="${encodeURI(item.image)}" alt="${item.alt}" class="gallery-image">
                 </div>
             `).join('');
+            // Wire up lightbox after render
+            initGalleryLightbox(galleryWrapper, sortedGallery);
         }
     } catch (e) {
         console.error('Error loading products:', e);
     }
+}
+
+// ── Gallery Lightbox ──────────────────────────────────────────────────────────
+function initGalleryLightbox(wrapper, images) {
+    // Build lightbox DOM once
+    if (!document.getElementById('galleryLightbox')) {
+        const lb = document.createElement('div');
+        lb.id = 'galleryLightbox';
+        lb.innerHTML = `
+            <div class="glb-backdrop"></div>
+            <button class="glb-close" aria-label="Close"><i class="fas fa-times"></i></button>
+            <button class="glb-prev" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+            <button class="glb-next" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+            <div class="glb-img-wrap">
+                <img class="glb-img" src="" alt="">
+                <div class="glb-counter"></div>
+            </div>`;
+        document.body.appendChild(lb);
+    }
+
+    const lb       = document.getElementById('galleryLightbox');
+    const img      = lb.querySelector('.glb-img');
+    const counter  = lb.querySelector('.glb-counter');
+    const btnPrev  = lb.querySelector('.glb-prev');
+    const btnNext  = lb.querySelector('.glb-next');
+    let current    = 0;
+    let touchStartX = null;
+
+    function show(idx) {
+        current = (idx + images.length) % images.length;
+        img.src = encodeURI(images[current].image);
+        img.alt = images[current].alt;
+        counter.textContent = (current + 1) + ' / ' + images.length;
+        btnPrev.style.display = images.length > 1 ? '' : 'none';
+        btnNext.style.display = images.length > 1 ? '' : 'none';
+        lb.classList.add('glb-open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function close() {
+        lb.classList.remove('glb-open');
+        document.body.style.overflow = '';
+        img.src = '';
+    }
+
+    // Click on gallery items
+    wrapper.querySelectorAll('.gallery-item').forEach(item => {
+        item.addEventListener('click', () => show(parseInt(item.dataset.galleryIndex, 10)));
+    });
+
+    btnPrev.addEventListener('click', () => show(current - 1));
+    btnNext.addEventListener('click', () => show(current + 1));
+    lb.querySelector('.glb-backdrop').addEventListener('click', close);
+    lb.querySelector('.glb-close').addEventListener('click', close);
+
+    // Keyboard
+    document.addEventListener('keydown', e => {
+        if (!lb.classList.contains('glb-open')) return;
+        if (e.key === 'ArrowLeft')  show(current - 1);
+        if (e.key === 'ArrowRight') show(current + 1);
+        if (e.key === 'Escape')     close();
+    });
+
+    // Touch swipe
+    lb.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend', e => {
+        if (touchStartX === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) dx < 0 ? show(current + 1) : show(current - 1);
+        touchStartX = null;
+    });
 }
 
 // Horizontal scroll for products section
