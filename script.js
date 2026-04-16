@@ -1761,8 +1761,10 @@ function initHeroVideoSteps() {
     }
 
     function snapToSection() {
-        // Instant snap — no animation delay, no swallowed wheel events
-        window.scrollTo({ top: videoSection.offsetTop, behavior: 'instant' });
+        // Direct scrollTop assignment — instant, universally supported, no animation delay
+        var top = videoSection.offsetTop;
+        document.documentElement.scrollTop = top;
+        document.body.scrollTop = top; // Safari fallback
     }
 
     function fadeToVideo(index) {
@@ -2334,7 +2336,7 @@ document.querySelectorAll('video').forEach(video => {
     });
     // Hero video is scroll-to-scrub; don't loop it
     // Mobile hero videos are scrub-controlled; don't loop them either
-    if (video.id === 'heroVideo' || video.classList.contains('mobile-hero-video')) return;
+    if (video.id === 'heroVideo' || video.id === 'heroVideo1' || video.id === 'heroVideo2' || video.id === 'heroVideo3' || video.classList.contains('mobile-hero-video')) return;
     video.addEventListener('ended', () => {
         video.currentTime = 0;
         video.play().catch(e => console.log('Video replay prevented:', e));
