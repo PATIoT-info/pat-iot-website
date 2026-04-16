@@ -2169,11 +2169,18 @@ function initVideoModes() {
         // If clicking the same button (any mode), always restart it
         if (currentMode === mode) {
             const video = modeVideos[mode];
-            // Always restart from beginning
-            video.currentTime = 0;
             video.classList.add('fade-in', 'active', 'playing');
             video.classList.remove('fade-out');
-            video.play().catch(e => console.log('Video play prevented:', e));
+            video.currentTime = 0;
+            video.addEventListener('seeked', function once() {
+                video.removeEventListener('seeked', once);
+                video.play().catch(() => {
+                    video.addEventListener('canplay', function once2() {
+                        video.removeEventListener('canplay', once2);
+                        video.play().catch(() => {});
+                    });
+                });
+            });
             
             // Update button state
             modeButtons.forEach(btn => {
@@ -2253,12 +2260,30 @@ function initVideoModes() {
         // Smooth fade in the selected non-morning mode video
         const newVideo = modeVideos[mode];
         if (newVideo) {
-            // Always restart from beginning
-            newVideo.currentTime = 0;
-            // Start fade in immediately for crossfade effect
             newVideo.classList.add('fade-in', 'active', 'playing');
             newVideo.classList.remove('fade-out');
-            newVideo.play().catch(e => console.log('Video play prevented:', e));
+            // Reset to start then play; retry via canplay if seek races with play()
+            function robustPlay(vid) {
+                vid.play().catch(() => {
+                    vid.addEventListener('canplay', function once() {
+                        vid.removeEventListener('canplay', once);
+                        vid.play().catch(() => {});
+                    });
+                });
+            }
+            if (newVideo.readyState >= 2) {
+                newVideo.currentTime = 0;
+                newVideo.addEventListener('seeked', function once() {
+                    newVideo.removeEventListener('seeked', once);
+                    robustPlay(newVideo);
+                });
+            } else {
+                newVideo.currentTime = 0;
+                newVideo.addEventListener('canplay', function once() {
+                    newVideo.removeEventListener('canplay', once);
+                    robustPlay(newVideo);
+                });
+            }
         }
         
         // Update active button
