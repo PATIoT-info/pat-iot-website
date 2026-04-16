@@ -764,8 +764,7 @@ body {
 }
 
 .service-card:hover .service-image {
-    border-color: var(--primary-color);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
 .service-card:hover .service-image img {
