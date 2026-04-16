@@ -1575,6 +1575,8 @@
                 if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
                 atEnd = true; atStart = false;
                 setPos(segE(i));
+                /* preload reverse clip now so it's ready if user swipes back */
+                if (rev[i].readyState < 1) { rev[i].load(); }
             });
         });
         rev.forEach(function(v, i) {
@@ -1608,18 +1610,21 @@
         function doRev() {
             function startRev() {
                 atEnd = false; isRev = true;
-                /* load rev clip on first use (preload=none) then play */
                 var v = rev[slot];
-                try { v.currentTime = 0.001; } catch(e){}
-                setActive(v);
-                if (v.readyState < 1) {
-                    v.load();
+                if (v.readyState >= 2) {
+                    /* already has data — activate & play immediately, no black flash */
+                    try { v.currentTime = 0.001; } catch(e){}
+                    setActive(v);
+                    playVid(v);
+                } else {
+                    /* not yet loaded — load, wait for first frame before activating */
+                    if (v.readyState < 1) v.load();
                     v.addEventListener('canplay', function once() {
                         v.removeEventListener('canplay', once);
+                        try { v.currentTime = 0.001; } catch(e){}
+                        setActive(v);   /* switch only when frame is ready */
                         playVid(v);
                     });
-                } else {
-                    playVid(v);
                 }
             }
             if (atEnd) {
@@ -1629,8 +1634,8 @@
                 /* at left boundary → crossfade to previous slot's reverse */
                 slot--; atStart = false; atEnd = false;
                 setPos(segE(slot));
-                try { rev[slot].currentTime = 0.001; } catch(e){}
-                setActive(rev[slot]);
+                /* preload rev clip for this slot before startRev runs */
+                if (rev[slot].readyState < 1) { rev[slot].load(); }
                 setTimeout(startRev, 520);
             }
         }
