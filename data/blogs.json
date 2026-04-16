@@ -37,7 +37,7 @@
     {
       "id": "3",
       "slug": "dali-touch-dimming-explained",
-      "title": "DALI Touch Dimming Explained",
+      "title": "DALI Dimming Explained",
       "excerpt": "Professional-grade dimming and lighting control for residential and commercial spaces.",
       "content": "<p>DALI (Digital Addressable Lighting Interface) gives precise control over dimming, CCT, and RGB/RGBW. Our touch panels and dimming modules are built for both homes and commercial projects.</p><p>Benefits include energy savings, scene presets, and long-term reliability. We offer 2-year warranty on all DALI products.</p><p>Use DALI for large lighting installations where individual fixture control and diagnostics matter.</p>",
       "date": "2026-01-05",
@@ -48,7 +48,7 @@
       "images": [
         {
           "src": "images/products/dali-touch-panels.jpg",
-          "caption": "DALI touch dimming panel"
+          "caption": "DALI dimming panel"
         },
         {
           "src": "images/products/dali-touch-panels.jpg",
