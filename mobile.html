@@ -440,11 +440,6 @@
             animation: hintPulse 1.8s ease-in-out infinite;
             transition: opacity 0.4s ease, transform 0.4s ease;
         }
-        .mode-hint.hide {
-            opacity: 0 !important;
-            transform: translateY(-4px);
-            pointer-events: none;
-        }
         .mode-controls-below .mode-btn {
             display: flex !important;
             flex-direction: column !important;
@@ -770,10 +765,6 @@
             pointer-events: none;
             animation: hintPulse 1.8s ease-in-out infinite;
             transition: opacity 0.4s ease, transform 0.4s ease;
-        }
-        .scrub-hint.hide {
-            opacity: 0 !important;
-            transform: translateY(-4px);
         }
         @keyframes hintPulse {
             0%, 100% { opacity: 1; }
@@ -1644,17 +1635,8 @@
             }
         }
 
-        var hint = document.getElementById('scrubHint');
-        function dismissHint() {
-            if (hint && !hint.classList.contains('hide')) {
-                hint.classList.add('hide');
-                setTimeout(function() { if (hint) hint.style.display = 'none'; }, 450);
-            }
-        }
-
         function onStart(e) {
             if (playing) return;
-            dismissHint();
             startX = e.touches ? e.touches[0].clientX : e.clientX;
             moved = false;
             e.preventDefault();
@@ -1705,20 +1687,6 @@
         });
     })();
 
-    /* ── Dismiss "Tap to switch" hint on first mode button tap ── */
-    (function () {
-        var hint = document.getElementById('modeHint');
-        if (!hint) return;
-        var dismissed = false;
-        document.querySelectorAll('.mode-controls-below .mode-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                if (dismissed) return;
-                dismissed = true;
-                hint.classList.add('hide');
-                setTimeout(function() { hint.style.display = 'none'; }, 450);
-            });
-        });
-    })();
 
     /* ── Hamburger menu — self-contained, above all content ── */
     (function () {
