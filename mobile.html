@@ -102,21 +102,19 @@
         /* ── Nav menu — plain white, slides down from behind navbar ── */
         #navMenu {
             position: fixed !important;
-            top: 66px !important;
+            top: 0 !important;          /* anchor at top of viewport */
             left: 0 !important;
             right: 0 !important;
             bottom: auto !important;
             z-index: 10001 !important;
-            /* Plain white background — no glass, no blur */
             background: #ffffff !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             border-bottom: 1px solid #e5e7eb !important;
             box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
-            /* Hidden physically off-screen — no opacity/pointer-events tricks */
-            transform: translateY(-110%) !important;
+            /* translateY(-100%) → bottom edge lands at y=0, fully behind navbar */
+            transform: translateY(-100%) !important;
             transition: transform 0.28s cubic-bezier(0.4,0,0.2,1) !important;
-            /* Layout */
             display: flex !important;
             flex-direction: column !important;
             padding: 0.75rem 0.9rem 1rem !important;
@@ -125,7 +123,8 @@
             max-height: calc(100svh - 66px) !important;
         }
         #navMenu.active {
-            transform: translateY(0) !important;
+            /* slide down so menu top aligns with navbar bottom */
+            transform: translateY(66px) !important;
         }
         #navMenu li {
             width: 100% !important;
