@@ -9,7 +9,7 @@
     },
     {
       "id": "2",
-      "name": "DALI Touch Dimming",
+      "name": "DALI Dimming",
       "caption": "Dimming, CCT, RGB, RGBW control",
       "image": "images/products/dali-touch-panels.jpg",
       "order": 2
