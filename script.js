@@ -794,8 +794,8 @@ function handleHeroVideoScroll() {
     const MAX_PLAYBACK_RATE = 3.0; // Maximum playback rate (increased for faster)
     const LERP_SPEED = 5.5;
     const SNAP_THRESHOLD = 0.35;
-    const SCROLL_LOCK_MARGIN = 60; // Only lock scroll when well inside section (reduces “whole page lag”)
-    const ENTRY_DEBOUNCE_MS = 80; // Don’t run heavy work until user has been in section briefly
+    const SCROLL_LOCK_MARGIN = 60; // Only lock scroll when well inside section (reduces "whole page lag")
+    const ENTRY_DEBOUNCE_MS = 80; // Don't run heavy work until user has been in section briefly
 
     heroVideo.muted = true;
     heroVideo.preload = 'auto';
@@ -1100,7 +1100,7 @@ function handleHeroVideoScroll() {
         smoothUpdateRaf = requestAnimationFrame(smoothVideoUpdate);
     }
 
-    // Scroll handler – defer first-entry work to avoid “whole site lag”
+    // Scroll handler – defer first-entry work to avoid "whole site lag"
     function onScroll() {
         if (scrollRaf) return;
         scrollRaf = requestAnimationFrame(() => {
@@ -1215,7 +1215,7 @@ function handleHeroVideoScroll() {
                     targetVideoTime = 0;
                     currentVideoTime = 0;
                     setHeroScrubIndicatorProgress(0);
-                    // Defer video work so first scroll doesn’t block – fixes “whole site lag”
+                    // Defer video work so first scroll doesn't block – fixes "whole site lag"
                     // Initialize video immediately - ensure it's ready for seeking
                     heroVideo.muted = true;
                     heroVideo.preload = 'auto';
@@ -1747,7 +1747,7 @@ function initHeroVideoSteps() {
     let isPlaying = false;
 
     // Smooth cross-fade between clips via CSS transition
-    heroVideos.forEach(v => { v.style.transition = ‘opacity 0.25s ease’; });
+    heroVideos.forEach(v => { v.style.transition = 'opacity 0.25s ease'; });
 
     function inVideoViewport() {
         const r = videoSection.getBoundingClientRect();
@@ -1762,13 +1762,13 @@ function initHeroVideoSteps() {
 
     function snapToSection() {
         // Instant snap — no animation delay, no swallowed wheel events
-        window.scrollTo({ top: videoSection.offsetTop, behavior: ‘instant’ });
+        window.scrollTo({ top: videoSection.offsetTop, behavior: 'instant' });
     }
 
     function fadeToVideo(index) {
         heroVideos.forEach((v, i) => {
-            v.style.opacity = i === index ? ‘1’ : ‘0’;
-            v.style.zIndex  = i === index ? ‘100’ : ‘0’;
+            v.style.opacity = i === index ? '1' : '0';
+            v.style.zIndex  = i === index ? '100' : '0';
         });
     }
 
@@ -1781,15 +1781,15 @@ function initHeroVideoSteps() {
             fadeToVideo(index);
             const apply = () => { video.pause(); updateArrow(index, dur); if (onDone) onDone(); };
             const fallback = setTimeout(apply, 150);
-            video.addEventListener(‘seeked’, function once() {
-                video.removeEventListener(‘seeked’, once);
+            video.addEventListener('seeked', function once() {
+                video.removeEventListener('seeked', once);
                 clearTimeout(fallback); apply();
             }, { once: true });
             try { video.currentTime = Math.max(0, dur - 0.05); } catch(e) { clearTimeout(fallback); apply(); }
         };
         if ((clipDurations[index] || video.duration) && video.readyState >= 2) go();
         else {
-            video.addEventListener(‘canplay’, go, { once: true });
+            video.addEventListener('canplay', go, { once: true });
             video.load();
         }
     }
@@ -1809,18 +1809,18 @@ function initHeroVideoSteps() {
                 const d = clipDurations[index] || video.duration || 0;
                 if (d) try { video.currentTime = Math.max(0, d - 0.05); } catch(e) {}
                 video.pause();
-                video.removeEventListener(‘timeupdate’, onTU);
-                video.removeEventListener(‘ended’, onEnded);
+                video.removeEventListener('timeupdate', onTU);
+                video.removeEventListener('ended', onEnded);
                 isPlaying = false;
                 if (onDone) onDone();
             };
             const onEnded = finish;
-            video.addEventListener(‘timeupdate’, onTU);
-            video.addEventListener(‘ended’, onEnded);
+            video.addEventListener('timeupdate', onTU);
+            video.addEventListener('ended', onEnded);
         };
 
         if (video.readyState >= 2) start();
-        else { video.addEventListener(‘canplay’, start, { once: true }); video.load(); }
+        else { video.addEventListener('canplay', start, { once: true }); video.load(); }
     }
 
     function playClipReverse(index, onDone, reverseMs = 900) {
@@ -1847,15 +1847,15 @@ function initHeroVideoSteps() {
         };
 
         if (video.readyState >= 2) go();
-        else { video.addEventListener(‘canplay’, go, { once: true }); video.load(); }
+        else { video.addEventListener('canplay', go, { once: true }); video.load(); }
     }
 
     function goToNextSection() {
         locked = false;
-        window.scrollTo({ top: nextSection.offsetTop, behavior: ‘smooth’ });
+        window.scrollTo({ top: nextSection.offsetTop, behavior: 'smooth' });
     }
 
-    window.addEventListener(‘wheel’, (e) => {
+    window.addEventListener('wheel', (e) => {
         if (!inVideoViewport()) return;
 
         if (e.deltaY > 0) { // ── scroll DOWN ──
@@ -1896,7 +1896,7 @@ function initHeroVideoSteps() {
             // At step 1 (clip 0 playing or just locked) — release lock so user can scroll up freely
             if (currentStep === 1 && !isPlaying) {
                 locked = false; currentStep = 0;
-                return; // don’t preventDefault — let the page scroll up naturally
+                return; // don't preventDefault — let the page scroll up naturally
             }
             // Scrolled past section and coming back up → snap back, show last frame
             if (currentStep >= 5 && !isPlaying) {
@@ -1907,7 +1907,7 @@ function initHeroVideoSteps() {
             }
         }
 
-        // While locked and playing, block scroll so page doesn’t drift
+        // While locked and playing, block scroll so page doesn't drift
         if (locked) e.preventDefault();
     }, { passive: false });
 }
