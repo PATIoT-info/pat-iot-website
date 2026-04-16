@@ -1740,289 +1740,175 @@ function initHeroVideoSteps() {
     }
 
     // Desktop: step-based behavior for 3 separate videos
-    let currentIndex = 0;      // 0/1/2 = which video is active
-    let currentStep = 0;       // 0: not locked, 1: locked, 2: after video1, 3: after video2, 4: after video3
+    // Steps: 0=unlocked  1=clip0 playing  2=waiting(clip0 done)
+    //        3=waiting(clip1 done)  4=waiting(clip2 done)  5=past section
+    let currentStep = 0;
     let locked = false;
     let isPlaying = false;
-    let scrollingToPin = false;
+
+    // Smooth cross-fade between clips via CSS transition
+    heroVideos.forEach(v => { v.style.transition = ‘opacity 0.25s ease’; });
 
     function inVideoViewport() {
-        const rect = videoSection.getBoundingClientRect();
-        return rect.top < window.innerHeight && rect.bottom > 0;
+        const r = videoSection.getBoundingClientRect();
+        return r.top < window.innerHeight && r.bottom > 0;
     }
 
-    // Only true when user has scrolled so the hero video section is at the top (don't lock/play before we're here)
-    function atHeroVideoSection() {
-        const rect = videoSection.getBoundingClientRect();
-        return rect.top <= 220 && rect.bottom > 120;
+    // True once section is close enough to the viewport top to trigger lock
+    function nearVideoTop() {
+        const r = videoSection.getBoundingClientRect();
+        return r.top <= 180 && r.bottom > 100;
+    }
+
+    function snapToSection() {
+        // Instant snap — no animation delay, no swallowed wheel events
+        window.scrollTo({ top: videoSection.offsetTop, behavior: ‘instant’ });
     }
 
     function fadeToVideo(index) {
-        // Ensure the active video is on top to avoid any stacking/overlay issues (especially for first clip)
-        heroVideos.forEach((video, i) => {
-            video.style.opacity = i === index ? '1' : '0';
-            try {
-                video.style.zIndex = (i === index) ? '100' : '0';
-            } catch (e) {}
+        heroVideos.forEach((v, i) => {
+            v.style.opacity = i === index ? ‘1’ : ‘0’;
+            v.style.zIndex  = i === index ? ‘100’ : ‘0’;
         });
-        currentIndex = index;
     }
 
-    // Show a clip paused on its last frame (wait for seek so first video doesn't flash wrong frame)
     function showLastFrame(index, onDone) {
         const video = heroVideos[index];
-        isPlaying = true;
-
-        const showFrame = () => {
-            const duration = clipDurations[index] || video.duration || 0;
-            if (!duration) {
-                isPlaying = false;
-                if (typeof onDone === 'function') onDone();
-                return;
-            }
-            const lastTime = Math.max(0, duration - 0.05);
+        const go = () => {
+            const dur = clipDurations[index] || video.duration || 0;
+            if (!dur) { if (onDone) onDone(); return; }
             video.pause();
-
-            const applyAfterSeek = () => {
-                video.pause();
-                fadeToVideo(index);
-                updateArrow(index, duration);
-                isPlaying = false;
-                if (typeof onDone === 'function') onDone();
-            };
-
-            const onSeeked = () => {
-                video.removeEventListener('seeked', onSeeked);
-                clearTimeout(seekFallback);
-                applyAfterSeek();
-            };
-            const seekFallback = setTimeout(onSeeked, 150);
-
-            try {
-                video.currentTime = lastTime;
-            } catch (e) {
-                clearTimeout(seekFallback);
-                applyAfterSeek();
-                return;
-            }
-            video.addEventListener('seeked', onSeeked, { once: true });
+            fadeToVideo(index);
+            const apply = () => { video.pause(); updateArrow(index, dur); if (onDone) onDone(); };
+            const fallback = setTimeout(apply, 150);
+            video.addEventListener(‘seeked’, function once() {
+                video.removeEventListener(‘seeked’, once);
+                clearTimeout(fallback); apply();
+            }, { once: true });
+            try { video.currentTime = Math.max(0, dur - 0.05); } catch(e) { clearTimeout(fallback); apply(); }
         };
-
-        const doWhenReady = () => {
-            video.removeEventListener('loadedmetadata', doWhenReady);
-            video.removeEventListener('canplay', doWhenReady);
-            showFrame();
-        };
-
-        if ((clipDurations[index] || video.duration) && video.readyState >= 2) {
-            showFrame();
-        } else {
-            video.addEventListener('loadedmetadata', doWhenReady);
-            video.addEventListener('canplay', doWhenReady);
+        if ((clipDurations[index] || video.duration) && video.readyState >= 2) go();
+        else {
+            video.addEventListener(‘canplay’, go, { once: true });
             video.load();
         }
     }
 
-    // Play a specific clip from the beginning, then hold on its last frame
     function playClip(index, onDone) {
         const video = heroVideos[index];
         isPlaying = true;
+        fadeToVideo(index);
 
-        const handleTimeUpdate = () => {
-            updateArrow(index, video.currentTime || 0);
-        };
-
-        const finish = () => {
-            const duration = clipDurations[index] || video.duration || 0;
-            if (duration) {
-                try {
-                    video.currentTime = Math.max(0, duration - 0.05);
-                } catch (e) {}
-            }
-            video.pause();
-            fadeToVideo(index);
-            updateArrow(index, duration || 0);
-            video.removeEventListener('timeupdate', handleTimeUpdate);
-            video.removeEventListener('ended', handleEnded);
-            isPlaying = false;
-            if (typeof onDone === 'function') onDone();
-        };
-
-        const handleEnded = () => {
-            const d = clipDurations[index] || video.duration || 0;
-            if (d > 0) {
-                try {
-                    video.currentTime = Math.max(0, d - 0.05);
-                } catch (err) {}
-            }
-            video.pause();
-            finish();
-        };
-
-        const startPlayback = () => {
-            const duration = video.duration || 0;
-            if (duration && isFinite(duration)) {
-                clipDurations[index] = duration;
-            }
-            try {
-                video.currentTime = 0;
-            } catch (e) {}
-            fadeToVideo(index);
+        const start = () => {
+            if (video.duration && isFinite(video.duration)) clipDurations[index] = video.duration;
+            try { video.currentTime = 0; } catch(e) {}
             video.play().catch(() => {});
-            video.addEventListener('timeupdate', handleTimeUpdate);
-            video.addEventListener('ended', handleEnded);
+
+            const onTU = () => updateArrow(index, video.currentTime || 0);
+            const finish = () => {
+                const d = clipDurations[index] || video.duration || 0;
+                if (d) try { video.currentTime = Math.max(0, d - 0.05); } catch(e) {}
+                video.pause();
+                video.removeEventListener(‘timeupdate’, onTU);
+                video.removeEventListener(‘ended’, onEnded);
+                isPlaying = false;
+                if (onDone) onDone();
+            };
+            const onEnded = finish;
+            video.addEventListener(‘timeupdate’, onTU);
+            video.addEventListener(‘ended’, onEnded);
         };
 
-        if (video.readyState >= 2) {
-            startPlayback();
-        } else {
-            video.addEventListener('canplay', startPlayback, { once: true });
-            video.load();
-        }
+        if (video.readyState >= 2) start();
+        else { video.addEventListener(‘canplay’, start, { once: true }); video.load(); }
     }
 
-    // Play a clip in reverse (smooth seek backwards) then call onDone
     function playClipReverse(index, onDone, reverseMs = 900) {
         const video = heroVideos[index];
         isPlaying = true;
+        fadeToVideo(index);
 
-        const startReverse = () => {
-            const duration = clipDurations[index] || video.duration || 0;
-            const startTime = Math.max(0, duration - 0.02);
-            fadeToVideo(index);
-            try {
-                video.pause();
-                video.currentTime = startTime;
-            } catch (e) {}
-
-            let lastTs = performance.now();
-            let rafId = null;
+        const go = () => {
+            const dur = clipDurations[index] || video.duration || 0;
+            try { video.pause(); video.currentTime = Math.max(0, dur - 0.02); } catch(e) {}
+            let last = performance.now();
             const step = (now) => {
-                const elapsed = now - lastTs;
-                lastTs = now;
-                const dec = (duration / Math.max(1, reverseMs)) * elapsed;
-                let newT = Math.max(0, (video.currentTime || 0) - dec);
-                try {
-                    video.currentTime = newT;
-                } catch (e) {}
-                if (newT <= 0.02) {
-                    try { video.currentTime = 0; } catch (e) {}
-                    video.pause();
-                    isPlaying = false;
-                    if (typeof onDone === 'function') onDone();
-                    return;
+                const dec = (dur / Math.max(1, reverseMs)) * (now - last);
+                last = now;
+                const t = Math.max(0, (video.currentTime || 0) - dec);
+                try { video.currentTime = t; } catch(e) {}
+                if (t <= 0.02) {
+                    try { video.currentTime = 0; } catch(e) {}
+                    video.pause(); isPlaying = false; if (onDone) onDone(); return;
                 }
-                rafId = requestAnimationFrame(step);
+                requestAnimationFrame(step);
             };
-            rafId = requestAnimationFrame(step);
+            requestAnimationFrame(step);
         };
 
-        if (video.readyState >= 2) {
-            startReverse();
-        } else {
-            video.addEventListener('canplay', startReverse, { once: true });
-            video.load();
-        }
-    }
-    function goToVideoTop() {
-        // smooth pin to top; ignore extra wheel events while animating
-        scrollingToPin = true;
-        videoSection.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
-        // fallback to clear the flag after animation (browsers vary in duration)
-        setTimeout(() => { scrollingToPin = false; }, 700);
+        if (video.readyState >= 2) go();
+        else { video.addEventListener(‘canplay’, go, { once: true }); video.load(); }
     }
 
     function goToNextSection() {
-        const top = nextSection.offsetTop;
-        window.scrollTo({ top, behavior: 'smooth' });
         locked = false;
+        window.scrollTo({ top: nextSection.offsetTop, behavior: ‘smooth’ });
     }
 
-    window.addEventListener('wheel', (e) => {
+    window.addEventListener(‘wheel’, (e) => {
         if (!inVideoViewport()) return;
-        if (scrollingToPin) {
-            // while we're animating the pin, swallow extra wheel events
-            e.preventDefault();
-            return;
-        }
 
-        // Only lock when user has actually reached the hero video section; don't start before they're there
-        if (e.deltaY > 0 && currentStep === 0 && !atHeroVideoSection()) return;
-
-        if (e.deltaY > 0) { // scroll down
-            // First downward scroll: lock to video (only when section is at top)
+        if (e.deltaY > 0) { // ── scroll DOWN ──
+            // First scroll down: snap instantly + start clip 0 immediately (no intermediate "lock" step)
             if (currentStep === 0) {
+                if (!nearVideoTop()) return;          // section not yet near top — let normal scroll through
                 locked = true;
+                snapToSection();
                 currentStep = 1;
-                goToVideoTop();
-                e.preventDefault();
-                return;
-            }
-            // Second scroll: play video 1
-            if (currentStep === 1 && !isPlaying) {
                 playClip(0, () => { currentStep = 2; });
-                e.preventDefault();
-                return;
+                e.preventDefault(); return;
             }
-            // Third scroll: play video 2
             if (currentStep === 2 && !isPlaying) {
                 playClip(1, () => { currentStep = 3; });
-                e.preventDefault();
-                return;
+                e.preventDefault(); return;
             }
-            // Fourth scroll: play video 3
             if (currentStep === 3 && !isPlaying) {
                 playClip(2, () => { currentStep = 4; });
-                e.preventDefault();
-                return;
+                e.preventDefault(); return;
             }
-            // Fifth scroll: go to next section
             if (currentStep === 4 && !isPlaying) {
-                goToNextSection();
-                currentStep = 5;
-                e.preventDefault();
-                return;
+                goToNextSection(); currentStep = 5;
+                e.preventDefault(); return;
             }
-        } else if (e.deltaY < 0) { // scroll up – show previous video at last frame (no play)
-            // From step 4 → play video 3 in reverse smoothly, then set step to 3
+        } else if (e.deltaY < 0) { // ── scroll UP ──
             if (currentStep === 4 && !isPlaying) {
                 playClipReverse(2, () => { currentStep = 3; });
-                e.preventDefault();
-                return;
+                e.preventDefault(); return;
             }
-            // From step 3 → play video 2 in reverse smoothly, then set step to 2
             if (currentStep === 3 && !isPlaying) {
                 playClipReverse(1, () => { currentStep = 2; });
-                e.preventDefault();
-                return;
+                e.preventDefault(); return;
             }
-            // From step 2 → play video 1 in reverse smoothly, then set step to 1
             if (currentStep === 2 && !isPlaying) {
                 playClipReverse(0, () => { currentStep = 1; });
-                e.preventDefault();
-                return;
+                e.preventDefault(); return;
             }
-            // From step 1 → unlock and allow normal scroll back up
-            if (currentStep === 1 && locked && !isPlaying) {
-                locked = false;
-                e.preventDefault(); // small ease; next scroll will actually move page
-                return;
+            // At step 1 (clip 0 playing or just locked) — release lock so user can scroll up freely
+            if (currentStep === 1 && !isPlaying) {
+                locked = false; currentStep = 0;
+                return; // don’t preventDefault — let the page scroll up naturally
             }
-            // If user scrolls up after going to next section, bring them back to video 3 last frame
+            // Scrolled past section and coming back up → snap back, show last frame
             if (currentStep >= 5 && !isPlaying) {
-                locked = true;
-                currentStep = 4;
-                goToVideoTop();
+                locked = true; currentStep = 4;
+                snapToSection();
                 showLastFrame(2, () => { currentStep = 4; });
-                e.preventDefault();
-                return;
+                e.preventDefault(); return;
             }
         }
 
-        if (locked) {
-            // While locked, prevent default so page doesn’t jump
-            e.preventDefault();
-        }
+        // While locked and playing, block scroll so page doesn’t drift
+        if (locked) e.preventDefault();
     }, { passive: false });
 }
 
