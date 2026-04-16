@@ -893,6 +893,27 @@ function initHeroVideoSteps() {
     // Smooth cross-fade between clips via CSS transition
     heroVideos.forEach(v => { v.style.transition = 'opacity 0.25s ease'; });
 
+    // ── Video failure fallback (Firefox / unsupported codec) ──
+    // If videos can't decode, hide the section so the page scrolls normally.
+    let videoErrorCount = 0;
+    function bypassVideoSection() {
+        videoSection.style.display = 'none';
+        currentStep = 5;
+        locked = false;
+    }
+    heroVideos.forEach(v => {
+        v.addEventListener('error', () => {
+            videoErrorCount++;
+            if (videoErrorCount >= 2) bypassVideoSection();
+        });
+    });
+    // Safety timeout: if no video has loaded at all after 6s, skip the section
+    setTimeout(() => {
+        if (currentStep === 0 && heroVideos.every(v => v.readyState < 1)) {
+            bypassVideoSection();
+        }
+    }, 6000);
+
     function inVideoViewport() {
         const r = videoSection.getBoundingClientRect();
         return r.top < window.innerHeight && r.bottom > 0;
@@ -1466,15 +1487,13 @@ function initScrollAnimations() {
 
 // Video error handling
 document.querySelectorAll('video').forEach(video => {
-    video.addEventListener('error', (e) => {
-        // Hide video if it fails to load
+    video.addEventListener('error', () => {
         video.style.display = 'none';
-        const overlay = video.nextElementSibling;
-        if (overlay && (overlay.classList.contains('section-video-overlay') || overlay.classList.contains('hero-overlay'))) {
-            // Keep overlay but adjust opacity
-            overlay.style.background = overlay.classList.contains('hero-overlay') 
-                ? 'rgba(0, 0, 0, 0.5)' 
-                : 'rgba(255, 255, 255, 0.95)';
+        // If a mode video fails, hide its parent section so layout doesn't break
+        const modeSection = video.closest('.video-modes-section');
+        if (modeSection) {
+            const allFailed = Array.from(modeSection.querySelectorAll('video')).every(v => v.style.display === 'none');
+            if (allFailed) modeSection.style.display = 'none';
         }
     });
     // Hero video is scroll-to-scrub; don't loop it
