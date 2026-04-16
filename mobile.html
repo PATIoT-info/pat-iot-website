@@ -112,7 +112,7 @@
         }
         #navOverlay.active { display: block; }
 
-        /* ── Nav menu — solid glass panel, drops down ── */
+        /* ── Nav menu — plain white, slides down from behind navbar ── */
         #navMenu {
             position: fixed !important;
             top: 66px !important;
@@ -120,56 +120,46 @@
             right: 0 !important;
             bottom: auto !important;
             z-index: 10001 !important;
-            /* Opaque enough to not need heavy blur — readable on all devices */
-            background: rgba(225,235,255,0.97) !important;
-            backdrop-filter: blur(16px) saturate(180%) !important;
-            -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-            border-bottom: 1.5px solid rgba(255,255,255,0.8) !important;
-            box-shadow:
-                0 12px 40px rgba(0,0,0,0.22),
-                inset 0 1px 0 rgba(255,255,255,0.9) !important;
-            /* Drop down animation */
-            transform: translateY(-8px) !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-            transition: transform 0.26s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease !important;
+            /* Plain white background — no glass, no blur */
+            background: #ffffff !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border-bottom: 1px solid #e5e7eb !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+            /* Hidden physically off-screen — no opacity/pointer-events tricks */
+            transform: translateY(-110%) !important;
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1) !important;
             /* Layout */
             display: flex !important;
             flex-direction: column !important;
-            padding: 0.85rem 0.9rem 1.1rem !important;
-            gap: 0.25rem !important;
+            padding: 0.75rem 0.9rem 1rem !important;
+            gap: 0.2rem !important;
             overflow-y: auto !important;
             max-height: calc(100svh - 66px) !important;
         }
         #navMenu.active {
             transform: translateY(0) !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
         }
         #navMenu li {
             width: 100% !important;
             list-style: none !important;
         }
         #navMenu .nav-link {
-            display: flex !important;
-            align-items: center !important;
-            padding: 0.85rem 1rem !important;
+            display: block !important;
+            padding: 0.9rem 1rem !important;
             font-size: 1rem !important;
             font-weight: 500 !important;
-            color: #1a3060 !important;
-            border-radius: 12px !important;
+            color: #1e3a5f !important;
+            border-radius: 10px !important;
             text-decoration: none !important;
-            /* Subtle glass tile per row */
-            background: rgba(255,255,255,0.6) !important;
-            border: 1px solid rgba(255,255,255,0.85) !important;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8) !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
             transition: background 0.15s ease !important;
         }
-        #navMenu .nav-link:active,
-        #navMenu .nav-link.active {
-            background: rgba(37,99,235,0.12) !important;
+        #navMenu .nav-link:active {
+            background: #eff6ff !important;
             color: #2563eb !important;
-            border-color: rgba(96,165,250,0.45) !important;
         }
 
         .nav-wrapper {
@@ -1771,22 +1761,10 @@
 
         btn.addEventListener('click', toggle);
 
-        /* Nav links — close menu first, then let the href navigate */
+        /* Nav links — close menu and let browser handle navigation naturally */
         menu.querySelectorAll('.nav-link').forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                var href = link.getAttribute('href');
+            link.addEventListener('click', function() {
                 closeMenu();
-                /* For in-page anchors, manually scroll so it works even after menu closes */
-                if (href && href.startsWith('#')) {
-                    e.preventDefault();
-                    var target = document.querySelector(href);
-                    if (target) {
-                        setTimeout(function() {
-                            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }, 60); /* small delay lets menu close animation start first */
-                    }
-                }
-                /* External links (blog.html etc) navigate naturally */
             });
         });
 
