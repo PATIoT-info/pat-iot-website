@@ -37,12 +37,6 @@
       "order": 1
     },
     {
-      "id": "2",
-      "image": "images/gallery/product-2.jpg",
-      "alt": "Smart Home Product",
-      "order": 2
-    },
-    {
       "id": "3",
       "image": "images/gallery/product-3.jpg",
       "alt": "Smart Home Product",
@@ -73,12 +67,6 @@
       "order": 7
     },
     {
-      "id": "8",
-      "image": "images/gallery/product-8.jpg",
-      "alt": "Smart Home Product",
-      "order": 8
-    },
-    {
       "id": "9",
       "image": "images/gallery/product-9.jpg",
       "alt": "Smart Home Product",
@@ -95,36 +83,6 @@
       "image": "images/gallery/product-11.jpg",
       "alt": "Smart Home Product",
       "order": 11
-    },
-    {
-      "id": "12",
-      "image": "images/gallery/product-12.jpg",
-      "alt": "Smart Home Product",
-      "order": 12
-    },
-    {
-      "id": "13",
-      "image": "images/gallery/product-13.jpg",
-      "alt": "Smart Home Product",
-      "order": 13
-    },
-    {
-      "id": "14",
-      "image": "images/gallery/product-14.jpg",
-      "alt": "Smart Home Product",
-      "order": 14
-    },
-    {
-      "id": "15",
-      "image": "images/gallery/product-15.jpg",
-      "alt": "Smart Home Product",
-      "order": 15
-    },
-    {
-      "id": "16",
-      "image": "images/gallery/product-16.jpg",
-      "alt": "Smart Home Product",
-      "order": 16
     },
     {
       "id": "17",
