@@ -1037,6 +1037,31 @@
             background: linear-gradient(90deg, #3b82f6, rgba(96,165,250,0.35));
         }
 
+        /* ── Hero Description ── */
+        .hero-desc-wrap {
+            background: linear-gradient(145deg, #eef2ff 0%, #e8effd 60%, #f0f9ff 100%);
+            padding: 1.25rem 1.1rem;
+        }
+        .hero-desc-card {
+            background: rgba(255,255,255,0.55);
+            backdrop-filter: blur(16px) saturate(160%);
+            -webkit-backdrop-filter: blur(16px) saturate(160%);
+            border: 1px solid rgba(255,255,255,0.85);
+            border-radius: var(--radius);
+            padding: 1.1rem 1.15rem;
+            box-shadow: 0 4px 18px rgba(37,99,235,0.07), 0 1.5px 0 rgba(255,255,255,0.65) inset;
+        }
+        .hero-desc-card p {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            line-height: 1.75;
+            margin: 0;
+        }
+        .hero-desc-card strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
         /* ── Gallery Lightbox ── */
         #galleryLightbox { display: none; position: fixed; inset: 0; z-index: 99999; align-items: center; justify-content: center; }
         #galleryLightbox.glb-open { display: flex; }
@@ -1136,6 +1161,13 @@
         </div>
         <div class="scrub-hint" id="scrubHint">
             <i class="fas fa-hand-point-up"></i> Swipe to play
+        </div>
+    </div>
+
+    <!-- ── Hero Description ── -->
+    <div class="hero-desc-wrap">
+        <div class="hero-desc-card">
+            <p>Experience the future of modern living. Our smart home automation seamlessly controls your lights, curtains, appliances, and entertainment systems — all from the <strong>PAT IoT app</strong> or through simple <strong>voice commands</strong>. No more manual switches or remotes. Just an intelligent home that adapts to your lifestyle, making every day more comfortable, efficient, and elegant.</p>
         </div>
     </div>
 
