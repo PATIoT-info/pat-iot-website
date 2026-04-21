@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAT IoT — Blog Admin</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --radius: 0.75rem;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* ── Top Bar ── */
+        .topbar {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+        .topbar-brand { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; font-size: 1.1rem; color: var(--primary); }
+        .topbar-brand img { height: 32px; }
+        .topbar-right { display: flex; align-items: center; gap: 1rem; }
+        .connected-badge { background: #dcfce7; color: var(--success); font-size: 0.78rem; font-weight: 600; padding: 0.3rem 0.75rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.4rem; }
+        .btn-logout { background: none; border: 1px solid var(--border); color: var(--text-light); font-size: 0.8rem; padding: 0.35rem 0.85rem; border-radius: 0.5rem; cursor: pointer; font-family: inherit; }
+        .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+        /* ── Login Screen ── */
+        #loginScreen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+        }
+        .login-card {
+            background: var(--white);
+            border-radius: 1.25rem;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255,255,255,0.9);
+        }
+        .login-card .brand { text-align: center; margin-bottom: 1.75rem; }
+        .login-card .brand img { height: 48px; margin-bottom: 0.75rem; }
+        .login-card .brand h1 { font-size: 1.4rem; font-weight: 700; color: var(--text); }
+        .login-card .brand p { font-size: 0.85rem; color: var(--text-light); margin-top: 0.3rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 0.4rem; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            border: 1.5px solid var(--border);
+            border-radius: 0.6rem;
+            padding: 0.65rem 0.9rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text);
+            background: var(--white);
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+        .hint { font-size: 0.75rem; color: var(--text-light); margin-top: 0.4rem; }
+        .hint a { color: var(--primary); }
+        .btn-primary {
+            width: 100%;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 0.6rem;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ── Editor Layout ── */
+        #editorScreen { display: none; }
+        .editor-layout {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        .editor-main, .editor-sidebar {
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card-body { padding: 1.25rem; }
+
+        /* ── Rich Text Editor ── */
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+        .toolbar-btn {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 0.4rem;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--text);
+            transition: all 0.15s;
+        }
+        .toolbar-btn:hover { background: #eff6ff; border-color: var(--primary); color: var(--primary); }
+        .toolbar-sep { width: 1px; background: var(--border); margin: 0 0.15rem; }
+        .editor-content {
+            min-height: 320px;
+            padding: 1rem 1.25rem;
+            outline: none;
+            font-size: 0.95rem;
+            line-height: 1.75;
+            color: var(--text);
+        }
+        .editor-content:empty::before { content: 'Write your blog post here...'; color: #9ca3af; }
+        .editor-content h2 { font-size: 1.3rem; margin: 1rem 0 0.5rem; }
+        .editor-content h3 { font-size: 1.1rem; margin: 0.85rem 0 0.4rem; }
+        .editor-content p { margin-bottom: 0.75rem; }
+        .editor-content ul, .editor-content ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .editor-content blockquote { border-left: 3px solid var(--primary); padding-left: 1rem; color: var(--text-light); margin: 0.75rem 0; }
+        .editor-content img { max-width: 100%; border-radius: 0.5rem; margin: 0.5rem 0; }
+
+        /* ── Sidebar ── */
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+        .meta-grid .full { grid-column: 1 / -1; }
+
+        /* ── Cover Image ── */
+        .cover-upload {
+            border: 2px dashed var(--border);
+            border-radius: 0.6rem;
+            padding: 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .cover-upload:hover { border-color: var(--primary); background: #eff6ff; }
+        .cover-upload input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .cover-upload i { font-size: 1.5rem; color: var(--text-light); margin-bottom: 0.4rem; }
+        .cover-upload p { font-size: 0.8rem; color: var(--text-light); }
+        .cover-preview { width: 100%; height: 140px; object-fit: cover; border-radius: 0.5rem; margin-top: 0.75rem; display: none; }
+
+        /* ── Inline Image Insert ── */
+        .inline-img-row { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.75rem; }
+        .inline-img-row input[type="file"] { display: none; }
+        .btn-outline {
+            background: var(--white);
+            border: 1.5px solid var(--primary);
+            color: var(--primary);
+            border-radius: 0.5rem;
+            padding: 0.45rem 0.9rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-outline:hover { background: #eff6ff; }
+
+        /* ── Submit ── */
+        .submit-area { padding: 1.25rem; border-top: 1px solid var(--border); display: flex; gap: 0.75rem; }
+        .btn-success {
+            flex: 1;
+            background: var(--success);
+            color: #fff;
+            border: none;
+            border-radius: 0.6rem;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: opacity 0.2s;
+        }
+        .btn-success:hover { opacity: 0.9; }
+        .btn-success:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Posts List ── */
+        .posts-list { max-width: 1100px; margin: 0 auto 2rem; padding: 0 1.5rem; }
+        .posts-list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+        .posts-list-header h2 { font-size: 1rem; font-weight: 600; }
+        .btn-new {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .post-row {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.6rem;
+            box-shadow: var(--shadow);
+        }
+        .post-row img { width: 64px; height: 48px; object-fit: cover; border-radius: 0.4rem; flex-shrink: 0; }
+        .post-row-info { flex: 1; min-width: 0; }
+        .post-row-title { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .post-row-meta { font-size: 0.78rem; color: var(--text-light); margin-top: 0.2rem; }
+        .post-row-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+        .btn-icon { background: none; border: 1px solid var(--border); border-radius: 0.4rem; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.8rem; color: var(--text-light); transition: all 0.15s; }
+        .btn-icon:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-icon.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--text);
+            color: #fff;
+            padding: 0.85rem 1.25rem;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+            max-width: 360px;
+        }
+        .toast.show { display: flex; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+
+        /* ── Spinner ── */
+        .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Section Toggle ── */
+        .view-new { display: none; }
+        .view-list { display: block; }
+
+        @media (max-width: 768px) {
+            .editor-layout { grid-template-columns: 1fr; }
+            .topbar { padding: 0 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Login Screen ── -->
+<div id="loginScreen">
+    <div class="login-card">
+        <div class="brand">
+            <img src="images/logo.png" alt="PAT IoT" onerror="this.style.display='none'">
+            <h1>Blog Admin</h1>
+            <p>PAT IoT Solutions — Content Management</p>
+        </div>
+        <div class="form-group">
+            <label>GitHub Personal Access Token</label>
+            <input type="password" id="patInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+            <p class="hint">
+                Create a token at <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings</a>
+                with <strong>repo</strong> scope (Contents: Read & Write).
+            </p>
+        </div>
+        <button class="btn-primary" id="loginBtn" onclick="login()">
+            <i class="fas fa-plug"></i> Connect to GitHub
+        </button>
+        <p class="hint" style="text-align:center; margin-top:0.75rem;">Your token is stored locally and never sent anywhere except GitHub.</p>
+    </div>
+</div>
+
+<!-- ── Editor Screen ── -->
+<div id="editorScreen">
+    <div class="topbar">
+        <div class="topbar-brand">
+            <img src="images/logo.png" alt="PAT IoT" onerror="this.style.display='none'">
+            Blog Admin
+        </div>
+        <div class="topbar-right">
+            <span class="connected-badge"><i class="fas fa-circle"></i> Connected</span>
+            <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+
+    <!-- Posts List View -->
+    <div class="posts-list view-list" id="viewList">
+        <div style="height:1.5rem"></div>
+        <div class="posts-list-header">
+            <h2><i class="fas fa-newspaper" style="color:var(--primary);margin-right:0.4rem"></i> All Blog Posts</h2>
+            <button class="btn-new" onclick="showNewEditor()"><i class="fas fa-plus"></i> New Post</button>
+        </div>
+        <div id="postsList">
+            <p style="color:var(--text-light);font-size:0.9rem">Loading posts...</p>
+        </div>
+    </div>
+
+    <!-- New / Edit Post View -->
+    <div class="view-new" id="viewNew">
+        <div class="editor-layout">
+            <!-- Main Editor -->
+            <div>
+                <div class="editor-main">
+                    <div class="card-header"><i class="fas fa-pen"></i> <span id="editorTitle">New Post</span></div>
+
+                    <!-- Title -->
+                    <div class="card-body" style="padding-bottom:0.5rem">
+                        <div class="form-group">
+                            <label>Post Title</label>
+                            <input type="text" id="fTitle" placeholder="Enter blog post title..." oninput="autoSlug()">
+                        </div>
+                        <div class="form-group">
+                            <label>Excerpt <span style="color:var(--text-light);font-weight:400">(short summary shown in listing)</span></label>
+                            <textarea id="fExcerpt" rows="2" placeholder="One or two sentence summary..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Rich Text Editor -->
+                    <div class="editor-toolbar">
+                        <button class="toolbar-btn" onclick="fmt('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                        <button class="toolbar-btn" onclick="fmt('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                        <button class="toolbar-btn" onclick="fmt('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                        <div class="toolbar-sep"></div>
+                        <button class="toolbar-btn" onclick="fmtBlock('h2')" title="Heading 2"><b>H2</b></button>
+                        <button class="toolbar-btn" onclick="fmtBlock('h3')" title="Heading 3"><b>H3</b></button>
+                        <button class="toolbar-btn" onclick="fmtBlock('p')" title="Paragraph"><i class="fas fa-paragraph"></i></button>
+                        <div class="toolbar-sep"></div>
+                        <button class="toolbar-btn" onclick="fmt('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                        <button class="toolbar-btn" onclick="fmt('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                        <button class="toolbar-btn" onclick="fmtBlock('blockquote')" title="Quote"><i class="fas fa-quote-left"></i></button>
+                        <div class="toolbar-sep"></div>
+                        <button class="toolbar-btn" onclick="insertLink()" title="Insert Link"><i class="fas fa-link"></i></button>
+                        <button class="toolbar-btn" onclick="document.getElementById('inlineImgInput').click()" title="Insert Image"><i class="fas fa-image"></i></button>
+                    </div>
+                    <div class="editor-content" id="editorContent" contenteditable="true"></div>
+                    <input type="file" id="inlineImgInput" accept="image/*" onchange="insertInlineImage(this)">
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+                <div class="editor-sidebar">
+                    <div class="card-header"><i class="fas fa-cog"></i> Post Settings</div>
+                    <div class="card-body">
+                        <div class="meta-grid">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="fCategory">
+                                    <option>Company</option>
+                                    <option>Products</option>
+                                    <option>Solutions</option>
+                                    <option>Tips</option>
+                                    <option>News</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Read Time</label>
+                                <input type="text" id="fReadTime" placeholder="3 min read">
+                            </div>
+                            <div class="form-group full">
+                                <label>Author</label>
+                                <input type="text" id="fAuthor" value="PAT IOT Team">
+                            </div>
+                            <div class="form-group full">
+                                <label>Date</label>
+                                <input type="date" id="fDate">
+                            </div>
+                            <div class="form-group full">
+                                <label>Slug <span style="color:var(--text-light);font-weight:400">(auto-generated)</span></label>
+                                <input type="text" id="fSlug" placeholder="post-url-slug">
+                            </div>
+                        </div>
+
+                        <!-- Cover Image -->
+                        <div class="form-group">
+                            <label>Cover Image</label>
+                            <div class="cover-upload" id="coverUpload">
+                                <input type="file" accept="image/*" onchange="handleCoverImage(this)">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click to upload cover image</p>
+                            </div>
+                            <img id="coverPreview" class="cover-preview" alt="Cover preview">
+                        </div>
+                    </div>
+
+                    <div class="submit-area">
+                        <button class="btn-success" id="submitBtn" onclick="submitPost()">
+                            <i class="fas fa-paper-plane"></i> Publish to Website
+                        </button>
+                    </div>
+                    <div style="padding:0 1.25rem 1rem; text-align:center">
+                        <button onclick="showList()" style="background:none;border:none;color:var(--text-light);font-size:0.82rem;cursor:pointer;font-family:inherit;">
+                            <i class="fas fa-arrow-left"></i> Back to all posts
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
+
+<script>
+    const REPO  = 'PATIoT-info/pat-iot-website';
+    const BRANCH = 'main';
+    let ghToken = '';
+    let blogsData = null;
+    let editingId = null;
+    let coverImageData = null; // { base64, filename, mimeType }
+    let inlineImages = []; // uploaded inline images
+
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    window.onload = () => {
+        const saved = localStorage.getItem('patiot_admin_token');
+        if (saved) { ghToken = saved; verifyAndShow(); }
+        // Set today's date
+        document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+    };
+
+    async function login() {
+        const val = document.getElementById('patInput').value.trim();
+        if (!val) { showToast('Please enter your GitHub token.', 'error'); return; }
+        ghToken = val;
+        const btn = document.getElementById('loginBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Verifying...';
+        await verifyAndShow();
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plug"></i> Connect to GitHub';
+    }
+
+    async function verifyAndShow() {
+        try {
+            const res = await ghFetch(`https://api.github.com/repos/${REPO}`);
+            if (!res.ok) throw new Error('Invalid token or no repo access');
+            localStorage.setItem('patiot_admin_token', ghToken);
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('editorScreen').style.display = 'block';
+            await loadPosts();
+        } catch(e) {
+            ghToken = '';
+            localStorage.removeItem('patiot_admin_token');
+            showToast('Authentication failed. Check your token.', 'error');
+        }
+    }
+
+    function logout() {
+        ghToken = '';
+        localStorage.removeItem('patiot_admin_token');
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('editorScreen').style.display = 'none';
+    }
+
+    // ── GitHub API ────────────────────────────────────────────────────────────
+    function ghFetch(url, opts = {}) {
+        return fetch(url, {
+            ...opts,
+            headers: {
+                'Authorization': `Bearer ${ghToken}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json',
+                ...(opts.headers || {})
+            }
+        });
+    }
+
+    async function getFile(path) {
+        const res = await ghFetch(`https://api.github.com/repos/${REPO}/contents/${path}?ref=${BRANCH}`);
+        if (!res.ok) return null;
+        return res.json();
+    }
+
+    async function putFile(path, content, sha, message) {
+        const body = { message, content: btoa(unescape(encodeURIComponent(content))), branch: BRANCH };
+        if (sha) body.sha = sha;
+        const res = await ghFetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+            method: 'PUT',
+            body: JSON.stringify(body)
+        });
+        return res;
+    }
+
+    async function uploadImage(filename, base64Data) {
+        // Remove data URL prefix
+        const content = base64Data.split(',')[1];
+        const path = `images/blog/${filename}`;
+        // Check if exists
+        const existing = await getFile(path);
+        const sha = existing ? existing.sha : undefined;
+        const res = await ghFetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                message: `Upload blog image: ${filename}`,
+                content,
+                branch: BRANCH,
+                ...(sha ? { sha } : {})
+            })
+        });
+        return res.ok ? path : null;
+    }
+
+    // ── Load Posts ────────────────────────────────────────────────────────────
+    async function loadPosts() {
+        const file = await getFile('data/blogs.json');
+        if (!file) { showToast('Could not load blogs.json', 'error'); return; }
+        blogsData = JSON.parse(atob(file.content.replace(/\n/g, '')));
+        blogsData._sha = file.sha;
+        renderPostsList();
+    }
+
+    function renderPostsList() {
+        const container = document.getElementById('postsList');
+        if (!blogsData.posts.length) {
+            container.innerHTML = '<p style="color:var(--text-light);font-size:0.9rem">No posts yet. Create your first post!</p>';
+            return;
+        }
+        const sorted = [...blogsData.posts].sort((a,b) => new Date(b.date) - new Date(a.date));
+        container.innerHTML = sorted.map(p => `
+            <div class="post-row">
+                <img src="${p.image}" alt="${p.title}" onerror="this.src='images/hero-image.jpg'">
+                <div class="post-row-info">
+                    <div class="post-row-title">${p.title}</div>
+                    <div class="post-row-meta">${p.category} &middot; ${p.date} &middot; ${p.readTime}</div>
+                </div>
+                <div class="post-row-actions">
+                    <button class="btn-icon" onclick="editPost('${p.id}')" title="Edit"><i class="fas fa-pen"></i></button>
+                    <button class="btn-icon danger" onclick="deletePost('${p.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ── Views ────────────────────────────────────────────────────────────────
+    function showNewEditor() {
+        editingId = null;
+        coverImageData = null;
+        inlineImages = [];
+        document.getElementById('fTitle').value = '';
+        document.getElementById('fExcerpt').value = '';
+        document.getElementById('fSlug').value = '';
+        document.getElementById('fAuthor').value = 'PAT IOT Team';
+        document.getElementById('fCategory').value = 'Company';
+        document.getElementById('fReadTime').value = '';
+        document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('editorContent').innerHTML = '';
+        document.getElementById('coverPreview').style.display = 'none';
+        document.getElementById('editorTitle').textContent = 'New Post';
+        document.getElementById('viewList').style.display = 'none';
+        document.getElementById('viewNew').style.display = 'block';
+        document.getElementById('fTitle').focus();
+    }
+
+    function editPost(id) {
+        const post = blogsData.posts.find(p => p.id === id);
+        if (!post) return;
+        editingId = id;
+        coverImageData = null;
+        inlineImages = [];
+        document.getElementById('fTitle').value = post.title;
+        document.getElementById('fExcerpt').value = post.excerpt;
+        document.getElementById('fSlug').value = post.slug;
+        document.getElementById('fAuthor').value = post.author;
+        document.getElementById('fCategory').value = post.category;
+        document.getElementById('fReadTime').value = post.readTime;
+        document.getElementById('fDate').value = post.date;
+        document.getElementById('editorContent').innerHTML = post.content;
+        const prev = document.getElementById('coverPreview');
+        prev.src = post.image;
+        prev.style.display = 'block';
+        document.getElementById('editorTitle').textContent = 'Edit Post';
+        document.getElementById('viewList').style.display = 'none';
+        document.getElementById('viewNew').style.display = 'block';
+    }
+
+    function showList() {
+        document.getElementById('viewNew').style.display = 'none';
+        document.getElementById('viewList').style.display = 'block';
+    }
+
+    // ── Editor ───────────────────────────────────────────────────────────────
+    function fmt(cmd) { document.execCommand(cmd, false, null); document.getElementById('editorContent').focus(); }
+    function fmtBlock(tag) { document.execCommand('formatBlock', false, tag); document.getElementById('editorContent').focus(); }
+    function insertLink() {
+        const url = prompt('Enter URL:');
+        if (url) { document.execCommand('createLink', false, url); document.getElementById('editorContent').focus(); }
+    }
+    function autoSlug() {
+        const title = document.getElementById('fTitle').value;
+        document.getElementById('fSlug').value = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    // ── Cover Image ──────────────────────────────────────────────────────────
+    function handleCoverImage(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const data = e.target.result;
+            coverImageData = { base64: data, filename: sanitizeFilename(file.name), mimeType: file.type };
+            const prev = document.getElementById('coverPreview');
+            prev.src = data;
+            prev.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ── Inline Image ─────────────────────────────────────────────────────────
+    function insertInlineImage(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const data = e.target.result;
+            const filename = sanitizeFilename(file.name);
+            inlineImages.push({ base64: data, filename });
+            document.execCommand('insertHTML', false, `<img src="${data}" alt="${filename}" data-upload="${filename}">`);
+            document.getElementById('editorContent').focus();
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+    }
+
+    // ── Submit ────────────────────────────────────────────────────────────────
+    async function submitPost() {
+        const title    = document.getElementById('fTitle').value.trim();
+        const excerpt  = document.getElementById('fExcerpt').value.trim();
+        const slug     = document.getElementById('fSlug').value.trim();
+        const author   = document.getElementById('fAuthor').value.trim();
+        const category = document.getElementById('fCategory').value;
+        const readTime = document.getElementById('fReadTime').value.trim() || '3 min read';
+        const date     = document.getElementById('fDate').value;
+
+        if (!title || !excerpt || !slug) {
+            showToast('Please fill in Title, Excerpt and Slug.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Publishing...';
+
+        try {
+            // 1. Upload cover image if new one selected
+            let coverPath = editingId
+                ? blogsData.posts.find(p => p.id === editingId)?.image || 'images/hero-image.jpg'
+                : 'images/hero-image.jpg';
+
+            if (coverImageData) {
+                showToast('Uploading cover image...', '');
+                const uploaded = await uploadImage(coverImageData.filename, coverImageData.base64);
+                if (uploaded) coverPath = uploaded;
+            }
+
+            // 2. Upload inline images and replace base64 with paths
+            let content = document.getElementById('editorContent').innerHTML;
+            for (const img of inlineImages) {
+                if (content.includes(img.base64)) {
+                    showToast(`Uploading image: ${img.filename}`, '');
+                    const uploaded = await uploadImage(img.filename, img.base64);
+                    if (uploaded) content = content.replace(new RegExp(img.base64.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), uploaded);
+                }
+            }
+
+            // 3. Build post object
+            const newPost = { id: editingId || String(Date.now()), slug, title, excerpt, content, date, category, image: coverPath, author, readTime };
+
+            // 4. Update blogs.json
+            const file = await getFile('data/blogs.json');
+            const data = JSON.parse(atob(file.content.replace(/\n/g, '')));
+            if (editingId) {
+                const idx = data.posts.findIndex(p => p.id === editingId);
+                if (idx !== -1) data.posts[idx] = newPost;
+            } else {
+                data.posts.unshift(newPost);
+            }
+
+            const res = await putFile(
+                'data/blogs.json',
+                JSON.stringify(data, null, 2),
+                file.sha,
+                `${editingId ? 'Update' : 'Add'} blog post: ${title}`
+            );
+
+            if (!res.ok) throw new Error('Failed to save post');
+
+            showToast(editingId ? 'Post updated successfully!' : 'Post published successfully!', 'success');
+            await loadPosts();
+            showList();
+        } catch(e) {
+            showToast('Error: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish to Website';
+        }
+    }
+
+    // ── Delete ────────────────────────────────────────────────────────────────
+    async function deletePost(id) {
+        const post = blogsData.posts.find(p => p.id === id);
+        if (!post) return;
+        if (!confirm(`Delete "${post.title}"? This cannot be undone.`)) return;
+        try {
+            const file = await getFile('data/blogs.json');
+            const data = JSON.parse(atob(file.content.replace(/\n/g, '')));
+            data.posts = data.posts.filter(p => p.id !== id);
+            const res = await putFile('data/blogs.json', JSON.stringify(data, null, 2), file.sha, `Delete blog post: ${post.title}`);
+            if (!res.ok) throw new Error('Failed to delete');
+            showToast('Post deleted.', 'success');
+            await loadPosts();
+        } catch(e) {
+            showToast('Error deleting post.', 'error');
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function sanitizeFilename(name) {
+        return name.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
+    }
+
+    let toastTimer;
+    function showToast(msg, type) {
+        const el = document.getElementById('toast');
+        el.className = 'toast show ' + (type || '');
+        document.getElementById('toastMsg').textContent = msg;
+        clearTimeout(toastTimer);
+        if (type !== '') toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+    }
+</script>
+</body>
+</html>
