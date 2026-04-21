@@ -191,7 +191,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #c8b89e;
     color: white;
     text-align: left;
     overflow: hidden;
