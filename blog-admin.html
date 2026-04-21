@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAT IoT — Blog Admin</title>
+    <title>PAT IoT — Site Admin</title>
     <link rel="icon" type="image/png" href="images/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -304,6 +304,104 @@
             .editor-layout { grid-template-columns: 1fr; }
             .topbar { padding: 0 1rem; }
         }
+
+        /* ── Tabs ── */
+        .tabs-bar {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 0;
+            padding: 0 2rem;
+            overflow-x: auto;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 0.85rem 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: inherit;
+            color: var(--text-light);
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: var(--primary); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* ── Section panels ── */
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── Grid Manager ── */
+        .mgr-wrap { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+        .mgr-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+        .mgr-header h2 { font-size: 1rem; font-weight: 600; }
+        .mgr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+        .mgr-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .mgr-card img { width: 100%; height: 120px; object-fit: cover; display: block; }
+        .mgr-card-body { padding: 0.75rem; }
+        .mgr-card-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .mgr-card-sub { font-size: 0.75rem; color: var(--text-light); }
+        .mgr-card-actions { display: flex; gap: 0.4rem; margin-top: 0.6rem; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: var(--white);
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-body { padding: 1.25rem; }
+        .modal-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); display: flex; gap: 0.75rem; justify-content: flex-end; }
+        .btn-cancel { background: var(--white); border: 1.5px solid var(--border); color: var(--text); border-radius: 0.5rem; padding: 0.55rem 1.1rem; font-size: 0.88rem; font-weight: 600; font-family: inherit; cursor: pointer; }
+
+        /* ── Brochure ── */
+        .brochure-wrap { max-width: 500px; margin: 2rem auto; padding: 0 1.5rem; }
+        .pdf-drop {
+            border: 2px dashed var(--border);
+            border-radius: 0.75rem;
+            padding: 2.5rem;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .pdf-drop:hover { border-color: var(--primary); background: #eff6ff; }
+        .pdf-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .pdf-drop i { font-size: 2rem; color: var(--text-light); margin-bottom: 0.5rem; }
     </style>
 </head>
 <body>
@@ -313,7 +411,7 @@
     <div class="login-card">
         <div class="brand">
             <img src="images/logo.png" alt="PAT IoT" onerror="this.style.display='none'">
-            <h1>Blog Admin</h1>
+            <h1>Site Admin</h1>
             <p>PAT IoT Solutions — Content Management</p>
         </div>
         <div class="form-group">
@@ -336,7 +434,7 @@
     <div class="topbar">
         <div class="topbar-brand">
             <img src="images/logo.png" alt="PAT IoT" onerror="this.style.display='none'">
-            Blog Admin
+            Site Admin
         </div>
         <div class="topbar-right">
             <span class="connected-badge"><i class="fas fa-circle"></i> Connected</span>
@@ -344,6 +442,18 @@
         </div>
     </div>
 
+    <!-- ── Tabs Bar ── -->
+    <div class="tabs-bar">
+        <button class="tab-btn active" onclick="switchTab('blog')"><i class="fas fa-newspaper"></i> Blog</button>
+        <button class="tab-btn" onclick="switchTab('products')"><i class="fas fa-box"></i> Products</button>
+        <button class="tab-btn" onclick="switchTab('gallery')"><i class="fas fa-images"></i> Gallery</button>
+        <button class="tab-btn" onclick="switchTab('services')"><i class="fas fa-cogs"></i> Services</button>
+        <button class="tab-btn" onclick="switchTab('clients')"><i class="fas fa-handshake"></i> Clients</button>
+        <button class="tab-btn" onclick="switchTab('brochure')"><i class="fas fa-file-pdf"></i> Brochure</button>
+    </div>
+
+    <!-- ── Tab: Blog ── -->
+    <div class="tab-panel active" id="tabBlog">
     <!-- Posts List View -->
     <div class="posts-list view-list" id="viewList">
         <div style="height:1.5rem"></div>
@@ -456,6 +566,96 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    </div> <!-- end tabBlog -->
+
+    <!-- ── Tab: Products ── -->
+    <div class="tab-panel" id="tabProducts">
+        <div class="mgr-wrap">
+            <div class="mgr-header">
+                <h2><i class="fas fa-box" style="color:var(--primary);margin-right:0.4rem"></i> Products</h2>
+                <button class="btn-new" onclick="openProductModal()"><i class="fas fa-plus"></i> Add Product</button>
+            </div>
+            <div class="mgr-grid" id="productsMgr"></div>
+        </div>
+    </div>
+
+    <!-- ── Tab: Gallery ── -->
+    <div class="tab-panel" id="tabGallery">
+        <div class="mgr-wrap">
+            <div class="mgr-header">
+                <h2><i class="fas fa-images" style="color:var(--primary);margin-right:0.4rem"></i> Gallery</h2>
+                <button class="btn-new" onclick="openGalleryModal()"><i class="fas fa-plus"></i> Add Image</button>
+            </div>
+            <div class="mgr-grid" id="galleryMgr"></div>
+        </div>
+    </div>
+
+    <!-- ── Tab: Services ── -->
+    <div class="tab-panel" id="tabServices">
+        <div class="mgr-wrap">
+            <div class="mgr-header">
+                <h2><i class="fas fa-cogs" style="color:var(--primary);margin-right:0.4rem"></i> Services</h2>
+                <button class="btn-new" onclick="openServiceModal()"><i class="fas fa-plus"></i> Add Service</button>
+            </div>
+            <div class="mgr-grid" id="servicesMgr"></div>
+        </div>
+    </div>
+
+    <!-- ── Tab: Clients ── -->
+    <div class="tab-panel" id="tabClients">
+        <div class="mgr-wrap">
+            <div class="mgr-header">
+                <h2><i class="fas fa-handshake" style="color:var(--primary);margin-right:0.4rem"></i> Clients</h2>
+                <button class="btn-new" onclick="openClientModal()"><i class="fas fa-plus"></i> Add Client</button>
+            </div>
+            <div class="mgr-grid" id="clientsMgr"></div>
+        </div>
+    </div>
+
+    <!-- ── Tab: Brochure ── -->
+    <div class="tab-panel" id="tabBrochure">
+        <div class="brochure-wrap">
+            <div style="height:2rem"></div>
+            <div class="editor-main">
+                <div class="card-header"><i class="fas fa-file-pdf"></i> Update Brochure</div>
+                <div class="card-body">
+                    <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:1.25rem">Upload a new PDF to replace the existing brochure. It will go live immediately.</p>
+                    <div class="pdf-drop" id="pdfDrop">
+                        <input type="file" accept=".pdf" onchange="handleBrochure(this)">
+                        <i class="fas fa-file-pdf" style="color:#dc2626"></i>
+                        <p style="font-weight:600;margin:0.4rem 0 0.2rem">Click to select PDF</p>
+                        <p style="font-size:0.78rem;color:var(--text-light)" id="pdfName">No file selected</p>
+                    </div>
+                    <div style="margin-top:1.25rem">
+                        <button class="btn-success" id="brochureBtn" onclick="uploadBrochure()" style="max-width:300px">
+                            <i class="fas fa-upload"></i> Upload Brochure
+                        </button>
+                    </div>
+                    <p style="margin-top:1rem;font-size:0.8rem;color:var(--text-light)">
+                        Current brochure: <a href="/brochure/brochure.pdf" target="_blank" style="color:var(--primary)">brochure/brochure.pdf</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Modals ── -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span id="modalTitle">Add Item</span>
+            <button class="btn-icon" onclick="closeModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn-success" id="modalSaveBtn" style="max-width:160px" onclick="saveModal()">
+                <i class="fas fa-save"></i> Save
+            </button>
         </div>
     </div>
 </div>
@@ -802,6 +1002,320 @@
         document.getElementById('toastMsg').textContent = msg;
         clearTimeout(toastTimer);
         if (type !== '') toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+    }
+
+    // ── Tabs ─────────────────────────────────────────────────────────────────
+    const TAB_MAP = { blog:'tabBlog', products:'tabProducts', gallery:'tabGallery', services:'tabServices', clients:'tabClients', brochure:'tabBrochure' };
+    function switchTab(name) {
+        document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', Object.keys(TAB_MAP)[i] === name));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(TAB_MAP[name]).classList.add('active');
+        if (name === 'products')  renderProductsMgr();
+        if (name === 'gallery')   renderGalleryMgr();
+        if (name === 'services')  renderServicesMgr();
+        if (name === 'clients')   renderClientsMgr();
+    }
+
+    // ── Site Data (site.json) ─────────────────────────────────────────────────
+    let siteData = null;
+
+    async function loadSiteData() {
+        const file = await getFile('data/site.json');
+        if (!file) return;
+        siteData = JSON.parse(atob(file.content.replace(/\n/g,'')));
+        siteData._sha = file.sha;
+    }
+
+    async function saveSiteData(msg) {
+        const file = await getFile('data/site.json');
+        const res = await putFile('data/site.json', JSON.stringify({ services: siteData.services, clients: siteData.clients }, null, 2), file.sha, msg);
+        if (res.ok) { const f = await getFile('data/site.json'); siteData._sha = f.sha; }
+        return res.ok;
+    }
+
+    // ── Products Manager ──────────────────────────────────────────────────────
+    function renderProductsMgr() {
+        if (!blogsData) return;
+        const container = document.getElementById('productsMgr');
+        // products are in products.json
+        getFile('data/products.json').then(f => {
+            if (!f) return;
+            const data = JSON.parse(atob(f.content.replace(/\n/g,'')));
+            container.innerHTML = data.products.map(p => `
+                <div class="mgr-card">
+                    <img src="${p.image}" alt="${p.name}" onerror="this.src='images/hero-image.jpg'">
+                    <div class="mgr-card-body">
+                        <div class="mgr-card-title">${p.name}</div>
+                        <div class="mgr-card-sub">${p.caption}</div>
+                        <div class="mgr-card-actions">
+                            <button class="btn-icon" onclick="openProductModal('${p.id}')" title="Edit"><i class="fas fa-pen"></i></button>
+                            <button class="btn-icon danger" onclick="deleteProduct('${p.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        });
+    }
+
+    let _modalType = '', _modalId = null, _modalImageData = null;
+
+    function openProductModal(id) {
+        _modalType = 'product'; _modalId = id || null; _modalImageData = null;
+        getFile('data/products.json').then(f => {
+            const data = JSON.parse(atob(f.content.replace(/\n/g,'')));
+            const item = id ? data.products.find(p => p.id === id) : null;
+            document.getElementById('modalTitle').textContent = id ? 'Edit Product' : 'Add Product';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="form-group"><label>Name</label><input type="text" id="mName" value="${item ? item.name : ''}"></div>
+                <div class="form-group"><label>Caption</label><input type="text" id="mCaption" value="${item ? item.caption : ''}"></div>
+                <div class="form-group"><label>Image</label>
+                    <div class="cover-upload"><input type="file" accept="image/*" onchange="modalImg(this)"><i class="fas fa-cloud-upload-alt"></i><p>Click to upload</p></div>
+                    <img id="mImgPrev" src="${item ? item.image : ''}" style="width:100%;height:100px;object-fit:cover;border-radius:0.5rem;margin-top:0.5rem;display:${item ? 'block' : 'none'}">
+                </div>`;
+            document.getElementById('modalOverlay').classList.add('open');
+        });
+    }
+
+    async function deleteProduct(id) {
+        if (!confirm('Delete this product?')) return;
+        const file = await getFile('data/products.json');
+        const data = JSON.parse(atob(file.content.replace(/\n/g,'')));
+        data.products = data.products.filter(p => p.id !== id);
+        const res = await putFile('data/products.json', JSON.stringify(data, null, 2), file.sha, 'Delete product');
+        if (res.ok) { showToast('Product deleted.', 'success'); renderProductsMgr(); }
+    }
+
+    // ── Gallery Manager ───────────────────────────────────────────────────────
+    function renderGalleryMgr() {
+        getFile('data/products.json').then(f => {
+            const data = JSON.parse(atob(f.content.replace(/\n/g,'')));
+            const container = document.getElementById('galleryMgr');
+            container.innerHTML = data.gallery.map(g => `
+                <div class="mgr-card">
+                    <img src="${g.image}" alt="${g.alt}" onerror="this.src='images/hero-image.jpg'">
+                    <div class="mgr-card-body">
+                        <div class="mgr-card-sub">${g.alt}</div>
+                        <div class="mgr-card-actions">
+                            <button class="btn-icon danger" onclick="deleteGalleryItem('${g.id}')" title="Remove"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        });
+    }
+
+    function openGalleryModal() {
+        _modalType = 'gallery'; _modalId = null; _modalImageData = null;
+        document.getElementById('modalTitle').textContent = 'Add Gallery Image';
+        document.getElementById('modalBody').innerHTML = `
+            <div class="form-group"><label>Alt text / Caption</label><input type="text" id="mAlt" placeholder="e.g. Smart switch installation"></div>
+            <div class="form-group"><label>Image</label>
+                <div class="cover-upload"><input type="file" accept="image/*" onchange="modalImg(this)"><i class="fas fa-cloud-upload-alt"></i><p>Click to upload</p></div>
+                <img id="mImgPrev" style="width:100%;height:100px;object-fit:cover;border-radius:0.5rem;margin-top:0.5rem;display:none">
+            </div>`;
+        document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    async function deleteGalleryItem(id) {
+        if (!confirm('Remove this gallery image?')) return;
+        const file = await getFile('data/products.json');
+        const data = JSON.parse(atob(file.content.replace(/\n/g,'')));
+        data.gallery = data.gallery.filter(g => g.id !== id);
+        const res = await putFile('data/products.json', JSON.stringify(data, null, 2), file.sha, 'Remove gallery image');
+        if (res.ok) { showToast('Image removed.', 'success'); renderGalleryMgr(); }
+    }
+
+    // ── Services Manager ──────────────────────────────────────────────────────
+    async function renderServicesMgr() {
+        if (!siteData) await loadSiteData();
+        const container = document.getElementById('servicesMgr');
+        container.innerHTML = siteData.services.map(s => `
+            <div class="mgr-card">
+                <img src="${s.image}" alt="${s.name}" onerror="this.src='images/hero-image.jpg'">
+                <div class="mgr-card-body">
+                    <div class="mgr-card-title">${s.name}</div>
+                    <div class="mgr-card-sub">${s.description.substring(0,60)}...</div>
+                    <div class="mgr-card-actions">
+                        <button class="btn-icon" onclick="openServiceModal('${s.id}')" title="Edit"><i class="fas fa-pen"></i></button>
+                        <button class="btn-icon danger" onclick="deleteService('${s.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>`).join('');
+    }
+
+    async function openServiceModal(id) {
+        _modalType = 'service'; _modalId = id || null; _modalImageData = null;
+        if (!siteData) await loadSiteData();
+        const item = id ? siteData.services.find(s => s.id === id) : null;
+        document.getElementById('modalTitle').textContent = id ? 'Edit Service' : 'Add Service';
+        document.getElementById('modalBody').innerHTML = `
+            <div class="form-group"><label>Name</label><input type="text" id="mName" value="${item ? item.name : ''}"></div>
+            <div class="form-group"><label>Description</label><textarea id="mDesc" rows="3">${item ? item.description : ''}</textarea></div>
+            <div class="form-group"><label>Image</label>
+                <div class="cover-upload"><input type="file" accept="image/*" onchange="modalImg(this)"><i class="fas fa-cloud-upload-alt"></i><p>Click to upload</p></div>
+                <img id="mImgPrev" src="${item ? item.image : ''}" style="width:100%;height:100px;object-fit:cover;border-radius:0.5rem;margin-top:0.5rem;display:${item ? 'block' : 'none'}">
+            </div>`;
+        document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    async function deleteService(id) {
+        if (!confirm('Delete this service?')) return;
+        if (!siteData) await loadSiteData();
+        siteData.services = siteData.services.filter(s => s.id !== id);
+        const ok = await saveSiteData('Delete service');
+        if (ok) { showToast('Service deleted.', 'success'); renderServicesMgr(); }
+    }
+
+    // ── Clients Manager ───────────────────────────────────────────────────────
+    async function renderClientsMgr() {
+        if (!siteData) await loadSiteData();
+        const container = document.getElementById('clientsMgr');
+        container.innerHTML = siteData.clients.map(c => `
+            <div class="mgr-card">
+                <img src="${c.logo}" alt="${c.name}" style="height:80px;object-fit:contain;padding:0.5rem;background:#f8fafc" onerror="this.src='images/logo.png'">
+                <div class="mgr-card-body">
+                    <div class="mgr-card-title">${c.name}</div>
+                    <div class="mgr-card-actions">
+                        <button class="btn-icon danger" onclick="deleteClient('${c.id}')" title="Remove"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>`).join('');
+    }
+
+    function openClientModal() {
+        _modalType = 'client'; _modalId = null; _modalImageData = null;
+        document.getElementById('modalTitle').textContent = 'Add Client Logo';
+        document.getElementById('modalBody').innerHTML = `
+            <div class="form-group"><label>Client Name</label><input type="text" id="mName" placeholder="e.g. ABC Builders"></div>
+            <div class="form-group"><label>Logo (PNG recommended)</label>
+                <div class="cover-upload"><input type="file" accept="image/*" onchange="modalImg(this)"><i class="fas fa-cloud-upload-alt"></i><p>Click to upload logo</p></div>
+                <img id="mImgPrev" style="width:100%;height:80px;object-fit:contain;border-radius:0.5rem;margin-top:0.5rem;display:none">
+            </div>`;
+        document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    async function deleteClient(id) {
+        if (!confirm('Remove this client?')) return;
+        if (!siteData) await loadSiteData();
+        siteData.clients = siteData.clients.filter(c => c.id !== id);
+        const ok = await saveSiteData('Remove client');
+        if (ok) { showToast('Client removed.', 'success'); renderClientsMgr(); }
+    }
+
+    // ── Modal Shared ──────────────────────────────────────────────────────────
+    function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+    function modalImg(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            _modalImageData = { base64: e.target.result, filename: sanitizeFilename(file.name) };
+            const prev = document.getElementById('mImgPrev');
+            prev.src = e.target.result; prev.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function saveModal() {
+        const btn = document.getElementById('modalSaveBtn');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+        try {
+            if (_modalType === 'product')  await saveProduct();
+            if (_modalType === 'gallery')  await saveGalleryItem();
+            if (_modalType === 'service')  await saveService();
+            if (_modalType === 'client')   await saveClient();
+            closeModal();
+        } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save'; }
+    }
+
+    async function resolveImage(existingPath) {
+        if (_modalImageData) {
+            const path = await uploadImage(_modalImageData.filename, _modalImageData.base64);
+            return path || existingPath;
+        }
+        return existingPath;
+    }
+
+    async function saveProduct() {
+        const name = document.getElementById('mName').value.trim();
+        const caption = document.getElementById('mCaption').value.trim();
+        if (!name) { showToast('Name is required.', 'error'); return; }
+        const file = await getFile('data/products.json');
+        const data = JSON.parse(atob(file.content.replace(/\n/g,'')));
+        const existing = _modalId ? data.products.find(p => p.id === _modalId) : null;
+        const imagePath = await resolveImage(existing ? existing.image : 'images/hero-image.jpg');
+        const item = { id: _modalId || String(Date.now()), name, caption, image: imagePath, order: existing ? existing.order : data.products.length + 1 };
+        if (_modalId) { const i = data.products.findIndex(p => p.id === _modalId); data.products[i] = item; }
+        else data.products.push(item);
+        const res = await putFile('data/products.json', JSON.stringify(data, null, 2), file.sha, (_modalId ? 'Update' : 'Add') + ' product: ' + name);
+        if (res.ok) { showToast('Product saved!', 'success'); renderProductsMgr(); }
+    }
+
+    async function saveGalleryItem() {
+        const alt = document.getElementById('mAlt').value.trim() || 'Smart Home Product';
+        if (!_modalImageData) { showToast('Please select an image.', 'error'); return; }
+        const imagePath = await resolveImage('');
+        const file = await getFile('data/products.json');
+        const data = JSON.parse(atob(file.content.replace(/\n/g,'')));
+        const maxOrder = data.gallery.reduce((m, g) => Math.max(m, g.order), 0);
+        data.gallery.push({ id: String(Date.now()), image: imagePath, alt, order: maxOrder + 1 });
+        const res = await putFile('data/products.json', JSON.stringify(data, null, 2), file.sha, 'Add gallery image');
+        if (res.ok) { showToast('Image added!', 'success'); renderGalleryMgr(); }
+    }
+
+    async function saveService() {
+        const name = document.getElementById('mName').value.trim();
+        const desc = document.getElementById('mDesc').value.trim();
+        if (!name) { showToast('Name is required.', 'error'); return; }
+        if (!siteData) await loadSiteData();
+        const existing = _modalId ? siteData.services.find(s => s.id === _modalId) : null;
+        const imagePath = await resolveImage(existing ? existing.image : 'images/services/motorised-curtains.jpg');
+        const item = { id: _modalId || String(Date.now()), name, description: desc, image: imagePath };
+        if (_modalId) { const i = siteData.services.findIndex(s => s.id === _modalId); siteData.services[i] = item; }
+        else siteData.services.push(item);
+        const ok = await saveSiteData((_modalId ? 'Update' : 'Add') + ' service: ' + name);
+        if (ok) { showToast('Service saved!', 'success'); renderServicesMgr(); }
+    }
+
+    async function saveClient() {
+        const name = document.getElementById('mName').value.trim() || 'Client';
+        if (!_modalImageData) { showToast('Please upload a logo.', 'error'); return; }
+        if (!siteData) await loadSiteData();
+        const logoPath = await resolveImage('');
+        siteData.clients.push({ id: String(Date.now()), name, logo: logoPath });
+        const ok = await saveSiteData('Add client: ' + name);
+        if (ok) { showToast('Client added!', 'success'); renderClientsMgr(); }
+    }
+
+    // ── Brochure ──────────────────────────────────────────────────────────────
+    let _brochureData = null;
+
+    function handleBrochure(input) {
+        const file = input.files[0];
+        if (!file) return;
+        document.getElementById('pdfName').textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = e => { _brochureData = e.target.result.split(',')[1]; };
+        reader.readAsDataURL(file);
+    }
+
+    async function uploadBrochure() {
+        if (!_brochureData) { showToast('Please select a PDF file.', 'error'); return; }
+        const btn = document.getElementById('brochureBtn');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Uploading...';
+        try {
+            const existing = await getFile('brochure/brochure.pdf');
+            const res = await ghFetch(`https://api.github.com/repos/${REPO}/contents/brochure/brochure.pdf`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    message: 'Update brochure PDF',
+                    content: _brochureData,
+                    branch: BRANCH,
+                    ...(existing ? { sha: existing.sha } : {})
+                })
+            });
+            if (res.ok) { showToast('Brochure updated successfully!', 'success'); _brochureData = null; document.getElementById('pdfName').textContent = 'No file selected'; }
+            else showToast('Upload failed.', 'error');
+        } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Upload Brochure'; }
     }
 </script>
 </body>
