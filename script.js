@@ -125,6 +125,37 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Load and render products from JSON
+async function loadSiteData() {
+    const servicesGrid  = document.getElementById('servicesGrid');
+    const clientsTrack  = document.getElementById('clientsTrack');
+    if (!servicesGrid && !clientsTrack) return;
+    try {
+        const res  = await fetch('data/site.json?v=' + Date.now());
+        const data = await res.json();
+        const isMobile = !!document.querySelector('.service-thumb') || window.innerWidth < 769;
+
+        if (servicesGrid && data.services) {
+            servicesGrid.innerHTML = data.services.map(s => isMobile
+                ? `<div class="service-card">
+                        <div class="service-thumb"><img src="${s.image}" alt="${s.name}" onerror="this.parentElement.style.background='#dbeafe';this.style.display='none'"></div>
+                        <div><h3>${s.name}</h3><p>${s.description}</p></div>
+                   </div>`
+                : `<div class="service-card">
+                        <div class="service-image"><img src="${s.image}" alt="${s.name}" onerror="this.style.display='none'"></div>
+                        <h3>${s.name}</h3><p>${s.description}</p>
+                   </div>`
+            ).join('');
+        }
+
+        if (clientsTrack && data.clients) {
+            const logos = data.clients.map(c =>
+                `<div class="client-logo"><img src="${c.logo}" alt="${c.name}" onerror="this.parentElement.classList.add('placeholder')"></div>`
+            ).join('');
+            clientsTrack.innerHTML = logos + logos;
+        }
+    } catch(e) { console.warn('loadSiteData failed', e); }
+}
+
 async function loadProducts() {
     const productsWrapper = document.getElementById('productsScrollWrapper');
     const galleryWrapper = document.getElementById('galleryScrollWrapper');
@@ -598,6 +629,7 @@ function initLightbox() {
 // Initialize products scroll on page load
 document.addEventListener('DOMContentLoaded', () => {
     try {
+        loadSiteData();
         loadProducts().then(() => {
             initProductsScroll();
             initGalleryScroll();
@@ -1493,6 +1525,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Use simplified, step-based hero video behavior
         initHeroVideoSteps();
         lazyLoadVideos();
+        loadSiteData();
         // Removed initInteractiveVideoSpeed() for better performance
         loadProducts().then(() => {
             initProductsScroll();
