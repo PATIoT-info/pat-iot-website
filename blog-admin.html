@@ -472,11 +472,26 @@
     let coverImageData = null; // { base64, filename, mimeType }
     let inlineImages = []; // uploaded inline images
 
+    // ── Access Password ───────────────────────────────────────────────────────
+    const ACCESS_HASH = 'd277dd34d849b1234cb9f600f4a776be7d2312a371859b36cbb35e6a84ca9cc4';
+
+    async function hashPassword(pw) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
     // ── Auth ──────────────────────────────────────────────────────────────────
-    window.onload = () => {
+    window.onload = async () => {
+        const accessOk = sessionStorage.getItem('patiot_access');
+        if (!accessOk) {
+            const pw = prompt('Enter admin password:');
+            if (!pw) { document.body.innerHTML = '<p style="text-align:center;margin-top:4rem;font-family:sans-serif;color:#6b7280">Access denied.</p>'; return; }
+            const hashed = await hashPassword(pw);
+            if (hashed !== ACCESS_HASH) { document.body.innerHTML = '<p style="text-align:center;margin-top:4rem;font-family:sans-serif;color:#dc2626">Incorrect password.</p>'; return; }
+            sessionStorage.setItem('patiot_access', '1');
+        }
         const saved = localStorage.getItem('patiot_admin_token');
         if (saved) { ghToken = saved; verifyAndShow(); }
-        // Set today's date
         document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
     };
 
