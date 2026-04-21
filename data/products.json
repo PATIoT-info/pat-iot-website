@@ -89,6 +89,12 @@
       "image": "images/gallery/product-17.jpg",
       "alt": "Smart Touch Switch Board Color Variants",
       "order": 17
+    },
+    {
+      "id": "1776766744387",
+      "image": "images/blog/wood-color-og.png",
+      "alt": "wooden Panel",
+      "order": 18
     }
   ]
 }
