@@ -23,4 +23,11 @@
     <priority>0.6</priority>
   </url>
 
+  <url>
+    <loc>https://patiot.in/privacy-policy.html</loc>
+    <lastmod>2026-05-07</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
 </urlset>

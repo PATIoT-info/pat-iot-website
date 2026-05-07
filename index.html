@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <script>
-        if (!window.location.search.includes('desktop=1') &&
+        if (window.location.hash === '#/privacy-policy') {
+            window.location.replace('privacy-policy.html');
+        } else if (!window.location.search.includes('desktop=1') &&
             (window.innerWidth < 769 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent))) {
             window.location.replace('mobile.html');
         }
