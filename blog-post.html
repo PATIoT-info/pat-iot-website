@@ -62,48 +62,6 @@
                 <div class="blog-post-gallery" id="blogPostGallery" style="display: none;"></div>
                 <div class="blog-post-back">
                     <p><a href="blog.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a></p>
-                    <p class="blog-post-edit-link" style="display: none;"><a href="javascript:void(0)" id="blogEditLink"><i class="fas fa-edit"></i> Admin: Edit this post</a></p>
-                </div>
-
-                <!-- Admin: Add/Edit post info (only when URL has ?edit=1) -->
-                <div class="blog-admin-panel" id="blogAdminPanel" style="display: none;">
-                    <h2 class="blog-admin-title"><i class="fas fa-edit"></i> Admin – <span id="adminTitleText">Edit this post</span></h2>
-                    <p class="blog-admin-hint" id="blogAdminHint">
-                        <strong>📝 How to Save Changes:</strong><br>
-                        • <strong>On Published Site:</strong> Click <strong>"Download blogs.json"</strong> → Go to <a href="https://github.com/PATIoT-info/pat-iot-website/edit/main/data/blogs.json" target="_blank">GitHub</a> → Click pencil icon → Paste content → Commit<br>
-                        • <strong>Local Server:</strong> Use <strong>"Save to file (local)"</strong> button (only shows when running <code>npm run admin</code>)<br>
-                        Update fields below, then click <strong>Update preview</strong> to see changes.
-                    </p>
-                    <form class="blog-admin-form" id="blogAdminForm">
-                        <label>Title <input type="text" id="adminTitle" required></label>
-                        <label>Excerpt (short summary) <textarea id="adminExcerpt" rows="2"></textarea></label>
-                        <label>Content (HTML) <textarea id="adminContent" rows="8" placeholder="<p>Paragraph...</p>"></textarea></label>
-                        <label>Date <input type="date" id="adminDate"></label>
-                        <label>Category <input type="text" id="adminCategory" placeholder="Company, Products, Solutions, Tips"></label>
-                        <label>Main image path <input type="text" id="adminImage" placeholder="images/hero-image.jpg"></label>
-                        <label>Author <input type="text" id="adminAuthor" placeholder="PAT IOT Team"></label>
-                        <label>Read time <input type="text" id="adminReadTime" placeholder="3 min read"></label>
-                        <div class="blog-admin-images">
-                            <strong>Post images (src + caption)</strong>
-                            <div id="adminImagesList"></div>
-                            <button type="button" class="btn btn-secondary" id="adminAddImage"><i class="fas fa-plus"></i> Add image</button>
-                        </div>
-                        <div class="blog-admin-actions">
-                            <button type="button" class="btn btn-primary" id="adminUpdatePreview">Update preview</button>
-                            <button type="button" class="btn btn-primary blog-admin-save-local" id="adminSaveLocal" style="display: none;"><i class="fas fa-save"></i> Save to file (local)</button>
-                            <button type="button" class="btn btn-primary" id="adminDownloadJson"><i class="fas fa-download"></i> Download blogs.json</button>
-                            <a href="https://github.com/PATIoT-info/pat-iot-website/edit/main/data/blogs.json" target="_blank" class="btn btn-success" id="adminUploadToGitHub" style="display: inline-block; margin-left: 0.5rem;"><i class="fab fa-github"></i> Upload to GitHub</a>
-                            <button type="button" class="btn btn-danger" id="adminDeletePost" style="display: none;"><i class="fas fa-trash"></i> Delete this post</button>
-                        </div>
-                        <div class="blog-admin-upload-instructions" style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px; display: none;" id="uploadInstructions">
-                            <strong>📤 How to Upload:</strong><br>
-                            1. Click "Download blogs.json" above<br>
-                            2. Click "Upload to GitHub" button (opens GitHub editor)<br>
-                            3. In GitHub: Delete all content → Paste downloaded file content → Click "Commit changes"<br>
-                            4. Your website will update automatically in 1-2 minutes!
-                        </div>
-                        <p class="blog-admin-save-status" id="adminSaveStatus" style="display: none;"></p>
-                    </form>
                 </div>
             </div>
         </div>
@@ -150,9 +108,6 @@
         (function() {
             var params = new URLSearchParams(window.location.search);
             var slug = params.get('slug');
-            var isEdit = params.get('edit') === '1';
-            var isAdminParam = params.get('admin') === '1';
-            var isNew = params.get('new') === '1';
             var loading = document.getElementById('blogPostLoading');
             var error = document.getElementById('blogPostError');
             var content = document.getElementById('blogPostContent');
@@ -165,12 +120,8 @@
             var authorEl = document.getElementById('blogPostAuthor');
             var readTimeEl = document.getElementById('blogPostReadTime');
             var galleryEl = document.getElementById('blogPostGallery');
-            var adminPanel = document.getElementById('blogAdminPanel');
-            var adminForm = document.getElementById('blogAdminForm');
-            var adminImagesList = document.getElementById('adminImagesList');
-            var allPostsData = null;
 
-            if (!slug && !isNew) {
+            if (!slug) {
                 loading.style.display = 'none';
                 error.style.display = 'block';
                 return;
@@ -226,96 +177,9 @@
                 }
             }
 
-            function postFromForm() {
-                var images = [];
-                var rows = adminImagesList.querySelectorAll('.blog-admin-image-row');
-                rows.forEach(function(row) {
-                    var src = (row.querySelector('input[name="imgSrc"]') || {}).value;
-                    var cap = (row.querySelector('input[name="imgCaption"]') || {}).value;
-                    if (src && src.trim()) {
-                        images.push({ src: src.trim(), caption: (cap && cap.trim()) ? cap.trim() : '' });
-                    }
-                });
-                var post = allPostsData && (allPostsData.posts || []).find(function(p) { return p.slug === slug; });
-                var currentSlug = slug;
-                if (isNew && !currentSlug) {
-                    var titleSlug = (document.getElementById('adminTitle') || {}).value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-                    currentSlug = titleSlug || 'new-post';
-                }
-                var maxId = 0;
-                if (allPostsData && allPostsData.posts) {
-                    allPostsData.posts.forEach(function(p) {
-                        var id = parseInt(p.id) || 0;
-                        if (id > maxId) maxId = id;
-                    });
-                }
-                return {
-                    id: (post && post.id) || String(maxId + 1),
-                    slug: (post && post.slug) || currentSlug,
-                    title: (document.getElementById('adminTitle') || {}).value || '',
-                    excerpt: (document.getElementById('adminExcerpt') || {}).value || '',
-                    content: (document.getElementById('adminContent') || {}).value || '',
-                    date: (document.getElementById('adminDate') || {}).value || new Date().toISOString().split('T')[0],
-                    category: (document.getElementById('adminCategory') || {}).value || 'Blog',
-                    image: (document.getElementById('adminImage') || {}).value || '',
-                    author: (document.getElementById('adminAuthor') || {}).value || '',
-                    readTime: (document.getElementById('adminReadTime') || {}).value || '',
-                    images: images.length ? images : undefined
-                };
-            }
-
-            function fillFormFromPost(post) {
-                if (!post || !adminForm) return;
-                var id = function(x) { return document.getElementById(x); };
-                if (id('adminTitle')) id('adminTitle').value = post.title || '';
-                if (id('adminExcerpt')) id('adminExcerpt').value = post.excerpt || '';
-                if (id('adminContent')) id('adminContent').value = post.content || '';
-                if (id('adminDate')) id('adminDate').value = post.date || '';
-                if (id('adminCategory')) id('adminCategory').value = post.category || '';
-                if (id('adminImage')) id('adminImage').value = post.image || '';
-                if (id('adminAuthor')) id('adminAuthor').value = post.author || '';
-                if (id('adminReadTime')) id('adminReadTime').value = post.readTime || '';
-                adminImagesList.innerHTML = '';
-                var list = post.images && post.images.length ? post.images : [{ src: '', caption: '' }];
-                list.forEach(function(item) {
-                    var src = typeof item === 'string' ? item : (item.src || '');
-                    var cap = typeof item === 'object' && item.caption ? item.caption : '';
-                    addImageRow(src, cap);
-                });
-            }
-
-            function addImageRow(src, caption) {
-                src = src || '';
-                caption = caption || '';
-                var row = document.createElement('div');
-                row.className = 'blog-admin-image-row';
-                row.innerHTML = '<input type="text" name="imgSrc" placeholder="images/photo.jpg" value="' + (src.replace(/"/g, '&quot;')) + '"> <input type="text" name="imgCaption" placeholder="Caption" value="' + (caption.replace(/"/g, '&quot;')) + '"> <button type="button" class="blog-admin-remove-img" aria-label="Remove">\u00d7</button>';
-                adminImagesList.appendChild(row);
-                row.querySelector('.blog-admin-remove-img').addEventListener('click', function() {
-                    row.remove();
-                });
-            }
-
-            fetch('data/blogs.json')
+            fetch('data/blogs.json?v=' + Date.now())
                 .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
                 .then(function(data) {
-                    allPostsData = data;
-                    if (isNew) {
-                        loading.style.display = 'none';
-                        content.style.display = 'block';
-                        if (adminPanel) {
-                            adminPanel.style.display = 'block';
-                            var titleTextEl = document.getElementById('adminTitleText');
-                            if (titleTextEl) titleTextEl.textContent = 'Create New Post';
-                            var today = new Date().toISOString().split('T')[0];
-                            if (document.getElementById('adminDate')) document.getElementById('adminDate').value = today;
-                            if (slug && document.getElementById('adminTitle')) {
-                                var titleFromSlug = slug.split('-').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
-                                document.getElementById('adminTitle').value = titleFromSlug;
-                            }
-                        }
-                        return;
-                    }
                     var post = (data.posts || []).find(function(p) { return p.slug === slug; });
                     if (!post) {
                         loading.style.display = 'none';
@@ -323,166 +187,11 @@
                         return;
                     }
                     showPost(post);
-                    // Only show admin edit panel when explicitly in edit mode AND user is admin/local
-                    var isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-                    var isAdminUser = isLocal || isAdminParam;
-                    if (isEdit && isAdminUser && adminPanel) {
-                        adminPanel.style.display = 'block';
-                        fillFormFromPost(post);
-                    }
                 })
                 .catch(function() {
-                    if (isNew) {
-                        loading.style.display = 'none';
-                        content.style.display = 'block';
-                        if (adminPanel) {
-                            adminPanel.style.display = 'block';
-                            var today = new Date().toISOString().split('T')[0];
-                            if (document.getElementById('adminDate')) document.getElementById('adminDate').value = today;
-                        }
-                        return;
-                    }
                     loading.style.display = 'none';
                     error.style.display = 'block';
                 });
-
-            var isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-            var editLinkWrap = document.querySelector('.blog-post-edit-link');
-            var editLink = document.getElementById('blogEditLink');
-            // Only show the edit button when in explicit admin mode (or local admin)
-            var isAdminUser = isLocal || isAdminParam;
-            var showEditButton = (isEdit || isAdminParam) && isAdminUser;
-            if (editLinkWrap && editLink && showEditButton) {
-                editLinkWrap.style.display = 'block';
-                editLink.href = isNew ? 'blog.html' : ('?slug=' + encodeURIComponent(slug));
-                editLink.innerHTML = '<i class="fas fa-edit"></i> ' + (isNew ? 'Back to Blogs' : 'Hide edit panel');
-            }
-            var saveLocalBtn = document.getElementById('adminSaveLocal');
-            var saveStatusEl = document.getElementById('adminSaveStatus');
-            if (saveLocalBtn && isLocal) {
-                saveLocalBtn.style.display = 'inline-block';
-            }
-
-            if (adminForm) {
-                document.getElementById('adminAddImage').addEventListener('click', function() {
-                    addImageRow('', '');
-                });
-                document.getElementById('adminUpdatePreview').addEventListener('click', function() {
-                    var post = postFromForm();
-                    showPost(post);
-                });
-                function getUpdatedPosts() {
-                    var post = postFromForm();
-                    var posts = (allPostsData && allPostsData.posts) ? allPostsData.posts.slice() : [];
-                    var currentSlug = slug || post.slug;
-                    var idx = currentSlug ? posts.findIndex(function(p) { return p.slug === currentSlug; }) : -1;
-                    if (idx >= 0) {
-                        posts[idx] = post;
-                    } else {
-                        posts.push(post);
-                    }
-                    if (isNew && currentSlug !== post.slug) {
-                        var newUrl = 'blog-post.html?slug=' + encodeURIComponent(post.slug) + '&edit=1';
-                        window.history.replaceState({}, '', newUrl);
-                        slug = post.slug;
-                    }
-                    return posts;
-                }
-                if (saveLocalBtn) {
-                    saveLocalBtn.addEventListener('click', function() {
-                        var posts = getUpdatedPosts();
-                        var statusEl = document.getElementById('adminSaveStatus');
-                        if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = 'Saving…'; statusEl.className = 'blog-admin-save-status'; }
-                        fetch('/api/save-blogs', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ posts: posts })
-                        }).then(function(r) { return r.json(); }).then(function(data) {
-                            if (statusEl) {
-                                statusEl.textContent = data.ok ? 'Saved to data/blogs.json' : ('Error: ' + (data.error || 'Unknown'));
-                                statusEl.className = 'blog-admin-save-status ' + (data.ok ? 'success' : 'error');
-                            }
-                        }).catch(function(err) {
-                            if (statusEl) {
-                                statusEl.textContent = 'Error: ' + (err.message || 'Request failed');
-                                statusEl.className = 'blog-admin-save-status error';
-                            }
-                        });
-                    });
-                }
-                document.getElementById('adminDownloadJson').addEventListener('click', function() {
-                    var posts = getUpdatedPosts();
-                    var json = JSON.stringify({ posts: posts }, null, 2);
-                    var blob = new Blob([json], { type: 'application/json' });
-                    var a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = 'blogs.json';
-                    a.click();
-                    URL.revokeObjectURL(a.href);
-                    
-                    // Show upload instructions
-                    var instructions = document.getElementById('uploadInstructions');
-                    if (instructions) {
-                        instructions.style.display = 'block';
-                    }
-                });
-                
-                // Show instructions when clicking upload button
-                var uploadBtn = document.getElementById('adminUploadToGitHub');
-                if (uploadBtn) {
-                    uploadBtn.addEventListener('click', function() {
-                        var instructions = document.getElementById('uploadInstructions');
-                        if (instructions) {
-                            instructions.style.display = 'block';
-                        }
-                    });
-                }
-                var deleteBtn = document.getElementById('adminDeletePost');
-                if (deleteBtn && !isNew && slug) {
-                    deleteBtn.style.display = 'inline-block';
-                    deleteBtn.addEventListener('click', function() {
-                        var postTitle = (document.getElementById('adminTitle') || {}).value || 'this post';
-                        if (!confirm('Are you sure you want to delete "' + postTitle + '"? This cannot be undone.')) return;
-                        var posts = (allPostsData && allPostsData.posts) ? allPostsData.posts.slice() : [];
-                        var idx = posts.findIndex(function(p) { return p.slug === slug; });
-                        if (idx >= 0) {
-                            posts.splice(idx, 1);
-                            var statusEl = document.getElementById('adminSaveStatus');
-                            if (isLocal) {
-                                if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = 'Deleting…'; statusEl.className = 'blog-admin-save-status'; }
-                                fetch('/api/save-blogs', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ posts: posts })
-                                }).then(function(r) { return r.json(); }).then(function(data) {
-                                    if (data.ok) {
-                                        window.location.href = 'blog.html';
-                                    } else {
-                                        if (statusEl) {
-                                            statusEl.textContent = 'Error: ' + (data.error || 'Delete failed');
-                                            statusEl.className = 'blog-admin-save-status error';
-                                        }
-                                    }
-                                }).catch(function(err) {
-                                    if (statusEl) {
-                                        statusEl.textContent = 'Error: ' + (err.message || 'Request failed');
-                                        statusEl.className = 'blog-admin-save-status error';
-                                    }
-                                });
-                            } else {
-                                var json = JSON.stringify({ posts: posts }, null, 2);
-                                var blob = new Blob([json], { type: 'application/json' });
-                                var a = document.createElement('a');
-                                a.href = URL.createObjectURL(blob);
-                                a.download = 'blogs.json';
-                                a.click();
-                                URL.revokeObjectURL(a.href);
-                                setTimeout(function() { window.location.href = 'blog.html'; }, 500);
-                            }
-                        }
-                    });
-                }
-            }
         })();
     </script>
 </body>
