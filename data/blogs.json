@@ -1,6 +1,18 @@
 {
   "posts": [
     {
+      "id": "1793789277995",
+      "slug": "something-new-is-coming-to-the-pat-iot-app",
+      "title": "Something New Is Coming to the PAT IoT App!",
+      "excerpt": "A smarter experience is on its way! PAT IoT Solutions is introducing a redesigned version of its mobile app, bringing a fresh look, improved user experience, and smarter home automation control.",
+      "content": "<h2>A New Era of Smart Home Control</h2><p class=\"isSelectedEnd\">Something exciting is happening at PAT IoT Solutions!</p><p class=\"isSelectedEnd\">We're working on a completely redesigned version of the PAT IoT App, built to make controlling your smart home easier, smoother, and more convenient than ever.</p><p class=\"isSelectedEnd\">Our goal is to bring a better digital experience to every PAT IoT user.</p><h2>What's New?</h2><h3>A Fresh New Look</h3><p class=\"isSelectedEnd\">Experience a redesigned interface with a modern appearance and improved navigation.</p><h3>Smarter User Experience</h3><p class=\"isSelectedEnd\">Enjoy a smoother and more intuitive way to interact with your smart home devices.</p><h3>Better Home Automation Control</h3><p class=\"isSelectedEnd\">Manage your connected smart home devices through an improved app experience.</p><h2>The Wait Is Almost Over!</h2><p class=\"isSelectedEnd\">We're putting the finishing touches on our new app experience, and we can't wait for you to explore it.</p><p class=\"isSelectedEnd\">A new look. A smarter experience. A better way to control your home.</p><p class=\"isSelectedEnd\"><strong>The new PAT IoT App is launching soon. Stay tuned!</strong></p><div contenteditable=\"false\"><hr></div><h1></h1>",
+      "date": "2026-11-04",
+      "category": "News",
+      "image": "images/blog/pat-iot-app-launching-soon.png",
+      "author": "PAT IoT Team",
+      "readTime": "3 min read"
+    },
+    {
       "id": "9",
       "slug": "a-new-pat-iot-app-is-coming",
       "title": "A New PAT IoT App Is Coming",
