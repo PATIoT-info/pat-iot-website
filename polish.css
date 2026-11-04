@@ -167,12 +167,13 @@
 .product-image, .service-image, .service-thumb, .gallery-item, .pat-app-image {
     background-color: var(--image-placeholder);
 }
-.product-image img:not(.img-loaded),
-.service-image img:not(.img-loaded),
-.service-thumb img:not(.img-loaded),
-.gallery-image:not(.img-loaded),
-.client-logo img:not(.img-loaded),
-.pat-app-img:not(.img-loaded) {
+/* .img-fade comes from script.js: without that script, images must stay visible */
+.img-fade .product-image img:not(.img-loaded),
+.img-fade .service-image img:not(.img-loaded),
+.img-fade .service-thumb img:not(.img-loaded),
+.img-fade .gallery-image:not(.img-loaded),
+.img-fade .client-logo img:not(.img-loaded),
+.img-fade .pat-app-img:not(.img-loaded) {
     opacity: 0;
 }
 .product-image img.img-loaded,
@@ -470,4 +471,49 @@
     }
     .clients-track { animation: none !important; }
     .clients-scroll-wrap { overflow-x: auto; }
+}
+
+/* ── Blog pages on phones: title close under the bar, footer like the mobile home page ── */
+@media (max-width: 768px) {
+    .blog-hero { margin-top: 0; padding: 1.25rem 0 0.75rem; }
+    .blog-section { padding-top: 1rem; }
+    .blog-post-page { padding-top: 1rem; }
+
+    .page-blog .footer { padding: 2.25rem 0 1.25rem; background: #111827; }
+    .page-blog .footer-content { display: flex; flex-direction: column; gap: 1.75rem; margin-bottom: 1.75rem; }
+    .page-blog .footer-section { text-align: left; }
+    .page-blog .footer-section .logo { justify-content: flex-start; margin-bottom: 0.875rem; }
+    .page-blog .footer-section .logo-img { height: 56px; margin: 0; filter: brightness(0) invert(1); }
+    .page-blog .footer-section h4 { margin-bottom: 0.75rem; font-size: 0.875rem; font-weight: 600; }
+    .page-blog .footer-section p { margin-bottom: 0.875rem; font-size: 0.775rem; line-height: 1.65; color: #9ca3af; }
+    .page-blog .footer-section ul { display: flex; flex-direction: column; gap: 0.5rem; }
+    .page-blog .footer-section ul li { margin: 0; }
+    .page-blog .footer-section ul a { font-size: 0.775rem; color: #9ca3af; }
+    .page-blog .social-links { justify-content: flex-start; gap: 0.5rem; }
+    .page-blog .social-links a { width: 32px; height: 32px; font-size: 0.8rem; }
+    .page-blog .hamburger { width: 44px; height: 44px; align-items: center; justify-content: center; margin-right: -0.5rem; }
+    .page-blog .nav-link::after { left: 50%; transform: translateX(-50%); }
+    .page-blog .nav-link-active::after { width: 44px; }
+    .page-blog .nav-menu li { display: flex; justify-content: center; }
+    .page-blog .newsletter-form { flex-direction: row; gap: 0.5rem; }
+    .page-blog .newsletter-form { align-items: stretch; }
+    .page-blog .newsletter-form input { flex: 1 1 0; width: 0; min-width: 0; max-width: none; padding: 0.55rem 0.75rem; font-size: 16px; }
+    .page-blog .newsletter-form .btn-primary { flex: 0 0 auto; width: auto; max-width: none; margin: 0; padding: 0.55rem 0.9rem; font-size: 0.8rem; }
+    .page-blog .footer-bottom { padding-top: 1.25rem; }
+    .page-blog .footer-bottom p { margin: 0; font-size: 0.72rem; color: #6b7280; }
+}
+
+/* ── Phone site: fields at 16px so iPhones do not zoom in on tap; section links stop below the bar ── */
+.site-mobile input,
+.site-mobile textarea,
+.site-mobile select {
+    font-size: 16px !important;
+}
+.site-mobile section[id] {
+    scroll-margin-top: 70px;
+}
+@media (pointer: coarse) {
+    .newsletter-form input {
+        font-size: 16px;
+    }
 }

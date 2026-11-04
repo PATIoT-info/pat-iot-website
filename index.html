@@ -8,7 +8,7 @@
         } else if (!window.location.search.includes('desktop=1') &&
             (window.innerWidth < 769 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent))) {
             window.__patRedirect = true;
-            window.location.replace('mobile.html');
+            window.location.replace('mobile.html' + window.location.hash);
         }
     </script>
     <meta charset="UTF-8">

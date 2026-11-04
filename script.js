@@ -159,15 +159,35 @@ function whenNear(el, cb, margin = '800px') {
     io.observe(el);
 }
 
-// Images fade in once decoded (polish.css keeps them transparent until .img-loaded)
-document.addEventListener('load', (e) => {
-    if (e.target && e.target.tagName === 'IMG') e.target.classList.add('img-loaded');
-}, true);
-document.addEventListener('DOMContentLoaded', () => {
+// Images fade in once decoded (under .img-fade, polish.css keeps them transparent until .img-loaded)
+function markLoadedImages() {
     document.querySelectorAll('img').forEach(img => {
         if (img.complete && img.naturalWidth) img.classList.add('img-loaded');
     });
-});
+}
+document.addEventListener('load', (e) => {
+    if (e.target && e.target.tagName === 'IMG') e.target.classList.add('img-loaded');
+}, true);
+markLoadedImages();
+document.documentElement.classList.add('img-fade');
+document.addEventListener('DOMContentLoaded', markLoadedImages);
+
+// Phone site opened on a section (mobile.html#contact): content loading above it pushes it
+// down after the browser's jump, so stay on it until the page settles or the visitor moves
+function holdHashTarget() {
+    const target = document.getElementById(location.hash.slice(1));
+    if (!target || !document.documentElement.classList.contains('site-mobile')) return;
+    const align = () => target.scrollIntoView({ behavior: 'instant', block: 'start' });
+    const observer = new ResizeObserver(align);
+    const release = () => {
+        observer.disconnect();
+        ['touchstart', 'wheel', 'keydown'].forEach(type => window.removeEventListener(type, release));
+    };
+    ['touchstart', 'wheel', 'keydown'].forEach(type => window.addEventListener(type, release, { passive: true }));
+    observer.observe(document.body);
+    setTimeout(release, 6000);
+}
+holdHashTarget();
 
 // Cards rendered after their grid already scrolled into view still need to reveal
 function revealRenderedCards() {
