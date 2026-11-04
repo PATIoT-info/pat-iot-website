@@ -742,6 +742,17 @@
         });
     }
 
+    // GitHub returns UTF-8 as base64; atob alone leaves it as raw bytes
+    function decodeContent(content) {
+        return decodeURIComponent(escape(atob(content.replace(/\n/g, ''))));
+    }
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, ch => (
+            { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+        ));
+    }
+
     async function getFile(path) {
         const res = await ghFetch(`https://api.github.com/repos/${REPO}/contents/${path}?ref=${BRANCH}`);
         if (!res.ok) return null;
@@ -781,7 +792,7 @@
     async function loadPosts() {
         const file = await getFile('data/blogs.json');
         if (!file) { showToast('Could not load blogs.json', 'error'); return; }
-        blogsData = JSON.parse(atob(file.content.replace(/\n/g, '')));
+        blogsData = JSON.parse(decodeContent(file.content));
         blogsData._sha = file.sha;
         renderPostsList();
     }
@@ -795,9 +806,9 @@
         const sorted = [...blogsData.posts].sort((a,b) => new Date(b.date) - new Date(a.date));
         container.innerHTML = sorted.map(p => `
             <div class="post-row">
-                <img src="${p.image}" alt="${p.title}" onerror="this.src='images/hero-image.jpg'">
+                <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.title)}" onerror="this.src='images/hero-image.jpg'">
                 <div class="post-row-info">
-                    <div class="post-row-title">${p.title}</div>
+                    <div class="post-row-title">${escapeHtml(p.title)}</div>
                     <div class="post-row-meta">${p.category} &middot; ${p.date} &middot; ${p.readTime}</div>
                 </div>
                 <div class="post-row-actions">
@@ -926,7 +937,8 @@
             if (coverImageData) {
                 showToast('Uploading cover image...', '');
                 const uploaded = await uploadImage(coverImageData.filename, coverImageData.base64);
-                if (uploaded) coverPath = uploaded;
+                if (!uploaded) throw new Error('Could not upload the cover image');
+                coverPath = uploaded;
             }
 
             // 2. Upload inline images and replace base64 with paths
@@ -935,7 +947,8 @@
                 if (content.includes(img.base64)) {
                     showToast(`Uploading image: ${img.filename}`, '');
                     const uploaded = await uploadImage(img.filename, img.base64);
-                    if (uploaded) content = content.replace(new RegExp(img.base64.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), uploaded);
+                    if (!uploaded) throw new Error('Could not upload ' + img.filename);
+                    content = content.replace(new RegExp(img.base64.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), uploaded);
                 }
             }
 
@@ -944,10 +957,14 @@
 
             // 4. Update blogs.json
             const file = await getFile('data/blogs.json');
-            const data = JSON.parse(atob(file.content.replace(/\n/g, '')));
+            const data = JSON.parse(decodeContent(file.content));
+            if (data.posts.some(p => p.slug === slug && p.id !== editingId)) {
+                throw new Error('Another post already uses this slug');
+            }
             if (editingId) {
                 const idx = data.posts.findIndex(p => p.id === editingId);
-                if (idx !== -1) data.posts[idx] = newPost;
+                // Spread keeps fields this form has no input for, such as the image gallery
+                if (idx !== -1) data.posts[idx] = { ...data.posts[idx], ...newPost };
             } else {
                 data.posts.unshift(newPost);
             }
@@ -979,7 +996,7 @@
         if (!confirm(`Delete "${post.title}"? This cannot be undone.`)) return;
         try {
             const file = await getFile('data/blogs.json');
-            const data = JSON.parse(atob(file.content.replace(/\n/g, '')));
+            const data = JSON.parse(decodeContent(file.content));
             data.posts = data.posts.filter(p => p.id !== id);
             const res = await putFile('data/blogs.json', JSON.stringify(data, null, 2), file.sha, `Delete blog post: ${post.title}`);
             if (!res.ok) throw new Error('Failed to delete');
@@ -1022,7 +1039,7 @@
     async function loadSiteData() {
         const file = await getFile('data/site.json');
         if (!file) return;
-        siteData = JSON.parse(atob(file.content.replace(/\n/g,'')));
+        siteData = JSON.parse(decodeContent(file.content));
         siteData._sha = file.sha;
     }
 
@@ -1040,13 +1057,13 @@
         // products are in products.json
         getFile('data/products.json').then(f => {
             if (!f) return;
-            const data = JSON.parse(atob(f.content.replace(/\n/g,'')));
+            const data = JSON.parse(decodeContent(f.content));
             container.innerHTML = data.products.map(p => `
                 <div class="mgr-card">
-                    <img src="${p.image}" alt="${p.name}" onerror="this.src='images/hero-image.jpg'">
+                    <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" onerror="this.src='images/hero-image.jpg'">
                     <div class="mgr-card-body">
-                        <div class="mgr-card-title">${p.name}</div>
-                        <div class="mgr-card-sub">${p.caption}</div>
+                        <div class="mgr-card-title">${escapeHtml(p.name)}</div>
+                        <div class="mgr-card-sub">${escapeHtml(p.caption)}</div>
                         <div class="mgr-card-actions">
                             <button class="btn-icon" onclick="openProductModal('${p.id}')" title="Edit"><i class="fas fa-pen"></i></button>
                             <button class="btn-icon danger" onclick="deleteProduct('${p.id}')" title="Delete"><i class="fas fa-trash"></i></button>
@@ -1061,15 +1078,15 @@
     function openProductModal(id) {
         _modalType = 'product'; _modalId = id || null; _modalImageData = null;
         getFile('data/products.json').then(f => {
-            const data = JSON.parse(atob(f.content.replace(/\n/g,'')));
+            const data = JSON.parse(decodeContent(f.content));
             const item = id ? data.products.find(p => p.id === id) : null;
             document.getElementById('modalTitle').textContent = id ? 'Edit Product' : 'Add Product';
             document.getElementById('modalBody').innerHTML = `
-                <div class="form-group"><label>Name</label><input type="text" id="mName" value="${item ? item.name : ''}"></div>
-                <div class="form-group"><label>Caption</label><input type="text" id="mCaption" value="${item ? item.caption : ''}"></div>
+                <div class="form-group"><label>Name</label><input type="text" id="mName" value="${item ? escapeHtml(item.name) : ''}"></div>
+                <div class="form-group"><label>Caption</label><input type="text" id="mCaption" value="${item ? escapeHtml(item.caption) : ''}"></div>
                 <div class="form-group"><label>Image</label>
                     <div class="cover-upload"><input type="file" accept="image/*" onchange="modalImg(this)"><i class="fas fa-cloud-upload-alt"></i><p>Click to upload</p></div>
-                    <img id="mImgPrev" src="${item ? item.image : ''}" style="width:100%;height:100px;object-fit:cover;border-radius:0.5rem;margin-top:0.5rem;display:${item ? 'block' : 'none'}">
+                    <img id="mImgPrev" src="${item ? escapeHtml(item.image) : ''}" style="width:100%;height:100px;object-fit:cover;border-radius:0.5rem;margin-top:0.5rem;display:${item ? 'block' : 'none'}">
                 </div>`;
             document.getElementById('modalOverlay').classList.add('open');
         });
@@ -1078,7 +1095,7 @@
     async function deleteProduct(id) {
         if (!confirm('Delete this product?')) return;
         const file = await getFile('data/products.json');
-        const data = JSON.parse(atob(file.content.replace(/\n/g,'')));
+        const data = JSON.parse(decodeContent(file.content));
         data.products = data.products.filter(p => p.id !== id);
         const res = await putFile('data/products.json', JSON.stringify(data, null, 2), file.sha, 'Delete product');
         if (res.ok) { showToast('Product deleted.', 'success'); renderProductsMgr(); }
@@ -1087,13 +1104,13 @@
     // ── Gallery Manager ───────────────────────────────────────────────────────
     function renderGalleryMgr() {
         getFile('data/products.json').then(f => {
-            const data = JSON.parse(atob(f.content.replace(/\n/g,'')));
+            const data = JSON.parse(decodeContent(f.content));
             const container = document.getElementById('galleryMgr');
             container.innerHTML = data.gallery.map(g => `
                 <div class="mgr-card">
-                    <img src="${g.image}" alt="${g.alt}" onerror="this.src='images/hero-image.jpg'">
+                    <img src="${escapeHtml(g.image)}" alt="${escapeHtml(g.alt)}" onerror="this.src='images/hero-image.jpg'">
                     <div class="mgr-card-body">
-                        <div class="mgr-card-sub">${g.alt}</div>
+                        <div class="mgr-card-sub">${escapeHtml(g.alt)}</div>
                         <div class="mgr-card-actions">
                             <button class="btn-icon danger" onclick="deleteGalleryItem('${g.id}')" title="Remove"><i class="fas fa-trash"></i></button>
                         </div>
@@ -1117,7 +1134,7 @@
     async function deleteGalleryItem(id) {
         if (!confirm('Remove this gallery image?')) return;
         const file = await getFile('data/products.json');
-        const data = JSON.parse(atob(file.content.replace(/\n/g,'')));
+        const data = JSON.parse(decodeContent(file.content));
         data.gallery = data.gallery.filter(g => g.id !== id);
         const res = await putFile('data/products.json', JSON.stringify(data, null, 2), file.sha, 'Remove gallery image');
         if (res.ok) { showToast('Image removed.', 'success'); renderGalleryMgr(); }
@@ -1129,10 +1146,10 @@
         const container = document.getElementById('servicesMgr');
         container.innerHTML = siteData.services.map(s => `
             <div class="mgr-card">
-                <img src="${s.image}" alt="${s.name}" onerror="this.src='images/hero-image.jpg'">
+                <img src="${escapeHtml(s.image)}" alt="${escapeHtml(s.name)}" onerror="this.src='images/hero-image.jpg'">
                 <div class="mgr-card-body">
-                    <div class="mgr-card-title">${s.name}</div>
-                    <div class="mgr-card-sub">${s.description.substring(0,60)}...</div>
+                    <div class="mgr-card-title">${escapeHtml(s.name)}</div>
+                    <div class="mgr-card-sub">${escapeHtml(s.description.substring(0,60))}...</div>
                     <div class="mgr-card-actions">
                         <button class="btn-icon" onclick="openServiceModal('${s.id}')" title="Edit"><i class="fas fa-pen"></i></button>
                         <button class="btn-icon danger" onclick="deleteService('${s.id}')" title="Delete"><i class="fas fa-trash"></i></button>
@@ -1147,11 +1164,11 @@
         const item = id ? siteData.services.find(s => s.id === id) : null;
         document.getElementById('modalTitle').textContent = id ? 'Edit Service' : 'Add Service';
         document.getElementById('modalBody').innerHTML = `
-            <div class="form-group"><label>Name</label><input type="text" id="mName" value="${item ? item.name : ''}"></div>
-            <div class="form-group"><label>Description</label><textarea id="mDesc" rows="3">${item ? item.description : ''}</textarea></div>
+            <div class="form-group"><label>Name</label><input type="text" id="mName" value="${item ? escapeHtml(item.name) : ''}"></div>
+            <div class="form-group"><label>Description</label><textarea id="mDesc" rows="3">${item ? escapeHtml(item.description) : ''}</textarea></div>
             <div class="form-group"><label>Image</label>
                 <div class="cover-upload"><input type="file" accept="image/*" onchange="modalImg(this)"><i class="fas fa-cloud-upload-alt"></i><p>Click to upload</p></div>
-                <img id="mImgPrev" src="${item ? item.image : ''}" style="width:100%;height:100px;object-fit:cover;border-radius:0.5rem;margin-top:0.5rem;display:${item ? 'block' : 'none'}">
+                <img id="mImgPrev" src="${item ? escapeHtml(item.image) : ''}" style="width:100%;height:100px;object-fit:cover;border-radius:0.5rem;margin-top:0.5rem;display:${item ? 'block' : 'none'}">
             </div>`;
         document.getElementById('modalOverlay').classList.add('open');
     }
@@ -1170,9 +1187,9 @@
         const container = document.getElementById('clientsMgr');
         container.innerHTML = siteData.clients.map(c => `
             <div class="mgr-card">
-                <img src="${c.logo}" alt="${c.name}" style="height:80px;object-fit:contain;padding:0.5rem;background:#f8fafc" onerror="this.src='images/logo.png'">
+                <img src="${escapeHtml(c.logo)}" alt="${escapeHtml(c.name)}" style="height:80px;object-fit:contain;padding:0.5rem;background:#f8fafc" onerror="this.src='images/logo.png'">
                 <div class="mgr-card-body">
-                    <div class="mgr-card-title">${c.name}</div>
+                    <div class="mgr-card-title">${escapeHtml(c.name)}</div>
                     <div class="mgr-card-actions">
                         <button class="btn-icon danger" onclick="deleteClient('${c.id}')" title="Remove"><i class="fas fa-trash"></i></button>
                     </div>
@@ -1219,18 +1236,22 @@
         const btn = document.getElementById('modalSaveBtn');
         btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
         try {
-            if (_modalType === 'product')  await saveProduct();
-            if (_modalType === 'gallery')  await saveGalleryItem();
-            if (_modalType === 'service')  await saveService();
-            if (_modalType === 'client')   await saveClient();
-            closeModal();
+            let saved = false;
+            if (_modalType === 'product')  saved = await saveProduct();
+            if (_modalType === 'gallery')  saved = await saveGalleryItem();
+            if (_modalType === 'service')  saved = await saveService();
+            if (_modalType === 'client')   saved = await saveClient();
+            if (saved) closeModal();
+        } catch(e) {
+            showToast('Error: ' + e.message, 'error');
         } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save'; }
     }
 
     async function resolveImage(existingPath) {
         if (_modalImageData) {
             const path = await uploadImage(_modalImageData.filename, _modalImageData.base64);
-            return path || existingPath;
+            if (!path) throw new Error('Could not upload the image');
+            return path;
         }
         return existingPath;
     }
@@ -1238,34 +1259,38 @@
     async function saveProduct() {
         const name = document.getElementById('mName').value.trim();
         const caption = document.getElementById('mCaption').value.trim();
-        if (!name) { showToast('Name is required.', 'error'); return; }
+        if (!name) { showToast('Name is required.', 'error'); return false; }
         const file = await getFile('data/products.json');
-        const data = JSON.parse(atob(file.content.replace(/\n/g,'')));
+        const data = JSON.parse(decodeContent(file.content));
         const existing = _modalId ? data.products.find(p => p.id === _modalId) : null;
         const imagePath = await resolveImage(existing ? existing.image : 'images/hero-image.jpg');
         const item = { id: _modalId || String(Date.now()), name, caption, image: imagePath, order: existing ? existing.order : data.products.length + 1 };
         if (_modalId) { const i = data.products.findIndex(p => p.id === _modalId); data.products[i] = item; }
         else data.products.push(item);
         const res = await putFile('data/products.json', JSON.stringify(data, null, 2), file.sha, (_modalId ? 'Update' : 'Add') + ' product: ' + name);
-        if (res.ok) { showToast('Product saved!', 'success'); renderProductsMgr(); }
+        if (!res.ok) throw new Error('GitHub rejected the save');
+        showToast('Product saved!', 'success'); renderProductsMgr();
+        return true;
     }
 
     async function saveGalleryItem() {
         const alt = document.getElementById('mAlt').value.trim() || 'Smart Home Product';
-        if (!_modalImageData) { showToast('Please select an image.', 'error'); return; }
+        if (!_modalImageData) { showToast('Please select an image.', 'error'); return false; }
         const imagePath = await resolveImage('');
         const file = await getFile('data/products.json');
-        const data = JSON.parse(atob(file.content.replace(/\n/g,'')));
+        const data = JSON.parse(decodeContent(file.content));
         const maxOrder = data.gallery.reduce((m, g) => Math.max(m, g.order), 0);
         data.gallery.push({ id: String(Date.now()), image: imagePath, alt, order: maxOrder + 1 });
         const res = await putFile('data/products.json', JSON.stringify(data, null, 2), file.sha, 'Add gallery image');
-        if (res.ok) { showToast('Image added!', 'success'); renderGalleryMgr(); }
+        if (!res.ok) throw new Error('GitHub rejected the save');
+        showToast('Image added!', 'success'); renderGalleryMgr();
+        return true;
     }
 
     async function saveService() {
         const name = document.getElementById('mName').value.trim();
         const desc = document.getElementById('mDesc').value.trim();
-        if (!name) { showToast('Name is required.', 'error'); return; }
+        if (!name) { showToast('Name is required.', 'error'); return false; }
         if (!siteData) await loadSiteData();
         const existing = _modalId ? siteData.services.find(s => s.id === _modalId) : null;
         const imagePath = await resolveImage(existing ? existing.image : 'images/services/motorised-curtains.jpg');
@@ -1273,17 +1298,21 @@
         if (_modalId) { const i = siteData.services.findIndex(s => s.id === _modalId); siteData.services[i] = item; }
         else siteData.services.push(item);
         const ok = await saveSiteData((_modalId ? 'Update' : 'Add') + ' service: ' + name);
-        if (ok) { showToast('Service saved!', 'success'); renderServicesMgr(); }
+        if (!ok) throw new Error('GitHub rejected the save');
+        showToast('Service saved!', 'success'); renderServicesMgr();
+        return true;
     }
 
     async function saveClient() {
         const name = document.getElementById('mName').value.trim() || 'Client';
-        if (!_modalImageData) { showToast('Please upload a logo.', 'error'); return; }
+        if (!_modalImageData) { showToast('Please upload a logo.', 'error'); return false; }
         if (!siteData) await loadSiteData();
         const logoPath = await resolveImage('');
         siteData.clients.push({ id: String(Date.now()), name, logo: logoPath });
         const ok = await saveSiteData('Add client: ' + name);
-        if (ok) { showToast('Client added!', 'success'); renderClientsMgr(); }
+        if (!ok) throw new Error('GitHub rejected the save');
+        showToast('Client added!', 'success'); renderClientsMgr();
+        return true;
     }
 
     // ── Brochure ──────────────────────────────────────────────────────────────

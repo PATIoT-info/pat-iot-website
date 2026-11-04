@@ -3,9 +3,11 @@
 <head>
     <script>
         if (window.location.hash === '#/privacy-policy') {
+            window.__patRedirect = true;
             window.location.replace('privacy-policy.html');
         } else if (!window.location.search.includes('desktop=1') &&
             (window.innerWidth < 769 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent))) {
+            window.__patRedirect = true;
             window.location.replace('mobile.html');
         }
     </script>
@@ -36,8 +38,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="polish.css">
 </head>
 <body>
+    <script src="intro.js"></script>
     <!-- Navigation -->
     <nav class="navbar" id="navbar">
         <div class="container">
@@ -70,7 +74,7 @@
     <section id="home" class="hero">
         <!-- Hero Image Background -->
         <div class="hero-image">
-            <img src="images/hero-image.jpg" alt="Transform Your Living" class="hero-bg-image" loading="eager" decoding="async">
+            <img src="images/hero-image.jpg" alt="Transform Your Living" class="hero-bg-image" width="2560" height="1440" loading="eager" fetchpriority="high" decoding="sync">
             <div class="hero-overlay"></div>
         </div>
         <div class="container">
@@ -98,14 +102,18 @@
     <!-- Video Section - plays 3 hero videos step‑by‑step based on scroll -->
     <section class="hero-video-section">
         <!-- Three stacked videos: previous holds last frame while next crossfades in -->
-        <video class="hero-video hero-video-layer" id="heroVideo1" muted playsinline preload="auto" data-hero-index="0">
+        <video class="hero-video hero-video-layer" id="heroVideo1" muted playsinline preload="none" poster="images/posters/hero-video-1.jpg" data-hero-index="0">
             <source src="videos/hero-video-1.mp4" type="video/mp4">
         </video>
-        <video class="hero-video hero-video-layer" id="heroVideo2" muted playsinline preload="auto" data-hero-index="1">
+        <video class="hero-video hero-video-layer" id="heroVideo2" muted playsinline preload="none" data-hero-index="1">
             <source src="videos/hero-video-2.mp4" type="video/mp4">
         </video>
-        <video class="hero-video hero-video-layer" id="heroVideo3" muted playsinline preload="auto" data-hero-index="2">
+        <video class="hero-video hero-video-layer" id="heroVideo3" muted playsinline preload="none" data-hero-index="2">
             <source src="videos/hero-video-3.mp4" type="video/mp4">
+        </video>
+        <!-- Reverse clips for scrolling back up -->
+        <video class="hero-video hero-video-layer" id="heroVideo3R" muted playsinline preload="none">
+            <source src="videos/hero-video-3-rev.mp4" type="video/mp4">
         </video>
         <div class="video-overlay"></div>
         <div class="hero-scroll-hint" id="heroScrollHint">
@@ -159,7 +167,7 @@
                     <p>You can use the app across multiple devices with no limits, add real photos of your home to each room for a more personalized experience, and enjoy full end-to-end encryption for total peace of mind. With seamless customization, instant responsiveness, and smooth performance, PAT IoT App delivers a reliable and effortless smart living experience—making your home smarter, safer, and more comfortable every day.</p>
                 </div>
                 <div class="pat-app-image">
-                    <img src="images/pat-home-app.jpg" alt="PAT Home App" class="pat-app-img">
+                    <img src="images/pat-home-app.jpg" alt="PAT Home App" class="pat-app-img" loading="lazy" decoding="async">
                 </div>
             </div>
         </div>
@@ -169,15 +177,15 @@
     <section class="video-modes-section">
         <div class="video-modes-container">
             <!-- Morning Mode Video -->
-            <video class="mode-video" id="morningVideo" muted playsinline>
+            <video class="mode-video" id="morningVideo" muted playsinline preload="none" poster="images/posters/morning-mode.jpg">
                 <source src="videos/morning-mode.mp4" type="video/mp4">
             </video>
             <!-- Movie Mode Video -->
-            <video class="mode-video" id="movieVideo" muted playsinline>
+            <video class="mode-video" id="movieVideo" muted playsinline preload="none" poster="images/posters/movie-mode.jpg">
                 <source src="videos/movie-mode.mp4" type="video/mp4">
             </video>
             <!-- Night Mode Video -->
-            <video class="mode-video" id="nightVideo" muted playsinline>
+            <video class="mode-video" id="nightVideo" muted playsinline preload="none" poster="images/posters/night-mode.jpg">
                 <source src="videos/night-mode.mp4" type="video/mp4">
             </video>
             <div class="video-overlay-modes"></div>
@@ -226,7 +234,7 @@
                     <p>Our commitment to quality, innovation, and customer satisfaction has made us a trusted name in the Indian smart home automation industry.</p>
                 </div>
                 <div class="about-image">
-                    <video src="videos/intro.mp4" class="about-image-img" autoplay muted loop playsinline></video>
+                    <video src="videos/intro.mp4" class="about-image-img" muted loop playsinline preload="none" poster="images/posters/intro.jpg"></video>
                 </div>
             </div>
         </div>
@@ -369,7 +377,7 @@
                             </div>
                         </div>
                         <div class="qr-code-box">
-                            <img src="images/qr-code.png" alt="Scan QR Code" class="qr-code-image-compact">
+                            <img src="images/qr-code.png" alt="Scan QR Code" class="qr-code-image-compact" loading="lazy" decoding="async">
                             <p class="qr-code-label">Scan for More Info</p>
                         </div>
                     </div>

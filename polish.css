@@ -1,0 +1,473 @@
+/* Site-wide polish, loaded last on index.html and mobile.html.
+   Shared timing, corners and shadows; opening animation; image fade-in; reduced motion. */
+
+:root {
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --radius-control: 0.75rem;
+    --radius-card: 1rem;
+    --card-shadow: 0 6px 24px rgba(15, 23, 42, 0.07);
+    --card-shadow-hover: 0 16px 40px rgba(15, 23, 42, 0.12);
+    --image-placeholder: #efe9df;
+    /* Clear liquid glass: what is behind stays visible, the edges and top highlight read as the glass */
+    --glass-blur: blur(3px) saturate(135%);
+    --glass-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+    --glass-gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 46%);
+    --glass-sheen-dark: linear-gradient(135deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.32) 100%);
+    --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(255, 255, 255, 0.22),
+                  inset 0 0 12px rgba(255, 255, 255, 0.12), 0 8px 24px rgba(15, 23, 42, 0.18);
+    --lg-blur: var(--glass-blur);
+    --lg-blur-sm: var(--glass-blur);
+}
+
+/* ── Opening animation ── */
+.intro {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: grid;
+    place-items: center;
+    background: #f8fafc;
+    pointer-events: none;
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 480ms ease-in-out;
+}
+.intro[data-state='out'] { clip-path: inset(0 0 100% 0); }
+.intro-card {
+    display: grid;
+    justify-items: center;
+    gap: 0.9rem;
+    transition: transform 480ms ease-in-out, opacity 300ms ease;
+}
+.intro[data-state='out'] .intro-card {
+    transform: translateY(-6vh);
+    opacity: 0;
+}
+.intro-logo {
+    width: 166px;
+    height: auto;
+    animation: introRise 520ms var(--ease-out) both;
+}
+.intro-trace {
+    width: min(320px, 70vw);
+    height: 24px;
+    overflow: visible;
+}
+.intro-trace path {
+    stroke: #2563eb;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: introDraw 460ms ease-out 80ms forwards;
+}
+.intro-trace circle {
+    fill: #f59e0b;
+    transform-box: fill-box;
+    transform-origin: center;
+    opacity: 0;
+    animation: introPad 180ms ease-out 500ms forwards;
+}
+.intro-sub {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: #475569;
+    animation: introFade 360ms ease-out 180ms both;
+}
+@keyframes introRise {
+    from { opacity: 0; transform: translateY(14px); clip-path: inset(100% 0 -10% 0); }
+    to   { opacity: 1; transform: none; clip-path: inset(0 0 -10% 0); }
+}
+@keyframes introDraw { to { stroke-dashoffset: 0; } }
+@keyframes introPad {
+    from { opacity: 0; transform: scale(0.4); }
+    to   { opacity: 1; transform: scale(1); }
+}
+@keyframes introFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ── Scroll-to-change videos ── */
+.hero-scroll-hint {
+    transition: opacity 0.3s ease;
+    /* Glass look without a live blur: this sits on the playing clips, which must stay smooth */
+    background: var(--glass-sheen-dark);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-color: rgba(255, 255, 255, 0.55);
+    box-shadow: var(--glass-edge);
+    text-shadow: 0 1px 3px rgba(15, 23, 42, 0.7);
+}
+.hero-scroll-hint.is-done { visibility: hidden; }
+.mode-hint.mode-controls-hint-hidden { visibility: hidden; }
+
+/* ── Liquid glass: what floats over imagery, plus the buttons further down ── */
+:root:not(.site-mobile) .navbar,
+.site-mobile .navbar {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.26) 100%) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.7) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(255, 255, 255, 0.25), 0 6px 24px rgba(15, 23, 42, 0.1) !important;
+}
+/* A little more body once page text can pass under the links */
+:root:not(.site-mobile) .navbar.scrolled {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.44) 100%) !important;
+    backdrop-filter: blur(7px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(7px) saturate(150%) !important;
+}
+/* The open menu is a page of text over a page of content, so it stays the most solid */
+.site-mobile #navMenu {
+    background: rgba(255, 255, 255, 0.72) !important;
+    backdrop-filter: blur(8px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(150%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.7) !important;
+}
+:root:not(.site-mobile) .video-mode-controls {
+    background: var(--glass-sheen-dark);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 22px;
+    box-shadow: var(--glass-edge);
+}
+:root:not(.site-mobile) .mode-btn {
+    background: transparent;
+    border-color: transparent;
+    border-radius: 14px;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(15, 23, 42, 0.7);
+}
+:root:not(.site-mobile) .mode-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: none;
+    transform: none;
+}
+:root:not(.site-mobile) .mode-btn.active {
+    background: var(--glass-gloss), rgba(255, 255, 255, 0.26);
+    border-color: rgba(255, 255, 255, 0.9);
+    color: #fff;
+    box-shadow: inset 0 1px 0 #fff, inset 0 0 12px rgba(255, 255, 255, 0.2), 0 6px 18px rgba(15, 23, 42, 0.25);
+}
+
+/* Cards and inputs sit on smooth gradients: a blur there changes nothing you can see and costs scroll speed */
+.service-card, .product-card, .warranty-card, .warranty-terms, .contact-box,
+.contact-form input, .contact-form textarea {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* ── Image fade-in over a warm placeholder ── */
+.product-image, .service-image, .service-thumb, .gallery-item, .pat-app-image {
+    background-color: var(--image-placeholder);
+}
+.product-image img:not(.img-loaded),
+.service-image img:not(.img-loaded),
+.service-thumb img:not(.img-loaded),
+.gallery-image:not(.img-loaded),
+.client-logo img:not(.img-loaded),
+.pat-app-img:not(.img-loaded) {
+    opacity: 0;
+}
+.product-image img.img-loaded,
+.service-image img.img-loaded,
+.service-thumb img.img-loaded,
+.gallery-image.img-loaded,
+.client-logo img.img-loaded,
+.pat-app-img.img-loaded {
+    animation: imageIn 420ms ease-out;
+}
+@keyframes imageIn { from { opacity: 0; } }
+
+/* ── One scroll-in motion ── */
+:root:not(.site-mobile) .section-header,
+:root:not(.site-mobile) .service-card,
+:root:not(.site-mobile) .product-card,
+:root:not(.site-mobile) .gallery-item,
+:root:not(.site-mobile) .warranty-card,
+:root:not(.site-mobile) .about-content {
+    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out),
+                box-shadow 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+}
+:root:not(.site-mobile) .section-header:not(.animate),
+:root:not(.site-mobile) .service-card:not(.animate),
+:root:not(.site-mobile) .product-card:not(.animate),
+:root:not(.site-mobile) .warranty-card:not(.animate),
+:root:not(.site-mobile) .about-content:not(.animate) {
+    transform: translateY(20px);
+}
+
+/* ── Buttons: liquid glass, each keeps its colour ── */
+.btn {
+    border-radius: var(--radius-control) !important;
+    min-height: 48px;
+    padding: 0.8rem 1.75rem;
+    font-weight: 600;
+    gap: 0.5rem;
+    color: #fff !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25) !important;
+    transition: transform 0.2s var(--ease-out), box-shadow 0.2s ease,
+                background 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+.btn:hover { transform: translateY(-2px) !important; }
+.btn:active { transform: scale(0.98) !important; }
+/* On the pale Contact, Subscribe and blog sections: clear blue with deep blue text, as white would not read */
+.btn-primary {
+    background: var(--glass-gloss), linear-gradient(155deg, rgba(37, 99, 235, 0.14) 0%, rgba(37, 99, 235, 0.24) 100%) !important;
+    border: 1px solid rgba(37, 99, 235, 0.5) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(255, 255, 255, 0.3), 0 8px 22px rgba(37, 99, 235, 0.18) !important;
+    color: #1e3a8a !important;
+    text-shadow: none !important;
+}
+.btn-primary:hover {
+    background: var(--glass-gloss), linear-gradient(155deg, rgba(37, 99, 235, 0.24) 0%, rgba(37, 99, 235, 0.36) 100%) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(255, 255, 255, 0.3), 0 12px 28px rgba(37, 99, 235, 0.26) !important;
+}
+/* Over the hero picture: white text */
+.hero-buttons .btn-primary {
+    background: var(--glass-gloss), linear-gradient(155deg, rgba(37, 99, 235, 0.36) 0%, rgba(30, 64, 175, 0.46) 100%) !important;
+    border-color: rgba(191, 219, 254, 0.8) !important;
+    color: #fff !important;
+    text-shadow: 0 1px 3px rgba(15, 23, 42, 0.6) !important;
+}
+.hero-buttons .btn-primary:hover {
+    background: var(--glass-gloss), linear-gradient(155deg, rgba(37, 99, 235, 0.52) 0%, rgba(30, 64, 175, 0.62) 100%) !important;
+}
+/* On the dark footer: white text, and small enough to stay inside its column */
+.newsletter-form { min-width: 0; }
+.newsletter-form input { min-width: 0; width: 0; }
+.newsletter-form .btn-primary {
+    flex-shrink: 0;
+    padding: 0.6rem 1rem;
+    background: var(--glass-gloss), linear-gradient(155deg, rgba(37, 99, 235, 0.42) 0%, rgba(30, 64, 175, 0.5) 100%) !important;
+    border-color: rgba(191, 219, 254, 0.7) !important;
+    color: #fff !important;
+}
+.newsletter-form .btn-primary:hover {
+    background: var(--glass-gloss), linear-gradient(155deg, rgba(37, 99, 235, 0.6) 0%, rgba(30, 64, 175, 0.68) 100%) !important;
+}
+/* The phone's form styles set their own solid blue */
+.site-mobile .contact-form .btn-primary {
+    background: var(--glass-gloss), linear-gradient(155deg, rgba(37, 99, 235, 0.14) 0%, rgba(37, 99, 235, 0.24) 100%) !important;
+    border: 1px solid rgba(37, 99, 235, 0.5) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(255, 255, 255, 0.3), 0 8px 22px rgba(37, 99, 235, 0.18) !important;
+    color: #1e3a8a !important;
+}
+/* Keeps enough tint to stay clearly red */
+.btn-brochure {
+    background: var(--glass-gloss), linear-gradient(160deg, rgba(239, 68, 68, 0.58) 0%, rgba(220, 38, 38, 0.64) 100%) !important;
+    border: 1px solid rgba(254, 202, 202, 0.8) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), inset 0 -1px 0 rgba(255, 255, 255, 0.2), 0 8px 22px rgba(220, 38, 38, 0.28) !important;
+}
+.btn-brochure:hover {
+    background: var(--glass-gloss), linear-gradient(160deg, rgba(220, 38, 38, 0.74) 0%, rgba(185, 28, 28, 0.78) 100%) !important;
+    border-color: rgba(254, 226, 226, 0.9) !important;
+}
+.btn-secondary {
+    background: var(--glass-sheen) !important;
+    border: 1px solid rgba(255, 255, 255, 0.65) !important;
+    box-shadow: var(--glass-edge) !important;
+    text-shadow: 0 1px 3px rgba(15, 23, 42, 0.65) !important;
+}
+.btn-secondary:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.14) 100%) !important;
+    border-color: rgba(255, 255, 255, 0.9) !important;
+}
+/* Product and gallery arrows sit on pale sections: a blue edge keeps the clear glass visible */
+.scroll-btn, .gallery-scroll-btn {
+    background: var(--glass-gloss), rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid rgba(37, 99, 235, 0.32) !important;
+    box-shadow: inset 0 1px 0 #fff, inset 0 0 10px rgba(255, 255, 255, 0.4), 0 6px 18px rgba(37, 99, 235, 0.16) !important;
+    color: #1d4ed8 !important;
+}
+.scroll-btn:hover, .gallery-scroll-btn:hover,
+.scroll-btn:active, .gallery-scroll-btn:active {
+    background: var(--glass-gloss), rgba(37, 99, 235, 0.2) !important;
+    border-color: rgba(37, 99, 235, 0.55) !important;
+    color: #1e3a8a !important;
+}
+/* Mode buttons on the phone sit on the dark band below the video */
+.site-mobile .mode-controls-below .mode-btn {
+    background: var(--glass-gloss), rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 6px 18px rgba(0, 0, 0, 0.25) !important;
+    color: #fff !important;
+}
+.site-mobile .mode-controls-below .mode-btn.active,
+.site-mobile .mode-controls-below .mode-btn:active {
+    background: var(--glass-gloss), rgba(37, 99, 235, 0.38) !important;
+    border-color: rgba(191, 219, 254, 0.8) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 22px rgba(37, 99, 235, 0.45) !important;
+}
+.site-mobile .newsletter-form button {
+    background: var(--glass-gloss), linear-gradient(155deg, rgba(37, 99, 235, 0.42) 0%, rgba(30, 64, 175, 0.5) 100%) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid rgba(147, 197, 253, 0.7) !important;
+    color: #fff !important;
+}
+.glb-close, .glb-prev, .glb-next {
+    background: var(--glass-sheen);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: var(--glass-edge);
+}
+.glb-close:hover, .glb-prev:hover, .glb-next:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.14) 100%);
+}
+
+/* Solid versions: no glass support, or the visitor asked for less transparency */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root:not(.site-mobile) .video-mode-controls { background: rgba(15, 23, 42, 0.82); }
+    .glb-close, .glb-prev, .glb-next { background: rgba(15, 23, 42, 0.7); }
+    :root:not(.site-mobile) .navbar, :root:not(.site-mobile) .navbar.scrolled, .site-mobile .navbar { background: rgba(255, 255, 255, 0.94) !important; }
+    .btn-primary, .hero-buttons .btn-primary, .newsletter-form .btn-primary, .site-mobile .contact-form .btn-primary { background: #2563eb !important; color: #fff !important; }
+    .btn-brochure { background: #dc2626 !important; }
+    .btn-secondary { background: rgba(15, 23, 42, 0.5) !important; }
+    .scroll-btn, .gallery-scroll-btn { background: #fff !important; }
+}
+@media (prefers-reduced-transparency: reduce) {
+    :root:not(.site-mobile) .navbar, :root:not(.site-mobile) .navbar.scrolled, .site-mobile .navbar, .site-mobile #navMenu { background: #fff !important; }
+    :root:not(.site-mobile) .video-mode-controls { background: #0f172a; }
+    .glb-close, .glb-prev, .glb-next { background: #0f172a; }
+    .btn-primary, .hero-buttons .btn-primary, .newsletter-form .btn-primary, .site-mobile .contact-form .btn-primary { background: #2563eb !important; color: #fff !important; }
+    .btn-brochure { background: #dc2626 !important; }
+    .btn-secondary { background: #0f172a !important; }
+    .scroll-btn, .gallery-scroll-btn { background: #fff !important; }
+}
+
+/* ── Cards ── */
+.service-card, .product-card, .warranty-card, .gallery-item,
+.pat-app-text, .about-text {
+    border-radius: var(--radius-card) !important;
+    box-shadow: var(--card-shadow) !important;
+}
+:root:not(.site-mobile) .service-card:hover,
+:root:not(.site-mobile) .product-card:hover,
+:root:not(.site-mobile) .warranty-card:hover {
+    box-shadow: var(--card-shadow-hover) !important;
+    transform: translateY(-4px) !important;
+}
+
+/* ── Client logos: same visual size in one card shape ── */
+.clients-track { gap: 1.5rem; }
+.client-logo {
+    width: 240px;
+    height: 128px;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-card);
+    box-shadow: var(--card-shadow);
+    box-sizing: border-box;
+}
+.client-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: none;
+    opacity: 1;
+}
+.site-mobile .client-logo { width: 180px; height: 100px; padding: 0.75rem 1rem; }
+
+/* ── App image and About video: frame matches the picture, nothing letterboxed ── */
+.pat-app-image { background-color: transparent; }
+:root:not(.site-mobile) .pat-app-img {
+    display: block;
+    width: 100%;
+    max-width: 560px;
+    height: auto;
+    max-height: none;
+    aspect-ratio: 1200 / 1018;
+    margin: 0 auto;
+    object-fit: cover;
+    border: 0;
+    background: #17191c;
+}
+:root:not(.site-mobile) .about-image-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    padding: 0;
+    border: 0;
+    border-radius: 1.25rem;
+    background: #17110c;
+    box-shadow: 0 24px 64px rgba(37, 99, 235, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+.site-mobile .about-video-wrap { background: #17110c; }
+
+/* ── Desktop hero and type scale ── */
+:root:not(.site-mobile) .hero-overlay {
+    background: linear-gradient(90deg, rgba(15, 23, 42, 0.72) 0%, rgba(15, 23, 42, 0.42) 42%, rgba(15, 23, 42, 0) 72%);
+}
+:root:not(.site-mobile) .hero-content { max-width: 680px; }
+:root:not(.site-mobile) .hero-title {
+    font-size: clamp(2.75rem, 5vw, 4.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.25rem;
+}
+:root:not(.site-mobile) .hero-subtitle {
+    font-size: clamp(1.0625rem, 1.4vw, 1.25rem);
+    line-height: 1.6;
+    max-width: 34em;
+    opacity: 1;
+}
+:root:not(.site-mobile) .hero-buttons { flex-direction: row; flex-wrap: wrap; }
+:root:not(.site-mobile) .section-title { font-size: clamp(2rem, 3vw, 2.5rem); line-height: 1.15; }
+:root:not(.site-mobile) .section-subtitle { font-size: 1.0625rem; line-height: 1.6; }
+:root:not(.site-mobile) .section-header { margin-bottom: 3rem; }
+:root:not(.site-mobile) .services,
+:root:not(.site-mobile) .products-section,
+:root:not(.site-mobile) .about,
+:root:not(.site-mobile) .pat-app-section,
+:root:not(.site-mobile) .clients-section,
+:root:not(.site-mobile) .product-gallery-section,
+:root:not(.site-mobile) .warranty-section,
+:root:not(.site-mobile) .contact {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+
+/* ── Mobile: blur is the costliest thing to scroll over. Keep it on the nav and the small buttons. ── */
+.site-mobile body *:not(.navbar):not(#navMenu):not(.btn):not(.mode-btn):not(.scroll-btn):not(.gallery-scroll-btn):not(.glb-close):not(.glb-prev):not(.glb-next):not(.newsletter-form button) {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+.site-mobile .service-card,
+.site-mobile .product-card,
+.site-mobile .warranty-card,
+.site-mobile .gallery-item {
+    background: #fff !important;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+    html, body { scroll-behavior: auto !important; }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        transition-delay: 0s !important;
+    }
+    .section-header, .service-card, .product-card, .gallery-item,
+    .warranty-card, .about-content, .info-item, .stat-item, .solution-card {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    .clients-track { animation: none !important; }
+    .clients-scroll-wrap { overflow-x: auto; }
+}

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="site-mobile">
 <head>
-    <script>if(window.location.hash==='#/privacy-policy'){window.location.replace('privacy-policy.html');}</script>
+    <script>if(window.location.hash==='#/privacy-policy'){window.__patRedirect=true;window.location.replace('privacy-policy.html');}</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>PAT IOT SOLUTIONS - Smart Home Automation</title>
@@ -26,6 +26,7 @@
     <link rel="icon" type="image/png" href="images/logo.png">
     <script>
         if (window.innerWidth >= 769 && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            window.__patRedirect = true;
             window.location.replace('index.html');
         }
     </script>
@@ -284,11 +285,17 @@
             inset: 0 !important;
             opacity: 0;
             z-index: 1;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.12s linear;
         }
         .mobile-hero-video.v-active {
             opacity: 1;
+            z-index: 3;
+        }
+        /* The outgoing clip holds its frame underneath while the next fades in */
+        .mobile-hero-video.v-prev {
+            opacity: 1;
             z-index: 2;
+            transition: none;
         }
 
         /* ══════════════════════════════
@@ -1099,8 +1106,10 @@
         .glb-prev, .glb-next { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(255,255,255,0.15); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
         .glb-prev { left: 0.5rem; } .glb-next { right: 0.5rem; }
     </style>
+<link rel="stylesheet" href="polish.css">
 </head>
 <body>
+    <script src="intro.js"></script>
 
     <!-- ── Navbar ── -->
     <nav id="navbar" class="navbar">
@@ -1137,7 +1146,7 @@
     <section id="home">
         <!-- Full image — natural width/height, nothing cut -->
         <img src="images/hero-image-mobile.jpg" alt="Smart Home by PAT IOT"
-             class="hero-bg-image" loading="eager" decoding="async">
+             class="hero-bg-image" width="1440" height="810" loading="eager" fetchpriority="high" decoding="sync">
         <!-- Text block — sits flush below image in normal document flow -->
         <div class="hero-text-section">
             <h1 class="hero-title">Transform Your Living</h1>
@@ -1158,7 +1167,7 @@
 
     <!-- ── Hero Video — 3 forward + 3 reverse (preload=none until needed) ── -->
     <section class="hero-video-section">
-        <video class="mobile-hero-video v-active" id="mhv1"  muted playsinline preload="metadata">
+        <video class="mobile-hero-video v-active" id="mhv1"  muted playsinline preload="metadata" poster="images/posters/hero-video-1.jpg">
             <source src="videos/hero-video-1.mp4"     type="video/mp4">
         </video>
         <video class="mobile-hero-video"              id="mhv2"  muted playsinline preload="metadata">
@@ -1235,7 +1244,7 @@
                 <p class="section-subtitle">Control your entire home from your phone</p>
             </div>
             <div class="pat-app-content">
-                <img src="images/pat-home-app.jpg" alt="PAT Home App" class="pat-app-img"
+                <img src="images/pat-home-app.jpg" alt="PAT Home App" class="pat-app-img" loading="lazy" decoding="async"
                      onerror="this.style.display='none';">
                 <div class="pat-app-text">
                     <p>Control and personalize your entire home from anywhere. Manage lights, fans, curtains, and smart devices in real time through a single intuitive interface.</p>
@@ -1248,13 +1257,13 @@
     <!-- ── Video Modes — 16:9 ── -->
     <section class="video-modes-section">
         <div class="video-modes-container">
-            <video class="mode-video" id="morningVideo" muted playsinline preload="auto">
+            <video class="mode-video" id="morningVideo" muted playsinline preload="none" poster="images/posters/morning-mode.jpg">
                 <source src="videos/morning-mode.mp4" type="video/mp4">
             </video>
-            <video class="mode-video" id="movieVideo" muted playsinline preload="auto">
+            <video class="mode-video" id="movieVideo" muted playsinline preload="none" poster="images/posters/movie-mode.jpg">
                 <source src="videos/movie-mode.mp4" type="video/mp4">
             </video>
-            <video class="mode-video" id="nightVideo" muted playsinline preload="auto">
+            <video class="mode-video" id="nightVideo" muted playsinline preload="none" poster="images/posters/night-mode.jpg">
                 <source src="videos/night-mode.mp4" type="video/mp4">
             </video>
             <div class="video-overlay-modes"></div>
@@ -1283,15 +1292,15 @@
             <i class="fas fa-hand-point-up"></i> Tap to switch
         </div>
         <div class="mode-controls-btns">
-            <button class="mode-btn active" data-mode="morning" onclick="document.getElementById('morningBtn').click()">
+            <button class="mode-btn active" data-mode="morning">
                 <i class="fas fa-sun mode-btn-icon"></i>
                 <span class="mode-btn-label">Morning</span>
             </button>
-            <button class="mode-btn" data-mode="movie" onclick="document.getElementById('movieBtn').click()">
+            <button class="mode-btn" data-mode="movie">
                 <i class="fas fa-video mode-btn-icon"></i>
                 <span class="mode-btn-label">Movie</span>
             </button>
-            <button class="mode-btn" data-mode="night" onclick="document.getElementById('nightBtn').click()">
+            <button class="mode-btn" data-mode="night">
                 <i class="fas fa-moon mode-btn-icon"></i>
                 <span class="mode-btn-label">Night</span>
             </button>
@@ -1314,7 +1323,7 @@
             </div>
             <div class="about-content">
                 <div class="about-video-wrap">
-                    <video class="about-video" autoplay muted loop playsinline preload="auto">
+                    <video class="about-video" muted loop playsinline preload="none" poster="images/posters/intro.jpg">
                         <source src="videos/intro.mp4" type="video/mp4">
                     </video>
                 </div>
@@ -1435,7 +1444,7 @@
                             </div>
                         </div>
                         <div class="qr-code-box">
-                            <img src="images/qr-code.png" alt="Scan QR Code" class="qr-code-image-compact"
+                            <img src="images/qr-code.png" alt="Scan QR Code" class="qr-code-image-compact" loading="lazy" decoding="async"
                                  onerror="this.parentElement.style.display='none';">
                             <p class="qr-code-label">Scan for More Info</p>
                         </div>
@@ -1513,6 +1522,7 @@
         var rafId   = null;
         var atEnd   = false;  /* fwd clip ended → at right boundary  */
         var atStart = true;   /* rev clip ended or init → at left boundary */
+        var cancelWait = null; /* drops a reverse clip still waiting to load */
 
         /* ── Load forward metadata & show first frame ── */
         fwd.forEach(function(v, i) {
@@ -1520,7 +1530,6 @@
                 durations[i] = v.duration || 0;
                 if (i === 0) { try { v.currentTime = 0.001; } catch(e){} }
             });
-            v.load();
         });
 
         /* ── Helpers ── */
@@ -1541,7 +1550,11 @@
         }
         function cur() { return isRev ? rev[slot] : fwd[slot]; }
         function setActive(v) {
-            fwd.concat(rev).forEach(function(x) { x.classList.remove('v-active'); });
+            fwd.concat(rev).forEach(function(x) {
+                x.classList.toggle('v-prev', x !== v && x.classList.contains('v-active'));
+                x.classList.remove('v-active');
+            });
+            v.classList.remove('v-prev');
             v.classList.add('v-active');
         }
         function syncHandle() {
@@ -1554,6 +1567,7 @@
         }
         function stopAll() {
             if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            if (cancelWait) { cancelWait(); cancelWait = null; }
             playing = false;
             fwd.forEach(function(v) { v.pause(); });
             rev.forEach(function(v) { v.pause(); });
@@ -1578,8 +1592,6 @@
                 if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
                 atEnd = true; atStart = false;
                 setPos(segE(i));
-                /* preload reverse clip now so it's ready if user swipes back */
-                if (rev[i].readyState < 1) { rev[i].load(); }
             });
         });
         rev.forEach(function(v, i) {
@@ -1601,7 +1613,7 @@
                 slot++; atEnd = false; atStart = false; isRev = false;
                 try { fwd[slot].currentTime = 0.001; } catch(e){}
                 setActive(fwd[slot]);
-                setTimeout(function() { playVid(fwd[slot]); }, 520);
+                playVid(fwd[slot]);
             } else if (!atEnd) {
                 atStart = false; isRev = false;
                 try { fwd[slot].currentTime = 0; } catch(e){}
@@ -1622,12 +1634,15 @@
                 } else {
                     /* not yet loaded — load, wait for first frame before activating */
                     if (v.readyState < 1) v.load();
-                    v.addEventListener('canplay', function once() {
+                    var once = function() {
                         v.removeEventListener('canplay', once);
+                        cancelWait = null;
                         try { v.currentTime = 0.001; } catch(e){}
                         setActive(v);   /* switch only when frame is ready */
                         playVid(v);
-                    });
+                    };
+                    v.addEventListener('canplay', once);
+                    cancelWait = function() { v.removeEventListener('canplay', once); };
                 }
             }
             if (atEnd) {
@@ -1637,9 +1652,7 @@
                 /* at left boundary → crossfade to previous slot's reverse */
                 slot--; atStart = false; atEnd = false;
                 setPos(segE(slot));
-                /* preload rev clip for this slot before startRev runs */
-                if (rev[slot].readyState < 1) { rev[slot].load(); }
-                setTimeout(startRev, 520);
+                startRev();
             }
         }
 
@@ -1669,6 +1682,14 @@
         track.addEventListener('mousedown',  onStart);
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup',   onEnd);
+
+        /* ── Fetch every clip as the section approaches, so the first swipe has no wait ── */
+        whenNear(track, function() {
+            fwd.concat(rev).forEach(function(v) {
+                v.preload = 'auto';
+                if (v.readyState < 1) v.load();
+            });
+        });
 
         /* ── Init ── */
         setActive(fwd[0]);

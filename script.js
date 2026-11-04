@@ -30,7 +30,24 @@
     let lastScroll = 0;
     let scrollRafPending = false;
 
+    const videoSection = document.querySelector('.hero-video-section');
+
+    function isOverVideoSection() {
+        if (!videoSection) return false;
+        const rect = videoSection.getBoundingClientRect();
+        const barHeight = navbar.offsetHeight;
+        return rect.top < barHeight && rect.bottom > barHeight;
+    }
+
     function showNavbar() {
+        if (isOverVideoSection()) {
+            // Gone at once: a slide-out would still pass over the picture
+            navbar.style.transition = 'none';
+            hideNavbar();
+            void navbar.offsetHeight;
+            navbar.style.transition = '';
+            return;
+        }
         navbar.classList.remove('navbar-hidden');
         navbar.classList.add('navbar-visible');
     }
@@ -124,6 +141,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// A failed <source> fires 'error' on the source, not on the <video>
+function onVideoFail(video, cb) {
+    const sources = video.querySelectorAll('source');
+    (sources.length ? sources[sources.length - 1] : video).addEventListener('error', cb);
+}
+
+// Runs cb once when el comes within margin of the viewport
+function whenNear(el, cb, margin = '800px') {
+    if (!('IntersectionObserver' in window)) { cb(); return; }
+    const io = new IntersectionObserver((entries) => {
+        if (entries.some(entry => entry.isIntersecting)) {
+            io.disconnect();
+            cb();
+        }
+    }, { rootMargin: margin });
+    io.observe(el);
+}
+
+// Images fade in once decoded (polish.css keeps them transparent until .img-loaded)
+document.addEventListener('load', (e) => {
+    if (e.target && e.target.tagName === 'IMG') e.target.classList.add('img-loaded');
+}, true);
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('img').forEach(img => {
+        if (img.complete && img.naturalWidth) img.classList.add('img-loaded');
+    });
+});
+
+// Cards rendered after their grid already scrolled into view still need to reveal
+function revealRenderedCards() {
+    document.querySelectorAll('.services-grid.animate .service-card, .products-scroll-wrapper.animate .product-card, .gallery-scroll-wrapper.animate .gallery-item').forEach(card => {
+        card.classList.add('animate');
+    });
+}
+
+// Admin-entered text goes into HTML templates; a quote or < must not break the markup
+function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, ch => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+    ));
+}
+
 // Load and render products from JSON
 async function loadSiteData() {
     const servicesGrid  = document.getElementById('servicesGrid');
@@ -132,27 +191,32 @@ async function loadSiteData() {
     try {
         const res  = await fetch('data/site.json?v=' + Date.now());
         const data = await res.json();
-        const isMobile = !!document.querySelector('.service-thumb') || window.innerWidth < 769;
+        const isMobile = document.documentElement.classList.contains('site-mobile');
 
         if (servicesGrid && data.services) {
             servicesGrid.innerHTML = data.services.map(s => isMobile
                 ? `<div class="service-card">
-                        <div class="service-thumb"><img src="${s.image}" alt="${s.name}" onerror="this.parentElement.style.background='#dbeafe';this.style.display='none'"></div>
-                        <div><h3>${s.name}</h3><p>${s.description}</p></div>
+                        <div class="service-thumb"><img src="${escapeHtml(s.image)}" alt="${escapeHtml(s.name)}" loading="lazy" decoding="async" onerror="this.parentElement.style.background='#dbeafe';this.style.display='none'"></div>
+                        <div><h3>${escapeHtml(s.name)}</h3><p>${escapeHtml(s.description)}</p></div>
                    </div>`
                 : `<div class="service-card">
-                        <div class="service-image"><img src="${s.image}" alt="${s.name}" onerror="this.style.display='none'"></div>
-                        <h3>${s.name}</h3><p>${s.description}</p>
+                        <div class="service-image"><img src="${escapeHtml(s.image)}" alt="${escapeHtml(s.name)}" loading="lazy" decoding="async" onerror="this.style.display='none'"></div>
+                        <h3>${escapeHtml(s.name)}</h3><p>${escapeHtml(s.description)}</p>
                    </div>`
             ).join('');
         }
 
         if (clientsTrack && data.clients) {
             const logos = data.clients.map(c =>
-                `<div class="client-logo"><img src="${c.logo}" alt="${c.name}" onerror="this.parentElement.classList.add('placeholder')"></div>`
+                `<div class="client-logo"><img data-src="${escapeHtml(c.logo)}" alt="${escapeHtml(c.name)}" decoding="async" onerror="this.parentElement.classList.add('placeholder')"></div>`
             ).join('');
             clientsTrack.innerHTML = logos + logos;
+            // Lazy as a group: native lazy-loading would pop logos in one by one as the track moves
+            whenNear(clientsTrack, () => {
+                clientsTrack.querySelectorAll('img[data-src]').forEach(img => { img.src = img.dataset.src; });
+            });
         }
+        revealRenderedCards();
     } catch(e) { console.warn('loadSiteData failed', e); }
 }
 
@@ -176,10 +240,10 @@ async function loadProducts() {
             productsWrapper.innerHTML = sortedProducts.map(product => `
                 <div class="product-card">
                     <div class="product-image">
-                        <img src="${encodeURI(product.image)}" alt="${product.name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%236b7280%22 font-family=%22Arial%22 font-size=%2214%22%3E${product.name}%3C/text%3E%3C/svg%3E';">
+                        <img src="${escapeHtml(encodeURI(product.image))}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%236b7280%22 font-family=%22Arial%22 font-size=%2214%22%3E${encodeURIComponent(product.name).replace(/'/g, '%27')}%3C/text%3E%3C/svg%3E';">
                     </div>
-                    <div class="product-label">${product.name}</div>
-                    <p class="product-caption">${product.caption}</p>
+                    <div class="product-label">${escapeHtml(product.name)}</div>
+                    <p class="product-caption">${escapeHtml(product.caption)}</p>
                 </div>
             `).join('');
         }
@@ -189,12 +253,13 @@ async function loadProducts() {
             const sortedGallery = [...data.gallery].sort((a, b) => (a.order || 0) - (b.order || 0));
             galleryWrapper.innerHTML = sortedGallery.map((item, idx) => `
                 <div class="gallery-item animate" data-gallery-index="${idx}" style="cursor:pointer;">
-                    <img src="${encodeURI(item.image)}" alt="${item.alt}" class="gallery-image">
+                    <img src="${escapeHtml(encodeURI(item.image))}" alt="${escapeHtml(item.alt)}" class="gallery-image" loading="lazy" decoding="async">
                 </div>
             `).join('');
             // Wire up lightbox after render
             initGalleryLightbox(galleryWrapper, sortedGallery);
         }
+        revealRenderedCards();
     } catch (e) {
         console.error('Error loading products:', e);
     }
@@ -626,21 +691,6 @@ function initLightbox() {
     };
 }
 
-// Initialize products scroll on page load
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        loadSiteData();
-        loadProducts().then(() => {
-            initProductsScroll();
-            initGalleryScroll();
-            // Lightbox disabled - gallery images are not clickable
-            // initLightbox();
-        });
-    } catch (e) {
-        console.warn('Feature initialization failed:', e);
-    }
-});
-
 // Scroll animations
 document.addEventListener('DOMContentLoaded', () => {
     try {
@@ -663,8 +713,8 @@ document.addEventListener('DOMContentLoaded', () => {
         animateElements.forEach(el => {
             if (el) {
                 el.style.opacity = '0';
-                el.style.transform = 'translateY(30px)';
-                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
                 observer.observe(el);
             }
         });
@@ -859,329 +909,300 @@ function handleVideoTransitions() {
 function initHeroVideoSteps() {
     const videoSection = document.querySelector('.hero-video-section');
     const nextSection = document.querySelector('#products');
-    const heroScrubArrow = document.getElementById('heroScrubArrow');
+    const scrollHint = document.getElementById('heroScrollHint');
 
-    const heroVideos = [
-        document.getElementById('heroVideo1'),
-        document.getElementById('heroVideo2'),
-        document.getElementById('heroVideo3')
-    ];
+    const forward = [1, 2, 3].map(n => document.getElementById('heroVideo' + n));
+    const lastFrame = document.getElementById('heroVideo3R'); // opens on clip 3's final frame, for arriving by scrollbar
+    const layers = forward.concat(lastFrame);
 
-    if (!videoSection || !nextSection || heroVideos.some(v => !v)) return;
-
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    const clipDurations = [0, 0, 0];
-
-    // Basic setup for all clips
-    heroVideos.forEach((video, index) => {
-        video.muted = true;
-        video.playsInline = true;
-        video.preload = 'auto';
-        video.pause();
-        try {
-            video.currentTime = 0;
-        } catch (e) {}
-        video.style.opacity = index === 0 ? '1' : '0';
-
-        video.addEventListener('loadedmetadata', () => {
-            if (video.duration && isFinite(video.duration)) {
-                clipDurations[index] = video.duration;
-            }
-        });
-    });
-
-    function updateArrow(index, t) {
-        if (!heroScrubArrow) return;
-        const duration = clipDurations[index] || heroVideos[index].duration || 0;
-        if (!duration) return;
-        const track = heroScrubArrow.parentElement;
-        if (!track) return;
-
-        const totalClips = heroVideos.length;
-        const clipProgress = Math.max(0, Math.min(1, t / duration));
-        const overall = Math.max(
-            0,
-            Math.min(1, (index + clipProgress) / totalClips)
-        );
-        const trackH = track.clientHeight || 0;
-        const arrowH = heroScrubArrow.offsetHeight || 0;
-        const travel = Math.max(0, trackH - arrowH);
-        heroScrubArrow.style.transform = `translate(-50%, ${travel * overall}px)`;
-    }
-
-    // Mobile / tablet: try autoplay; if blocked show a tap-to-play overlay and then play full sequence
-    if (isTouchDevice) {
-        const firstVideo = heroVideos[0];
-        let mobileSequencePlaying = false;
-
-        // Create overlay UI
-        function createMobileOverlay() {
-            let overlay = document.querySelector('.mobile-play-overlay');
-            if (overlay) return overlay;
-            overlay = document.createElement('div');
-            overlay.className = 'mobile-play-overlay';
-            overlay.innerHTML = '<button class=\"mobile-play-btn\" aria-label=\"Play hero videos\">Play</button>';
-            overlay.addEventListener('click', (e) => {
-                e.preventDefault();
-                overlay.style.display = 'none';
-                startMobileSequence();
-            }, { passive: false });
-            videoSection.appendChild(overlay);
-            return overlay;
-        }
-
-        function removeMobileOverlay() {
-            const overlay = document.querySelector('.mobile-play-overlay');
-            if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        }
-
-        function startMobileSequence() {
-            if (mobileSequencePlaying) return;
-            mobileSequencePlaying = true;
-            locked = true;
-            // Play clips sequentially; do NOT add global touch/wheel preventDefault here
-            playClip(0, () => {
-                if (!mobileSequencePlaying) return stopMobileSequence();
-                playClip(1, () => {
-                    if (!mobileSequencePlaying) return stopMobileSequence();
-                    playClip(2, () => {
-                        mobileSequencePlaying = false;
-                        locked = false;
-                        stopMobileSequence();
-                        // after sequence, scroll to next section gently
-                        setTimeout(() => { goToNextSection(); }, 500);
-                    });
-                });
-            });
-        }
-
-        function stopMobileSequence() {
-            mobileSequencePlaying = false;
-            try { heroVideos.forEach(v => { v.pause(); }); } catch (e) {}
-            locked = false;
-            removeMobileOverlay();
-        }
-
-        // Try to autoplay muted first
-        try {
-            // Ensure muted and playsInline are set
-            heroVideos.forEach(v => { v.muted = true; v.playsInline = true; v.preload = 'auto'; });
-            const playPromise = firstVideo.play();
-            if (playPromise && playPromise.then) {
-                playPromise.then(() => {
-                    // autoplay succeeded; pause and start sequence so playClip can handle it
-                    firstVideo.pause();
-                    startMobileSequence();
-                }).catch(() => {
-                    // autoplay blocked — show overlay for user to tap
-                    createMobileOverlay();
-                });
-            } else {
-                // no promise, start sequence
-                firstVideo.pause();
-                startMobileSequence();
-            }
-        } catch (e) {
-            createMobileOverlay();
-        }
-
+    if (!videoSection || !nextSection || layers.some(v => !v)) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        // No scroll-driven playback: show the first clip's poster and drop the scroll prompt
+        forward[0].style.opacity = '1';
+        if (scrollHint) scrollHint.classList.add('is-done');
         return;
     }
 
-    // Desktop: step-based behavior for 3 separate videos
-    // Steps: 0=unlocked  1=clip0 playing  2=waiting(clip0 done)
-    //        3=waiting(clip1 done)  4=waiting(clip2 done)  5=past section
-    let currentStep = 0;
-    let locked = false;
+    const ENGAGE_RANGE = 180;    // px from aligned at which the section takes over scrolling
+    const NEW_GESTURE_GAP = 120; // ms of wheel silence that means a fresh scroll, not trackpad inertia
+    const STEP_COOLDOWN = 800;   // ms after a clip ends before continuous scrolling may start the next
+    const CONTINUE_TRAVEL = 300; // px of continuous scrolling after a clip that means more than an inertia tail
+    const QUEUE_HOLD = 120;      // ms the finished frame stays up before a scroll made during the clip runs
+    const INPUT_WINDOW = 800;    // ms after input in which a page movement counts as the visitor's scrolling
+    const READY_TIMEOUT = 2500;  // ms to wait for a clip that hasn't buffered before letting the page scroll
+
+    let pos = 0;           // clips finished: 0 = before clip 1, 3 = after clip 3
+    let engaged = false;   // section holds the scroll and each step plays a clip
     let isPlaying = false;
+    let disabled = false;
+    let gliding = false;   // the page is moving under glideTo()
+    let glideFrame = 0;
+    let queuedStep = false; // scroll made while a clip played, run when it ends
+    let lastInputAt = 0;
+    let stepEndedAt = 0;
+    let recentTravel = 0;  // px of input that may still be on its way, used to catch a fast scroll in time
+    let travelSinceStep = 0;
+    let lastTop = videoSection.getBoundingClientRect().top;
+    let shown = forward[0];
 
-    // Smooth cross-fade between clips via CSS transition
-    heroVideos.forEach(v => { v.style.transition = 'opacity 0.25s ease'; });
+    layers.forEach(video => {
+        video.muted = true;
+        video.playsInline = true;
+        video.pause();
+        video.style.transition = 'opacity 0.12s linear';
+        video.style.opacity = video === shown ? '1' : '0';
+    });
 
-    // ── Video failure fallback (Firefox / unsupported codec) ──
-    // If videos can't decode, hide the section so the page scrolls normally.
-    let videoErrorCount = 0;
-    function bypassVideoSection() {
-        videoSection.style.display = 'none';
-        currentStep = 5;
-        locked = false;
+    // Load the clips once the hero image is done so they don't compete with it
+    const preloadClips = () => layers.forEach(video => {
+        video.preload = 'auto';
+        video.load();
+    });
+    if (document.readyState === 'complete') preloadClips();
+    else window.addEventListener('load', preloadClips, { once: true });
+
+    // Clip boundaries match, so the new layer fades in over the old one's held frame (no dip to the background)
+    function show(video) {
+        if (video === shown) return;
+        const previous = shown;
+        shown = video;
+        layers.forEach(v => {
+            if (v !== video && v !== previous) { v.style.opacity = '0'; v.style.zIndex = '0'; }
+        });
+        previous.style.zIndex = '99';
+        video.style.zIndex = '100';
+        video.style.opacity = '1';
+        setTimeout(() => {
+            if (shown !== previous) { previous.style.opacity = '0'; previous.style.zIndex = '0'; }
+        }, 160);
     }
-    heroVideos.forEach(v => {
-        v.addEventListener('error', () => {
-            videoErrorCount++;
-            if (videoErrorCount >= 2) bypassVideoSection();
+
+    function setPos(next) {
+        pos = next;
+        if (scrollHint) scrollHint.classList.toggle('is-done', pos === 3);
+    }
+
+    function release() {
+        engaged = false;
+        queuedStep = false;
+    }
+
+    function bypassVideoSection() {
+        disabled = true;
+        release();
+        isPlaying = false;
+        setPos(3);
+        videoSection.style.display = 'none';
+    }
+
+    let failedClips = 0;
+    forward.forEach(video => {
+        onVideoFail(video, () => {
+            failedClips++;
+            if (failedClips >= 2) bypassVideoSection();
         });
     });
-    // Safety timeout: if no video has loaded at all after 6s, skip the section
-    setTimeout(() => {
-        if (currentStep === 0 && heroVideos.every(v => v.readyState < 1)) {
-            bypassVideoSection();
-        }
-    }, 6000);
 
-    function inVideoViewport() {
-        const r = videoSection.getBoundingClientRect();
-        return r.top < window.innerHeight && r.bottom > 0;
-    }
-
-    // True once section is close enough to the viewport top to trigger lock
-    function nearVideoTop() {
-        const r = videoSection.getBoundingClientRect();
-        return r.top <= 180 && r.bottom > 100;
-    }
-
-    function snapToSection() {
-        // Direct scrollTop assignment — instant, universally supported, no animation delay
-        var top = videoSection.offsetTop;
-        document.documentElement.scrollTop = top;
-        document.body.scrollTop = top; // Safari fallback
-    }
-
-    function fadeToVideo(index) {
-        heroVideos.forEach((v, i) => {
-            v.style.opacity = i === index ? '1' : '0';
-            v.style.zIndex  = i === index ? '100' : '0';
-        });
-    }
-
-    function showLastFrame(index, onDone) {
-        const video = heroVideos[index];
-        const go = () => {
-            const dur = clipDurations[index] || video.duration || 0;
-            if (!dur) { if (onDone) onDone(); return; }
-            video.pause();
-            fadeToVideo(index);
-            const apply = () => { video.pause(); updateArrow(index, dur); if (onDone) onDone(); };
-            const fallback = setTimeout(apply, 150);
-            video.addEventListener('seeked', function once() {
-                video.removeEventListener('seeked', once);
-                clearTimeout(fallback); apply();
-            }, { once: true });
-            try { video.currentTime = Math.max(0, dur - 0.05); } catch(e) { clearTimeout(fallback); apply(); }
+    // Frame by frame, so it also cuts off whatever the browser's own wheel animation still had queued
+    function glideTo(element, onDone) {
+        cancelAnimationFrame(glideFrame);
+        const from = window.scrollY;
+        const targetTop = () => element.getBoundingClientRect().top + window.scrollY;
+        const duration = Math.min(550, 220 + Math.abs(targetTop() - from) * 0.5);
+        const startedAt = performance.now();
+        gliding = true;
+        const frame = (now) => {
+            const t = Math.min(1, Math.max(0, (now - startedAt) / duration));
+            const eased = 1 - Math.pow(1 - t, 3);
+            window.scrollTo({ top: from + (targetTop() - from) * eased, behavior: 'instant' });
+            if (t < 1) { glideFrame = requestAnimationFrame(frame); return; }
+            gliding = false;
+            lastTop = videoSection.getBoundingClientRect().top;
+            onDone();
         };
-        if ((clipDurations[index] || video.duration) && video.readyState >= 2) go();
-        else {
-            video.addEventListener('canplay', go, { once: true });
-            video.load();
-        }
+        glideFrame = requestAnimationFrame(frame);
     }
 
-    function playClip(index, onDone) {
-        const video = heroVideos[index];
+    function playLayer(video, onDone) {
         isPlaying = true;
-        fadeToVideo(index);
 
         const start = () => {
-            if (video.duration && isFinite(video.duration)) clipDurations[index] = video.duration;
-            try { video.currentTime = 0; } catch(e) {}
-            video.play().catch(() => {});
-
-            const onTU = () => updateArrow(index, video.currentTime || 0);
+            let done = false;
             const finish = () => {
-                const d = clipDurations[index] || video.duration || 0;
-                if (d) try { video.currentTime = Math.max(0, d - 0.05); } catch(e) {}
+                if (done) return;
+                done = true;
+                clearTimeout(watchdog);
+                video.removeEventListener('ended', finish);
                 video.pause();
-                video.removeEventListener('timeupdate', onTU);
-                video.removeEventListener('ended', onEnded);
+                show(video);
                 isPlaying = false;
-                if (onDone) onDone();
+                stepEndedAt = performance.now();
+                travelSinceStep = 0;
+                onDone();
+                if (engaged) runQueued();
+                else syncIfOffScreen(); // the visitor left mid-clip
             };
-            const onEnded = finish;
-            video.addEventListener('timeupdate', onTU);
-            video.addEventListener('ended', onEnded);
+            const watchdog = setTimeout(finish, (video.duration || 2) * 1000 + 1500);
+            video.addEventListener('ended', finish);
+
+            try { video.currentTime = 0; } catch (e) {}
+            if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(() => show(video));
+            else video.addEventListener('playing', () => show(video), { once: true });
+            video.play().catch(finish);
         };
 
-        if (video.readyState >= 2) start();
-        else { video.addEventListener('canplay', start, { once: true }); video.load(); }
+        if (video.readyState >= 2) { start(); return; }
+
+        // Still buffering: never trap the visitor on a clip that isn't ready
+        const onReady = () => { clearTimeout(giveUp); start(); };
+        const giveUp = setTimeout(() => {
+            video.removeEventListener('canplay', onReady);
+            release();
+            isPlaying = false;
+            setPos(3);
+            syncToPosition();
+        }, READY_TIMEOUT);
+        video.addEventListener('canplay', onReady, { once: true });
+        if (video.networkState === HTMLMediaElement.NETWORK_EMPTY) video.load();
     }
 
-    function playClipReverse(index, onDone, reverseMs = 900) {
-        const video = heroVideos[index];
-        isPlaying = true;
-        fadeToVideo(index);
-
-        const go = () => {
-            const dur = clipDurations[index] || video.duration || 0;
-            try { video.pause(); video.currentTime = Math.max(0, dur - 0.02); } catch(e) {}
-            let last = performance.now();
-            const step = (now) => {
-                const dec = (dur / Math.max(1, reverseMs)) * (now - last);
-                last = now;
-                const t = Math.max(0, (video.currentTime || 0) - dec);
-                try { video.currentTime = t; } catch(e) {}
-                if (t <= 0.02) {
-                    try { video.currentTime = 0; } catch(e) {}
-                    video.pause(); isPlaying = false; if (onDone) onDone(); return;
-                }
-                requestAnimationFrame(step);
-            };
-            requestAnimationFrame(step);
-        };
-
-        if (video.readyState >= 2) go();
-        else { video.addEventListener('canplay', go, { once: true }); video.load(); }
+    // Show the right still when the visitor got here without playing the clips (scrollbar, anchor link)
+    function syncToPosition() {
+        const target = pos === 3 ? lastFrame : forward[0];
+        if (pos === 3 && shown === forward[2]) return;
+        if (pos === 0 && shown === forward[0] && forward[0].currentTime < 0.05) return;
+        try { target.currentTime = 0; } catch (e) {}
+        show(target);
     }
 
-    function goToNextSection() {
-        locked = false;
-        window.scrollTo({ top: nextSection.offsetTop, behavior: 'smooth' });
+    function syncIfOffScreen() {
+        const rect = videoSection.getBoundingClientRect();
+        if (rect.bottom <= 0 && pos !== 3) { setPos(3); syncToPosition(); }
+        else if (rect.top >= window.innerHeight && pos !== 0) { setPos(0); syncToPosition(); }
+    }
+
+    function runQueued() {
+        if (!queuedStep) return;
+        queuedStep = false;
+        setTimeout(() => {
+            if (engaged && !isPlaying && !gliding) advance();
+        }, QUEUE_HOLD);
+    }
+
+    // Plays the next clip, or moves on to the next section after the last one
+    function advance() {
+        if (pos < 3) {
+            const clip = pos;
+            playLayer(forward[clip], () => setPos(clip + 1));
+            return;
+        }
+        release();
+        glideTo(nextSection, () => {});
+    }
+
+    // Runs one scroll step. Returns true when the section consumed the input.
+    function step(dir, isFreshInput) {
+        if (disabled || window.__navLinkScrollActive) return false;
+
+        // Scrolling up is always the page's own: no stop, no clips
+        if (dir < 0) {
+            if (gliding) { cancelAnimationFrame(glideFrame); gliding = false; }
+            release();
+            return false;
+        }
+
+        if (gliding) return true;
+
+        if (!engaged) {
+            const rect = videoSection.getBoundingClientRect();
+            if (pos >= 3 || rect.top > ENGAGE_RANGE + recentTravel || rect.bottom <= 100) return false;
+            engaged = true;
+            glideTo(videoSection, () => {
+                stepEndedAt = performance.now();
+                travelSinceStep = 0;
+                if (!isPlaying) advance();
+            });
+            return true;
+        }
+
+        if (isPlaying) {
+            if (isFreshInput) queuedStep = true;
+            return true;
+        }
+        if (!isFreshInput && (performance.now() - stepEndedAt < STEP_COOLDOWN || travelSinceStep < CONTINUE_TRAVEL)) return true;
+
+        advance();
+        return true;
     }
 
     window.addEventListener('wheel', (e) => {
-        if (!inVideoViewport()) return;
-
-        if (e.deltaY > 0) { // ── scroll DOWN ──
-            // First scroll down: snap instantly + start clip 0 immediately (no intermediate "lock" step)
-            if (currentStep === 0) {
-                if (!nearVideoTop()) return;          // section not yet near top — let normal scroll through
-                locked = true;
-                snapToSection();
-                currentStep = 1;
-                playClip(0, () => { currentStep = 2; });
-                e.preventDefault(); return;
-            }
-            if (currentStep === 2 && !isPlaying) {
-                playClip(1, () => { currentStep = 3; });
-                e.preventDefault(); return;
-            }
-            if (currentStep === 3 && !isPlaying) {
-                playClip(2, () => { currentStep = 4; });
-                e.preventDefault(); return;
-            }
-            if (currentStep === 4 && !isPlaying) {
-                goToNextSection(); currentStep = 5;
-                e.preventDefault(); return;
-            }
-        } else if (e.deltaY < 0) { // ── scroll UP ──
-            if (currentStep === 4 && !isPlaying) {
-                playClipReverse(2, () => { currentStep = 3; });
-                e.preventDefault(); return;
-            }
-            if (currentStep === 3 && !isPlaying) {
-                playClipReverse(1, () => { currentStep = 2; });
-                e.preventDefault(); return;
-            }
-            if (currentStep === 2 && !isPlaying) {
-                playClipReverse(0, () => { currentStep = 1; });
-                e.preventDefault(); return;
-            }
-            // At step 1 (clip 0 playing or just locked) — release lock so user can scroll up freely
-            if (currentStep === 1 && !isPlaying) {
-                locked = false; currentStep = 0;
-                return; // don't preventDefault — let the page scroll up naturally
-            }
-            // Scrolled past section and coming back up → snap back, show last frame
-            if (currentStep >= 5 && !isPlaying) {
-                locked = true; currentStep = 4;
-                snapToSection();
-                showLastFrame(2, () => { currentStep = 4; });
-                e.preventDefault(); return;
-            }
-        }
-
-        // While locked and playing, block scroll so page doesn't drift
-        if (locked) e.preventDefault();
+        if (e.ctrlKey || !e.deltaY) return;
+        const now = performance.now();
+        const isFreshInput = now - lastInputAt > NEW_GESTURE_GAP;
+        const scale = e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? window.innerHeight : 1;
+        const travel = Math.abs(e.deltaY) * scale;
+        recentTravel = (isFreshInput ? 0 : recentTravel * 0.6) + travel;
+        travelSinceStep += travel;
+        lastInputAt = now;
+        if (step(e.deltaY > 0 ? 1 : -1, isFreshInput)) e.preventDefault();
     }, { passive: false });
+
+    window.addEventListener('keydown', (e) => {
+        const typing = e.target.closest && e.target.closest('input, textarea, select, button, a, [contenteditable]');
+        if (typing || e.altKey || e.ctrlKey || e.metaKey) return;
+        let dir = 0;
+        if (e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !e.shiftKey)) dir = 1;
+        if (e.key === 'ArrowUp' || e.key === 'PageUp' || (e.key === ' ' && e.shiftKey)) dir = -1;
+        if (!dir) return;
+        lastInputAt = performance.now();
+        recentTravel = e.key.startsWith('Arrow') ? 60 : window.innerHeight;
+        if (e.repeat ? (dir > 0 && (engaged || gliding)) : step(dir, true)) e.preventDefault();
+    });
+
+    // Touch laptops and tablets in desktop mode: a swipe is one step
+    let touchY = null;
+    window.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+        lastInputAt = performance.now();
+        recentTravel = 0;
+        if (touchY === null) return;
+        const dy = touchY - e.touches[0].clientY;
+        if (Math.abs(dy) > 24) {
+            touchY = null;
+            if (step(dy > 0 ? 1 : -1, true) && e.cancelable) e.preventDefault();
+        } else if ((engaged || gliding) && e.cancelable) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    // Scrollbar drags and anchor links move the page without going through step()
+    let scrollQueued = false;
+    window.addEventListener('scroll', () => {
+        if (scrollQueued) return;
+        scrollQueued = true;
+        requestAnimationFrame(() => {
+            scrollQueued = false;
+            if (disabled || gliding) return;
+            const rect = videoSection.getBoundingClientRect();
+            const height = window.innerHeight;
+            const previousTop = lastTop;
+            lastTop = rect.top;
+            if (window.__navLinkScrollActive) release();
+            if (engaged) {
+                if (Math.abs(rect.top) > height * 0.6) release();
+                else if (Math.abs(rect.top) > 1) { // hold the section still against leftover scrolling
+                    window.scrollTo({ top: rect.top + window.scrollY, behavior: 'instant' });
+                    lastTop = 0;
+                    return;
+                }
+            }
+            if (engaged) return;
+            // A scroll fast enough to slip past the wheel check still stops here
+            const crossed = previousTop > 0 && rect.top <= 0;
+            if (crossed && performance.now() - lastInputAt < INPUT_WINDOW && step(1, true)) return;
+            syncIfOffScreen();
+        });
+    }, { passive: true });
 }
 
 // Lazy load videos when they come into view
@@ -1237,11 +1258,13 @@ function initVideoModes() {
         });
     }
     
-    // Preload videos on initialization
-    preloadVideos();
+    // Fetch them only as the section approaches, so they don't slow the first paint
+    if (videoModesSection) whenNear(videoModesSection, preloadVideos);
+    else preloadVideos();
     
     // Function to start morning mode
     function startMorningMode() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         if (modeVideos.morning && !morningModeStarted) {
             modeVideos.morning.classList.add('active', 'playing', 'fade-in');
             modeVideos.morning.classList.remove('fade-out');
@@ -1259,29 +1282,32 @@ function initVideoModes() {
         }
     }
     
-    // Use Intersection Observer to detect when section is scrolled into view
+    // Show the morning poster straight away instead of an empty band
+    if (modeVideos.morning) modeVideos.morning.classList.add('active');
+
+    // Play the chosen mode only while the section is on screen
     if (videoModesSection && modeVideos.morning) {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting && !morningModeStarted && !isPlayingOtherMode) {
-                    // Section is visible, start morning mode
+                const video = modeVideos[currentMode];
+                if (!video) return;
+                if (!entry.isIntersecting) {
+                    video.pause();
+                } else if (currentMode === 'morning' && !morningModeStarted) {
                     startMorningMode();
-                } else if (!entry.isIntersecting && morningModeStarted && !isPlayingOtherMode) {
-                    // Section is not visible, pause morning mode
-                    if (modeVideos.morning) {
-                        modeVideos.morning.pause();
-                        modeVideos.morning.classList.remove('active', 'playing');
-                    }
-                    morningModeStarted = false;
+                } else if (video.paused && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                    && !(video.duration && video.currentTime >= video.duration - 0.05)) {
+                    // Resume, unless it already finished and is holding its last frame
+                    video.play().catch(() => {});
                 }
             });
         }, {
             threshold: 0.3 // Start when 30% of section is visible
         });
-        
+
         observer.observe(videoModesSection);
     }
-    
+
     // Function to return to morning mode
     function returnToMorning() {
         const currentVideo = modeVideos[currentMode];
@@ -1500,7 +1526,7 @@ function initVideoModes() {
     }
     
     // Hide "Tap to switch mode" hint when any button is pressed
-    const modeHint = document.getElementById('modeControlsHint');
+    const modeHint = document.getElementById('modeControlsHint') || document.getElementById('modeHint');
     function hideModeHint() {
         if (modeHint) {
             modeHint.classList.add('mode-controls-hint-hidden');
@@ -1561,7 +1587,7 @@ function initScrollAnimations() {
                     cards.forEach((card, index) => {
                         setTimeout(() => {
                             card.classList.add('animate');
-                        }, index * 100);
+                        }, Math.min(index, 6) * 70);
                     });
                 }
             }
@@ -1593,7 +1619,7 @@ function initScrollAnimations() {
 
 // Video error handling
 document.querySelectorAll('video').forEach(video => {
-    video.addEventListener('error', () => {
+    onVideoFail(video, () => {
         video.style.display = 'none';
         // If a mode video fails, hide its parent section so layout doesn't break
         const modeSection = video.closest('.video-modes-section');
@@ -1604,10 +1630,21 @@ document.querySelectorAll('video').forEach(video => {
     });
     // Hero video is scroll-to-scrub; don't loop it
     // Mobile hero videos are scrub-controlled; don't loop them either
-    if (video.id === 'heroVideo' || video.id === 'heroVideo1' || video.id === 'heroVideo2' || video.id === 'heroVideo3' || video.classList.contains('mobile-hero-video')) return;
+    if (video.id === 'heroVideo' || video.classList.contains('hero-video-layer') || video.classList.contains('mobile-hero-video') || video.classList.contains('mode-video')) return;
     video.addEventListener('ended', () => {
         video.currentTime = 0;
         video.play().catch(() => {});
     });
 });
 
+// About video: fetch and play only while on screen
+document.addEventListener('DOMContentLoaded', () => {
+    const aboutVideo = document.querySelector('.about-image-img, .about-video');
+    if (!aboutVideo || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) aboutVideo.play().catch(() => {});
+            else aboutVideo.pause();
+        });
+    }, { rootMargin: '200px' }).observe(aboutVideo);
+});

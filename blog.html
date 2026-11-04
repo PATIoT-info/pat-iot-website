@@ -15,6 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="polish.css">
 </head>
 <body class="page-blog">
     <!-- Navigation -->
@@ -127,6 +128,10 @@
             var loading = document.getElementById('blogLoading');
             if (!grid) return;
 
+            function escapeAttr(value) {
+                return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+
             function formatDate(iso) {
                 try {
                     return new Date(iso + 'T12:00:00').toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -146,11 +151,11 @@
                     card.innerHTML =
                         '<a href="' + url + '" class="blog-card-link">' +
                         '  <div class="blog-card-image">' +
-                        '    <img src="' + (post.image || 'images/hero-image.jpg') + '" alt="' + (post.title || '').replace(/"/g, '&quot;') + '" loading="lazy" onerror="this.src=\'images/hero-image.jpg\'">' +
-                        '    <span class="blog-card-category">' + (post.category || 'Blog') + '</span>' +
+                        '    <img src="' + escapeAttr(post.image || 'images/hero-image.jpg') + '" alt="' + (post.title || '').replace(/"/g, '&quot;') + '" loading="lazy" onerror="this.src=\'images/hero-image.jpg\'">' +
+                        '    <span class="blog-card-category">' + escapeAttr(post.category || 'Blog') + '</span>' +
                         '  </div>' +
                         '  <div class="blog-card-content">' +
-                        '    <time class="blog-card-date" datetime="' + (post.date || '') + '">' + formatDate(post.date || '') + '</time>' +
+                        '    <time class="blog-card-date" datetime="' + escapeAttr(post.date) + '">' + formatDate(post.date || '') + '</time>' +
                         '    <h2 class="blog-card-title">' + (post.title || 'Untitled').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</h2>' +
                         '    <p class="blog-card-excerpt">' + (post.excerpt || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>' +
                         '  </div>' +
