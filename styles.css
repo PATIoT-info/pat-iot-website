@@ -2684,18 +2684,30 @@ body {
 
 .blog-card-image {
     position: relative;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 4 / 3;
     overflow: hidden;
+    background: var(--bg-light);
 }
 
+/* The whole cover always shows, whatever its shape; a blurred copy fills the space around it */
 .blog-card-image img {
+    position: relative;
+    display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     transition: transform 0.4s ease;
 }
 
-.blog-card:hover .blog-card-image img {
+.blog-card-image img.blog-card-backdrop {
+    position: absolute;
+    inset: 0;
+    object-fit: cover;
+    filter: blur(20px) brightness(0.9);
+    transform: scale(1.2);
+}
+
+.blog-card:hover .blog-card-image img:not(.blog-card-backdrop) {
     transform: scale(1.05);
 }
 
@@ -2859,17 +2871,20 @@ body {
 }
 
 .blog-post-image-wrap {
-    margin-bottom: 2rem;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto 2rem;
     border-radius: 1rem;
     overflow: hidden;
     box-shadow: var(--shadow-lg);
 }
 
 .blog-post-image-wrap img {
-    width: 100%;
+    display: block;
+    width: auto;
     height: auto;
-    max-height: 400px;
-    object-fit: cover;
+    max-width: 100%;
+    max-height: 640px;
 }
 
 .blog-post-body {

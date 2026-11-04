@@ -151,6 +151,7 @@
                     card.innerHTML =
                         '<a href="' + url + '" class="blog-card-link">' +
                         '  <div class="blog-card-image">' +
+                        '    <img class="blog-card-backdrop" src="' + escapeAttr(post.image || 'images/hero-image.jpg') + '" alt="" loading="lazy" onerror="this.src=\'images/hero-image.jpg\'">' +
                         '    <img src="' + escapeAttr(post.image || 'images/hero-image.jpg') + '" alt="' + (post.title || '').replace(/"/g, '&quot;') + '" loading="lazy" onerror="this.src=\'images/hero-image.jpg\'">' +
                         '    <span class="blog-card-category">' + escapeAttr(post.category || 'Blog') + '</span>' +
                         '  </div>' +
