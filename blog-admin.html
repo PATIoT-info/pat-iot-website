@@ -402,6 +402,16 @@
         .pdf-drop:hover { border-color: var(--primary); background: #eff6ff; }
         .pdf-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
         .pdf-drop i { font-size: 2rem; color: var(--text-light); margin-bottom: 0.5rem; }
+    
+        /* Social buttons on blog post rows */
+        .post-row-social { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: 0.5rem; }
+        .btn-social { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.6rem; border: 1.5px solid var(--border); border-radius: 0.5rem; background: var(--white); color: var(--text); font-family: inherit; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn-social:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .btn-social:disabled { cursor: default; color: var(--text-light); }
+        .btn-social.posted { background: #dcfce7; border-color: #dcfce7; color: var(--success); }
+        .btn-social.edited { background: #fef3c7; border-color: #fde68a; color: #b45309; }
+        .btn-social.failed { border-color: var(--danger); color: var(--danger); }
+        .social-why { font-size: 0.72rem; color: var(--danger); }
     </style>
 </head>
 <body>
@@ -419,7 +429,7 @@
             <input type="password" id="patInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
             <p class="hint">
                 Create a token at <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings</a>
-                with <strong>repo</strong> scope (Contents: Read & Write).
+                with <strong>repo</strong> scope (Contents and Actions: Read & Write).
             </p>
         </div>
         <button class="btn-primary" id="loginBtn" onclick="login()">
@@ -551,6 +561,7 @@
                                 <p>Click to upload cover image</p>
                             </div>
                             <img id="coverPreview" class="cover-preview" alt="Cover preview">
+                            <p class="hint" id="coverRatioHint" style="display:none; color:#b45309;">This image is too tall or too wide for Instagram, which will not post it automatically. Use a shape between 3:4 (portrait) and 1.91:1 (landscape).</p>
                         </div>
                     </div>
 
@@ -795,6 +806,7 @@
         blogsData = JSON.parse(decodeContent(file.content));
         blogsData._sha = file.sha;
         renderPostsList();
+        loadSocial();
     }
 
     function renderPostsList() {
@@ -810,6 +822,7 @@
                 <div class="post-row-info">
                     <div class="post-row-title">${escapeHtml(p.title)}</div>
                     <div class="post-row-meta">${p.category} &middot; ${p.date} &middot; ${p.readTime}</div>
+                    <div class="post-row-social" id="social-${p.id}">${socialButtons(p)}</div>
                 </div>
                 <div class="post-row-actions">
                     <button class="btn-icon" onclick="editPost('${p.id}')" title="Edit"><i class="fas fa-pen"></i></button>
@@ -819,10 +832,133 @@
         `).join('');
     }
 
+    // ── Social Sharing ───────────────────────────────────────────────────────
+    // Blog posts only. Buttons start .github/workflows/share-blog.yml, which posts through Buffer
+    // and records the result in data/social-posts.json.
+    const SOCIAL_PLATFORMS = [
+        { key: 'linkedin', label: 'LinkedIn', icon: 'fab fa-linkedin' },
+        { key: 'facebook', label: 'Facebook', icon: 'fab fa-facebook' },
+        { key: 'instagram', label: 'Instagram', icon: 'fab fa-instagram' }
+    ];
+    const SOCIAL_WAIT_FOR_RUN_MS = 2 * 60 * 1000;
+    let socialPosts = {};
+    let socialRuns = [];
+    let socialTimer = null;
+    const socialPressed = {}; // run title -> when its button was pressed, until the run shows up
+
+    function socialRunTitle(post, key) {
+        return `Share ${post.slug} to ${key}`;
+    }
+
+    // Same wording as caption() in .github/scripts/share-blog.js
+    function socialCaption(post, key) {
+        const link = key === 'instagram'
+            ? 'Read the full post on our blog at patiot.in'
+            : `Read more: https://patiot.in/blog-post.html?slug=${encodeURIComponent(post.slug)}`;
+        return [post.title, post.excerpt, link].filter(Boolean).join('\n\n');
+    }
+
+    function socialStatus(post, key) {
+        const record = socialPosts[post.id]?.[key];
+        if (record) return record.title !== post.title || record.excerpt !== post.excerpt ? 'edited' : 'posted';
+        const title = socialRunTitle(post, key);
+        const run = socialRuns.find(r => r.display_title === title);
+        const pressed = socialPressed[title];
+        // Allows a minute of clock difference between this computer and GitHub
+        const runIsNew = run && new Date(run.created_at).getTime() >= pressed - 60000;
+        if (pressed && !runIsNew && Date.now() - pressed < SOCIAL_WAIT_FOR_RUN_MS) return 'posting';
+        if (!run) return 'ready';
+        if (run.status !== 'completed') return 'posting';
+        return run.conclusion === 'success' ? 'ready' : 'failed';
+    }
+
+    function socialButtons(post) {
+        return SOCIAL_PLATFORMS.map(({ key, label, icon }) => {
+            const status = socialStatus(post, key);
+            const url = socialPosts[post.id]?.[key]?.url;
+            const run = socialRuns.find(r => r.display_title === socialRunTitle(post, key));
+            if (status === 'posted') {
+                const attrs = url ? `href="${escapeHtml(url)}" target="_blank" rel="noopener" title="Open the post"` : 'title="Posted, check it in Buffer"';
+                return `<a class="btn-social posted" ${attrs}><i class="${icon}"></i> Posted on ${label}</a>`;
+            }
+            if (status === 'edited') {
+                return `<button class="btn-social edited" onclick="updateSocial('${post.id}', '${key}')" title="Blog changed after posting. Copies the new text and opens the post."><i class="${icon}"></i> Update ${label}</button>`;
+            }
+            if (status === 'posting') {
+                return `<button class="btn-social" disabled><i class="fas fa-spinner fa-spin"></i> Posting to ${label}</button>`;
+            }
+            const button = `<button class="btn-social${status === 'failed' ? ' failed' : ''}" onclick="postToSocial('${post.id}', '${key}')"><i class="${icon}"></i> ${status === 'failed' ? 'Retry' : 'Post to'} ${label}</button>`;
+            return status === 'failed' ? `${button}<a class="social-why" href="${escapeHtml(run.html_url)}" target="_blank" rel="noopener">why?</a>` : button;
+        }).join('');
+    }
+
+    function renderSocial() {
+        blogsData.posts.forEach(post => {
+            const row = document.getElementById(`social-${post.id}`);
+            if (row) row.innerHTML = socialButtons(post);
+        });
+        clearTimeout(socialTimer);
+        const busy = blogsData.posts.some(post => SOCIAL_PLATFORMS.some(({ key }) => socialStatus(post, key) === 'posting'));
+        if (busy) socialTimer = setTimeout(loadSocial, 15000);
+    }
+
+    async function loadSocial() {
+        try {
+            const file = await getFile('data/social-posts.json');
+            socialPosts = file ? JSON.parse(decodeContent(file.content)) : {};
+            const res = await ghFetch(`https://api.github.com/repos/${REPO}/actions/workflows/share-blog.yml/runs?event=workflow_dispatch&per_page=30`);
+            socialRuns = res.ok ? (await res.json()).workflow_runs : [];
+        } catch (e) {
+            console.error(e);
+        }
+        renderSocial();
+    }
+
+    async function postToSocial(id, key) {
+        const post = blogsData.posts.find(p => p.id === id);
+        const platform = SOCIAL_PLATFORMS.find(p => p.key === key);
+        if (!post || !confirm(`Post "${post.title}" to ${platform.label} now? It goes out publicly straight away.`)) return;
+        const res = await ghFetch(`https://api.github.com/repos/${REPO}/actions/workflows/share-blog.yml/dispatches`, {
+            method: 'POST',
+            body: JSON.stringify({ ref: BRANCH, inputs: { slug: post.slug, platform: key, dry_run: 'false' } })
+        });
+        if (!res.ok) {
+            showToast(res.status === 403 ? 'Your GitHub token cannot start Actions. It needs Actions: Read & Write.' : `Could not start posting (error ${res.status})`, 'error');
+            return;
+        }
+        socialPressed[socialRunTitle(post, key)] = Date.now();
+        showToast(`Posting to ${platform.label}. This takes a few minutes.`, 'success');
+        renderSocial();
+    }
+
+    // Published posts cannot be changed through Buffer, so an edit is pasted in on the platform by hand
+    async function updateSocial(id, key) {
+        const post = blogsData.posts.find(p => p.id === id);
+        const platform = SOCIAL_PLATFORMS.find(p => p.key === key);
+        const url = socialPosts[id]?.[key]?.url;
+        if (!post) return;
+        try {
+            // Copy first: the new tab takes focus, and the clipboard refuses an unfocused page
+            await navigator.clipboard.writeText(socialCaption(post, key));
+            if (url) window.open(url, '_blank', 'noopener');
+            const file = await getFile('data/social-posts.json');
+            const state = JSON.parse(decodeContent(file.content));
+            state[id][key] = { ...state[id][key], title: post.title, excerpt: post.excerpt };
+            const res = await putFile('data/social-posts.json', JSON.stringify(state, null, 2) + '\n', file.sha, `Update social post text: ${post.title}`);
+            if (!res.ok) throw new Error('Could not save');
+            socialPosts = state;
+            showToast(`New text copied. Paste it into the ${platform.label} post and save it there.`, 'success');
+            renderSocial();
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
     // ── Views ────────────────────────────────────────────────────────────────
     function showNewEditor() {
         editingId = null;
         coverImageData = null;
+        document.getElementById('coverRatioHint').style.display = 'none';
         inlineImages = [];
         document.getElementById('fTitle').value = '';
         document.getElementById('fExcerpt').value = '';
@@ -844,6 +980,7 @@
         if (!post) return;
         editingId = id;
         coverImageData = null;
+        document.getElementById('coverRatioHint').style.display = 'none';
         inlineImages = [];
         document.getElementById('fTitle').value = post.title;
         document.getElementById('fExcerpt').value = post.excerpt;
@@ -889,6 +1026,12 @@
             const prev = document.getElementById('coverPreview');
             prev.src = data;
             prev.style.display = 'block';
+            const probe = new Image();
+            probe.onload = () => {
+                const ratio = probe.naturalWidth / probe.naturalHeight;
+                document.getElementById('coverRatioHint').style.display = ratio < 0.75 || ratio > 1.91 ? 'block' : 'none';
+            };
+            probe.src = data;
         };
         reader.readAsDataURL(file);
     }
