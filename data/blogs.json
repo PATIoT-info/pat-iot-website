@@ -1,6 +1,18 @@
 {
   "posts": [
     {
+      "id": "1794464141545",
+      "slug": "the-new-pat-iot-app-is-now-live",
+      "title": "The New PAT IoT App Is Now Live!",
+      "excerpt": "The new version of the PAT IoT App is here. Control, automate and personalise your home from anywhere, with scenes, room management and home screen widgets.",
+      "content": "<div><span style=\"font-size: 15.2px;\">The wait is over! The new version of the PAT IoT App is now live, redesigned to make controlling your smart home simpler and faster.</span></div><div><span style=\"font-size: 15.2px;\"><br></span></div><div><span style=\"font-size: 15.2px;\">What's new</span></div><div><span style=\"font-size: 15.2px;\"><br></span></div><div><span style=\"font-size: 15.2px;\">App Control: switch your lights, fans and devices from your phone, at home or away.</span></div><div><span style=\"font-size: 15.2px;\">Scene Automation: set up Good Morning, Good Evening, Good Night and more, and switch several devices with one tap.</span></div><div><span style=\"font-size: 15.2px;\">Room Management: see each room's devices and switch a whole room on or off at once.</span></div><div><span style=\"font-size: 15.2px;\">Home Screen Widgets: control your favourite devices without opening the app.</span></div><div><span style=\"font-size: 15.2px;\"><br></span></div><div><span style=\"font-size: 15.2px;\">Download now</span></div><div><span style=\"font-size: 15.2px;\"><br></span></div><div><span style=\"font-size: 15.2px;\">Get it on Google Play and the App Store. Already using the app? Just update it.</span></div><div><span style=\"font-size: 15.2px;\"><br></span></div><div><span style=\"font-size: 15.2px;\">Google Play: https://play.google.com/store/apps/details?id=com.patiot.pat_home</span></div><div><span style=\"font-size: 0.95rem;\"><br></span></div><div><span style=\"font-size: 15.2px;\">App Store:&nbsp;</span>iPhone: https://apps.apple.com/app/id6479612068</div><div><br></div>",
+      "date": "2026-11-12",
+      "category": "News",
+      "image": "images/blog/pat-iot-app-now-live.png",
+      "author": "PAT IOT Team",
+      "readTime": "2 min read"
+    },
+    {
       "id": "1793789277995",
       "slug": "something-new-is-coming-to-the-pat-iot-app",
       "title": "Something New Is Coming to the PAT IoT App!",
