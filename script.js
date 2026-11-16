@@ -745,20 +745,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Contact form handling – opens email to marketing@patiot.in with form data
 const CONTACT_EMAIL = 'marketing@patiot.in';
+const WHATSAPP_NUMBER = '919030983040';
 
 const contactForm = document.getElementById('contactForm');
 if (contactForm) {
     contactForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const name = (document.getElementById('name') || {}).value || '';
-        const email = (document.getElementById('email') || {}).value || '';
-        const phone = (document.getElementById('phone') || {}).value || '';
-        const message = (document.getElementById('message') || {}).value || '';
-        const subject = 'Get in touch – ' + (name || 'Website enquiry');
-        const body = 'Name: ' + name + '\nEmail: ' + email + '\nPhone: ' + phone + '\n\nMessage:\n' + message;
-        const mailto = 'mailto:' + CONTACT_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-        window.location.href = mailto;
-        alert('Your email client will open to send this message to ' + CONTACT_EMAIL + '. If it doesn\'t open, email us at ' + CONTACT_EMAIL);
+        const val = id => ((document.getElementById(id) || {}).value || '').trim();
+        // The enquiry goes to the marketing WhatsApp, with the visitor's answers already typed in
+        const fields = [['Name', 'name'], ['Phone', 'phone'], ['Email', 'email'], ['Property', 'propertyType'],
+                        ['Size', 'propertySize'], ['Stage', 'buildStage'], ['Area', 'area']];
+        const lines = ['Hi PAT IoT, I would like a smart home demo.', ''];
+        fields.forEach(([label, id]) => { if (val(id)) lines.push(label + ': ' + val(id)); });
+        if (val('message')) lines.push('', val('message'));
+        const url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(lines.join('\n'));
+        const win = window.open(url, '_blank');
+        if (win) win.opener = null; else window.location.href = url;
         contactForm.reset();
     });
 }

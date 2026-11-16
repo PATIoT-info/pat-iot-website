@@ -158,7 +158,7 @@
 
 /* Cards and inputs sit on smooth gradients: a blur there changes nothing you can see and costs scroll speed */
 .service-card, .product-card, .warranty-card, .warranty-terms, .contact-box,
-.contact-form input, .contact-form textarea {
+.contact-form input, .contact-form select, .contact-form textarea {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
@@ -517,3 +517,246 @@
         font-size: 16px;
     }
 }
+
+/* ── App store badges and "Works with" strip (PAT IoT App section) ── */
+.app-stores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+.store-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius-control);
+    background: #0f172a;
+    color: #fff !important;
+    text-decoration: none;
+    line-height: 1.1;
+    transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+.store-badge i { font-size: 1.5rem; }
+.store-badge span { display: flex; flex-direction: column; font-size: 1rem; font-weight: 600; }
+.store-badge small { font-size: 0.62rem; font-weight: 400; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.8; }
+.store-badge:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25); }
+.store-badge:focus-visible, .qc-btn:focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+
+.works-with {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.1rem;
+}
+.works-with-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-right: 0.25rem;
+}
+.works-with-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    background: #fff;
+    color: #1f2937;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* ── Floating WhatsApp and call buttons ── */
+.quick-contact {
+    position: fixed;
+    right: calc(18px + env(safe-area-inset-right, 0px));
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    z-index: 9000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+.qc-btn {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: #fff !important;
+    font-size: 1.55rem;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25);
+    transition: transform 0.2s var(--ease-out);
+}
+.qc-btn:hover { transform: scale(1.08); }
+.qc-whatsapp { background: #25d366; }
+.qc-call { background: #2563eb; font-size: 1.2rem; }
+/* Call button only where tapping a number places a call */
+@media (min-width: 900px) and (hover: hover) { .qc-call { display: none; } }
+
+.nav-link.nav-call { white-space: nowrap; font-weight: 600; }
+.nav-link.nav-call i { margin-right: 0.3rem; font-size: 0.85em; }
+
+/* Contact form dropdowns */
+.contact-form select {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    padding-right: 2.5rem !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='2'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 1rem center !important;
+    color: #1f2937;
+}
+.contact-form select:invalid,
+.contact-form select:has(option[value=""]:checked) { color: #6b7280; }
+.contact-form select option { color: #1f2937; }
+@media (max-width: 899px) { .qc-btn { width: 48px; height: 48px; font-size: 1.35rem; } .qc-call { font-size: 1.05rem; } }
+.contact-form button .fa-whatsapp { margin-right: 0.4rem; }
+.info-text-compact p a .fa-whatsapp { color: #25d366; }
+
+/* ── Desktop: Warranty and Get In Touch each fit one screen ── */
+.contact-form select {
+    background-color: rgba(255, 255, 255, 0.62) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.82) !important;
+    border-radius: 0.625rem !important;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.04), 0 2px 8px rgba(37,99,235,0.04) !important;
+}
+.contact-form select:focus {
+    background-color: rgba(255, 255, 255, 0.88) !important;
+    border-color: rgba(37, 99, 235, 0.45) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    outline: none !important;
+}
+
+@media (min-width: 993px) {
+    .warranty-section, #contact.contact {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        padding-block: 5.5rem 1.5rem !important;
+        box-sizing: border-box;
+    }
+    .warranty-section > .container, #contact > .container { width: 100%; }
+    .warranty-section .section-header, #contact .section-header { margin-bottom: 1.5rem; }
+    .warranty-section .section-title, #contact .section-title { font-size: 2.1rem; margin-bottom: 0.4rem; }
+    .warranty-section .section-subtitle, #contact .section-subtitle { font-size: 1rem; line-height: 1.5; }
+
+    /* Warranty: the two product cards side by side, terms beside them */
+    .warranty-content { grid-template-columns: 1.15fr 1fr; gap: 1.75rem; margin-top: 0; align-items: stretch; }
+    .warranty-info { grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: stretch; }
+    .warranty-card { padding: 1.5rem; display: flex; flex-direction: column; }
+    .warranty-icon { width: 48px; height: 48px; font-size: 1.2rem; margin-bottom: 1rem; }
+    .warranty-card h3 { font-size: 1.15rem; margin-bottom: 0.5rem; }
+    .warranty-period {
+        align-self: flex-start;
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+        padding: 0.25rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.09);
+    }
+    .warranty-card p:not(.warranty-period) { font-size: 0.92rem; line-height: 1.65; }
+    .warranty-terms { padding: 1.5rem 1.75rem; display: flex; flex-direction: column; }
+    .warranty-terms h3 { font-size: 1.2rem; margin-bottom: 0.6rem; }
+    .warranty-terms ul { margin-bottom: 0; }
+    .warranty-terms ul li { padding: 0.35rem 0; font-size: 0.92rem; line-height: 1.5; }
+    .warranty-contact { margin-top: auto; padding: 0.9rem 1.1rem; }
+    .warranty-contact p { font-size: 0.92rem; margin-bottom: 0.25rem; }
+
+    /* Get In Touch: form fields in two columns, info card compact */
+    #contact .contact-content { grid-template-columns: 1.35fr 1fr; gap: 2rem; margin-top: 0; }
+    #contact .contact-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+    #contact .contact-form .form-group:has(#area),
+    #contact .contact-form .form-group:has(textarea),
+    #contact .contact-form button { grid-column: 1 / -1; }
+    #contact .contact-form input,
+    #contact .contact-form select,
+    #contact .contact-form textarea { padding: 0.8rem 1rem; font-size: 0.95rem; }
+    #contact .contact-form select { padding-right: 2.5rem !important; }
+    #contact .contact-form textarea { min-height: 84px; height: 150px; }
+    #contact .contact-box { position: static; }
+    #contact .contact-box-header { padding: 0.9rem 1.25rem; }
+    #contact .contact-box-content { padding: 1.1rem 1.25rem; gap: 0.75rem; }
+    #contact .info-item-compact { padding-bottom: 0.75rem; }
+    #contact .qr-code-box { flex-direction: row; justify-content: center; gap: 1rem; margin-top: 0; padding-top: 0.75rem; }
+    #contact .qr-code-image-compact { width: 92px; height: 92px; }
+}
+
+.info-text-compact p a, .warranty-contact a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+}
+.info-text-compact p a:hover, .warranty-contact a:hover { text-decoration: underline; }
+
+/* ── Warranty claims: number, WhatsApp and email as tidy chips that never split ── */
+.wc-links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.wc-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #dbe4f5;
+    color: #1d4ed8;
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+.wc-links a:hover { text-decoration: none; border-color: #2563eb; }
+.wc-links .fa-whatsapp { color: #25d366; }
+/* On the phone page the claims box is solid blue */
+.site-mobile .wc-links a {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #fff !important;
+    font-size: 0.78rem;
+    padding: 0.3rem 0.65rem;
+}
+.site-mobile .wc-links .fa-whatsapp { color: #fff; }
+
+/* ── Phone page: Warranty and Get In Touch each fit one screen ── */
+.site-mobile .warranty-section,
+.site-mobile #contact {
+    min-height: 100vh;
+    min-height: 100svh;
+    box-sizing: border-box;
+    padding-block: 76px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.site-mobile .warranty-section .section-header,
+.site-mobile #contact .section-header { margin-bottom: 0.9rem; }
+.site-mobile .warranty-info { margin-bottom: 0.75rem; align-items: stretch; }
+.site-mobile .warranty-card { padding: 0.9rem; }
+.site-mobile .warranty-terms { padding: 1rem 1.1rem; }
+.site-mobile .warranty-terms h3 { margin-bottom: 0.6rem; }
+.site-mobile .warranty-terms ul { gap: 0.4rem; margin-bottom: 0.8rem; }
+
+/* Form: short fields in pairs */
+.site-mobile #contact .contact-content { gap: 0.9rem; }
+.site-mobile #contact .contact-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+.site-mobile #contact .contact-form .form-group:has(#name),
+.site-mobile #contact .contact-form .form-group:has(#email),
+.site-mobile #contact .contact-form .form-group:has(#area),
+.site-mobile #contact .contact-form .form-group:has(textarea),
+.site-mobile #contact .contact-form button { grid-column: 1 / -1; }
+.site-mobile #contact .contact-form input,
+.site-mobile #contact .contact-form select,
+.site-mobile #contact .contact-form textarea { padding: 0.7rem 0.85rem; font-size: 16px; min-width: 0; width: 100%; }
+.site-mobile #contact .contact-form select { padding-right: 2rem !important; background-position: right 0.7rem center !important; }
+.site-mobile #contact .contact-form textarea { height: 64px; min-height: 64px; }
+/* Info card: QR is for scanning from another screen, not useful on the phone itself */
+.site-mobile #contact .qr-code-box { display: none; }
+.site-mobile #contact .contact-box-header { padding: 0.65rem 1rem; }
+.site-mobile #contact .contact-box-content { padding: 0.8rem 1rem; gap: 0.6rem; }
+.site-mobile #contact .info-item-compact { padding-bottom: 0.6rem; }

@@ -615,6 +615,7 @@
         .contact-form { display: flex; flex-direction: column; gap: 0.75rem; }
         .form-group { display: flex; flex-direction: column; }
         .contact-form input,
+        .contact-form select,
         .contact-form textarea {
             padding: 0.825rem 0.95rem; font-size: 0.9rem;
             font-family: 'Inter', sans-serif;
@@ -625,7 +626,7 @@
             transition: border-color 0.2s, box-shadow 0.2s;
             color: var(--text);
         }
-        .contact-form input:focus, .contact-form textarea:focus {
+        .contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus {
             border-color: rgba(37,99,235,0.45);
             box-shadow: 0 0 0 3px rgba(37,99,235,0.09);
             background: rgba(255,255,255,0.95);
@@ -990,6 +991,7 @@
 
         /* ── Contact ── */
         .contact-form input,
+        .contact-form select,
         .contact-form textarea {
             background: rgba(255,255,255,0.68) !important;
             backdrop-filter: blur(18px) saturate(160%) !important;
@@ -998,6 +1000,7 @@
             box-shadow: inset 0 2px 6px rgba(0,0,0,0.03), var(--lg-spec-sm) !important;
         }
         .contact-form input:focus,
+        .contact-form select:focus,
         .contact-form textarea:focus {
             background: rgba(255,255,255,0.9) !important;
             border-color: rgba(37,99,235,0.45) !important;
@@ -1249,6 +1252,16 @@
                 <div class="pat-app-text">
                     <p>Control and personalize your entire home from anywhere. Manage lights, fans, curtains, and smart devices in real time through a single intuitive interface.</p>
                     <p>Use across multiple devices, add real photos of each room, and enjoy full end-to-end encryption for total peace of mind.</p>
+                    <div class="app-stores">
+                        <a href="https://play.google.com/store/apps/details?id=com.patiot.pat_home" target="_blank" rel="noopener" class="store-badge"><i class="fab fa-google-play"></i><span><small>GET IT ON</small>Google Play</span></a>
+                        <a href="https://apps.apple.com/app/id6479612068" target="_blank" rel="noopener" class="store-badge"><i class="fab fa-apple"></i><span><small>Download on the</small>App Store</span></a>
+                    </div>
+                    <div class="works-with">
+                        <span class="works-with-label">Works with</span>
+                        <span class="works-with-item"><i class="fab fa-google"></i> Google Home</span>
+                        <span class="works-with-item"><i class="fab fa-amazon"></i> Amazon Alexa</span>
+                        <span class="works-with-item"><i class="fab fa-apple"></i> Apple Home</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1401,7 +1414,11 @@
                 </ul>
                 <div class="warranty-contact">
                     <p><strong>For warranty claims:</strong></p>
-                    <p>+91 83746 63171 &nbsp;|&nbsp; marketing@patiot.in</p>
+                    <div class="wc-links">
+                            <a href="tel:+919030983040"><i class="fas fa-phone"></i> +91 90309 83040</a>
+                            <a href="https://wa.me/919030983040" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                            <a href="mailto:marketing@patiot.in"><i class="fas fa-envelope"></i> marketing@patiot.in</a>
+                        </div>
                 </div>
             </div>
         </div>
@@ -1417,10 +1434,43 @@
             <div class="contact-content">
                 <form id="contactForm" class="contact-form">
                     <div class="form-group"><input type="text"  id="name"    name="name"    placeholder="Your Name"    required></div>
-                    <div class="form-group"><input type="email" id="email"   name="email"   placeholder="Your Email"   required></div>
+                    <div class="form-group"><input type="email" id="email"   name="email"   placeholder="Your Email"></div>
                     <div class="form-group"><input type="tel"   id="phone"   name="phone"   placeholder="Your Phone"></div>
-                    <div class="form-group"><textarea           id="message" name="message" rows="4" placeholder="Your Message" required></textarea></div>
-                    <button type="submit" class="btn btn-primary">Send Message</button>
+                    <div class="form-group">
+                        <select id="propertyType" name="propertyType">
+                            <option value="" disabled selected>Property type</option>
+                            <option>Apartment</option>
+                            <option>Independent House</option>
+                            <option>Villa</option>
+                            <option>Office / Commercial</option>
+                            <option>Builder / Architect / Interior Designer</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="propertySize" name="propertySize">
+                            <option value="" disabled selected>Home size</option>
+                            <option>1 BHK</option>
+                            <option>2 BHK</option>
+                            <option>3 BHK</option>
+                            <option>4 BHK or bigger</option>
+                            <option>Not a home</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="buildStage" name="buildStage">
+                            <option value="" disabled selected>Build stage</option>
+                            <option>Under construction</option>
+                            <option>Electrical work going on</option>
+                            <option>Interiors going on</option>
+                            <option>Ready to move / Living in it</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="area" name="area" placeholder="Area / City (e.g. Kondapur, Hyderabad)">
+                    </div>
+                    <div class="form-group"><textarea           id="message" name="message" rows="4" placeholder="Anything else? (optional)"></textarea></div>
+                    <button type="submit" class="btn btn-primary"><i class="fab fa-whatsapp"></i> Send on WhatsApp</button>
                 </form>
                 <aside class="contact-box">
                     <div class="contact-box-header"><h3>Contact Information</h3></div>
@@ -1434,7 +1484,7 @@
                         </div>
                         <div class="info-item-compact">
                             <div class="info-icon-compact"><i class="fas fa-phone"></i></div>
-                            <div class="info-text-compact"><h4>Phone</h4><p>+91 83746 63171</p></div>
+                            <div class="info-text-compact"><h4>Phone</h4><p><a href="tel:+919030983040">+91 90309 83040</a><br><a href="https://wa.me/919030983040" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp us</a></p></div>
                         </div>
                         <div class="info-item-compact">
                             <div class="info-icon-compact"><i class="fas fa-envelope"></i></div>
@@ -1496,6 +1546,11 @@
     </footer>
 
     <div id="lightbox"></div>
+    <!-- Quick contact: WhatsApp and call -->
+    <div class="quick-contact">
+        <a href="https://wa.me/919030983040?text=Hi%20PAT%20IoT%2C%20I%27m%20interested%20in%20smart%20home%20automation." target="_blank" rel="noopener" class="qc-btn qc-whatsapp" aria-label="Chat on WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        <a href="tel:+919030983040" class="qc-btn qc-call" aria-label="Call +91 90309 83040"><i class="fas fa-phone"></i></a>
+    </div>
     <script src="script.js"></script>
     <script>
     /* ── Hero Video — 6-video smooth forward+reverse player ── */
