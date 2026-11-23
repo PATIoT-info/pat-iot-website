@@ -172,18 +172,18 @@ markLoadedImages();
 document.documentElement.classList.add('img-fade');
 document.addEventListener('DOMContentLoaded', markLoadedImages);
 
-// Phone site opened on a section (mobile.html#contact): content loading above it pushes it
+// Site opened on a section (#contact, #design-panel): content loading above it pushes it
 // down after the browser's jump, so stay on it until the page settles or the visitor moves
 function holdHashTarget() {
-    const target = document.getElementById(location.hash.slice(1));
-    if (!target || !document.documentElement.classList.contains('site-mobile')) return;
+    const target = document.getElementById(location.hash.slice(1).split('?')[0]);
+    if (!target) return;
     const align = () => target.scrollIntoView({ behavior: 'instant', block: 'start' });
     const observer = new ResizeObserver(align);
     const release = () => {
         observer.disconnect();
-        ['touchstart', 'wheel', 'keydown'].forEach(type => window.removeEventListener(type, release));
+        ['touchstart', 'wheel', 'keydown', 'mousedown'].forEach(type => window.removeEventListener(type, release));
     };
-    ['touchstart', 'wheel', 'keydown'].forEach(type => window.addEventListener(type, release, { passive: true }));
+    ['touchstart', 'wheel', 'keydown', 'mousedown'].forEach(type => window.addEventListener(type, release, { passive: true }));
     observer.observe(document.body);
     setTimeout(release, 6000);
 }

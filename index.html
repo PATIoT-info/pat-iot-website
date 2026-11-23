@@ -38,7 +38,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="polish.css?v=dp26">
 </head>
 <body>
     <script src="intro.js"></script>
@@ -58,6 +58,7 @@
                     <li><a href="#services" class="nav-link">Services</a></li>
                     <li><a href="#about" class="nav-link">About</a></li>
                     <li><a href="#products" class="nav-link">Products</a></li>
+                    <li><a href="#design-panel" class="nav-link">Design Panel</a></li>
                     <li><a href="blog.html" class="nav-link">Blogs</a></li>
                     <li><a href="#contact" class="nav-link">Contact</a></li>
                     <li><a href="tel:+919030983040" class="nav-link nav-call"><i class="fas fa-phone"></i> 90309 83040</a></li>
@@ -261,6 +262,118 @@
         </div>
         <div class="clients-scroll-wrap">
             <div class="clients-track" id="clientsTrack"></div>
+        </div>
+    </section>
+
+    <!-- Design Your Panel -->
+    <section id="design-panel" class="design-panel-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Design Your Panel</h2>
+                <p class="section-subtitle">Choose a size, finish and logo. Your panel updates as you go.</p>
+            </div>
+            <div class="dp-layout">
+                <div class="dp-preview">
+                    <div class="dp-stage">
+                        <canvas id="dpCanvas" role="img" aria-label="Preview of your designed panel"></canvas>
+                    </div>
+                    <p class="dp-caption" id="dpCaption" aria-live="polite"></p>
+                </div>
+
+                <form class="dp-controls" id="dpForm" onsubmit="return false">
+                    <div class="dp-row dp-pick">
+                        <label class="dp-label" for="dpSize">Board</label>
+                        <select id="dpSize" aria-label="Panel size">
+                            <option value="2">2 Module</option>
+                            <option value="4">4 Module</option>
+                            <option value="6" selected>6 Module</option>
+                            <option value="8">8 Module</option>
+                            <option value="12">12 Module</option>
+                        </select>
+                        <select id="dpBoard" aria-label="Board type"></select>
+                    </div>
+
+                    <div class="dp-group" id="dpFinishGroup">
+                        <div class="dp-label">Finish <span class="dp-finish-name" id="dpFinishName">White</span> <button type="button" class="dp-crop-btn" id="dpPhotoCrop" hidden><i class="fas fa-crop-simple" aria-hidden="true"></i> Crop</button></div>
+                        <div class="dp-swatches" id="dpSwatches">
+                            <button type="button" class="dp-swatch dp-custom" id="dpCustom" title="Any colour" aria-label="Pick any colour from the wheel" aria-expanded="false" aria-controls="dpWheelPop"></button>
+                            <button type="button" class="dp-swatch dp-tex" data-texture="marble-1" title="Marble 1 (Blue Gold)" aria-label="Marble 1 (Blue Gold)"></button>
+                            <button type="button" class="dp-swatch dp-tex" data-texture="marble-2" title="Marble 2 (Mint)" aria-label="Marble 2 (Mint)"></button>
+                            <button type="button" class="dp-swatch dp-tex" data-texture="marble-3" title="Marble 3 (Rose)" aria-label="Marble 3 (Rose)"></button>
+                            <button type="button" class="dp-swatch dp-tex" data-texture="wood" title="Wooden" aria-label="Wooden"></button>
+                            <label class="dp-swatch dp-photo" id="dpPhotoBtn" title="Your own photo as the finish">
+                                <input type="file" id="dpPhoto" accept="image/*" aria-label="Upload your own photo as the finish">
+                                <i class="fas fa-camera" aria-hidden="true"></i>
+                            </label>
+                        </div>
+                        <div class="dp-wheel-pop" id="dpWheelPop" hidden>
+                            <div class="dp-wheel-wrap">
+                                <canvas id="dpWheel" width="220" height="220" aria-label="Colour wheel"></canvas>
+                                <span class="dp-wheel-marker" id="dpWheelMarker"></span>
+                            </div>
+                            <div class="dp-wheel-side">
+                                <label class="dp-mini" for="dpBright">Brightness</label>
+                                <input type="range" id="dpBright" min="0" max="100" value="100">
+                                <label class="dp-mini" for="dpHex">Hex code</label>
+                                <input type="text" id="dpHex" maxlength="7" spellcheck="false" autocomplete="off">
+                                <button type="button" class="dp-done" id="dpWheelDone">Done</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dp-group">
+                        <span class="dp-label">Wall</span>
+                        <div class="dp-walls">
+                            <button type="button" class="dp-swatch dp-wall dp-studio" data-wall="studio" title="Studio" aria-label="Studio background"></button>
+                            <button type="button" class="dp-swatch dp-wall" data-wall="white" title="White wall" aria-label="White wall"></button>
+                            <button type="button" class="dp-swatch dp-wall" data-wall="cream" title="Cream wall" aria-label="Cream wall"></button>
+                            <button type="button" class="dp-swatch dp-wall" data-wall="grey" title="Grey wall" aria-label="Grey wall"></button>
+                            <button type="button" class="dp-swatch dp-wall" data-wall="sage" title="Sage green wall" aria-label="Sage green wall"></button>
+                            <button type="button" class="dp-swatch dp-wall" data-wall="blue" title="Blue wall" aria-label="Blue wall"></button>
+                            <button type="button" class="dp-swatch dp-wall dp-tex" data-wall="brick" title="Brick wall" aria-label="Brick wall"></button>
+                            <button type="button" class="dp-swatch dp-wall dp-tex" data-wall="wood" title="Wooden wall" aria-label="Wooden wall"></button>
+                            <label class="dp-swatch dp-wall dp-photo" id="dpWallPhotoBtn" data-wall="photo" title="Photo of your wall">
+                                <input type="file" id="dpWallPhoto" accept="image/*" aria-label="Upload a photo of your wall">
+                                <i class="fas fa-house" aria-hidden="true"></i>
+                            </label>
+                        </div>
+                        <div class="dp-wall-tools" id="dpWallTools" hidden>
+                            <label class="dp-mini" for="dpWallScale">Board size</label>
+                            <input type="range" class="dp-range" id="dpWallScale" min="40" max="250" value="100">
+                            <span class="dp-mini">Drag to move</span>
+                        </div>
+                    </div>
+
+                    <div class="dp-group">
+                        <span class="dp-label">Logo <button type="button" class="dp-crop-btn" id="dpLogoCrop" hidden><i class="fas fa-crop-simple" aria-hidden="true"></i> Crop</button></span>
+                        <div class="dp-logo-row">
+                            <div class="dp-choices">
+                                <label class="dp-choice"><input type="radio" name="dpLogo" value="pat" checked><span>PAT</span></label>
+                                <label class="dp-choice" id="dpOwnLogoChip"><input type="radio" name="dpLogo" value="own"><span><i class="fas fa-upload" aria-hidden="true"></i> Your logo</span></label>
+                                <label class="dp-choice"><input type="radio" name="dpLogo" value="none"><span>None</span></label>
+                            </div>
+                        </div>
+                        <div class="dp-logo-row">
+                            <select id="dpLogoPos" aria-label="Logo position">
+                                <option value="br" selected>Bottom right</option>
+                                <option value="bl">Bottom left</option>
+                                <option value="tr">Top right</option>
+                                <option value="tl">Top left</option>
+                            </select>
+                            <label class="dp-logo-size"><span class="dp-mini">Logo size</span>
+                                <input type="range" class="dp-range" id="dpLogoSize" min="60" max="180" value="100" aria-label="Logo size">
+                            </label>
+                        </div>
+                        <input type="file" id="dpOwnLogo" accept="image/*" hidden>
+                    </div>
+
+                    <div class="dp-actions">
+                        <button type="button" class="btn btn-primary dp-send" id="dpSend"><i class="fab fa-whatsapp"></i> Send on WhatsApp</button>
+                        <button type="button" class="dp-download" id="dpDownload" title="Download a high quality picture"><i class="fas fa-download" aria-hidden="true"></i> <span class="dp-dl-text">Download HD</span></button>
+                    </div>
+                    <small class="dp-note"><span class="dp-note-text">Photos and logos stay on your device. </span><button type="button" class="dp-corel" id="dpCorel" title="Real size vector file for CorelDRAW (SVG)"><i class="fas fa-pen-ruler" aria-hidden="true"></i> CorelDRAW file</button></small>
+                </form>
+            </div>
         </div>
     </section>
 
@@ -493,7 +606,8 @@
         <a href="https://wa.me/919030983040?text=Hi%20PAT%20IoT%2C%20I%27m%20interested%20in%20smart%20home%20automation." target="_blank" rel="noopener" class="qc-btn qc-whatsapp" aria-label="Chat on WhatsApp"><i class="fab fa-whatsapp"></i></a>
         <a href="tel:+919030983040" class="qc-btn qc-call" aria-label="Call +91 90309 83040"><i class="fas fa-phone"></i></a>
     </div>
-    <script src="script.js"></script>
+    <script src="script.js?v=h1"></script>
+    <script src="customizer.js?v=dp35" defer></script>
 </body>
 </html>
 
