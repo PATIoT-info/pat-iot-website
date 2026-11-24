@@ -1122,33 +1122,45 @@
         const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
         const head = (W, H) => '<?xml version="1.0" encoding="UTF-8"?>\n' +
             `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${fmt(W)}mm" height="${fmt(H)}mm" viewBox="0 0 ${fmt(W)} ${fmt(H)}">\n`;
-        const list = designs();
-        if (boards.length === 1) {
-            const one = boardSvg(1);
-            return head(one.W, one.H) + `<title>${esc(one.title)}</title>\n${one.body}\n</svg>\n`;
-        }
-        // Every board the customer ordered, one group per copy named like the designer's own files
-        // ("6M", "12M"), each design starting its own row: ready to place on the print sheet.
-        const keep = boards[active], out = [], LAB = 8, GAP_MM = 10, SHEET = 600, perSize = {};
-        let y = 0, sheetW = 0, k = 0;
+        // The print sheet, like the designer's own files: a 1270 x 1270 mm sheet with every board the
+        // customer ordered (one group per copy, named "8M", "6M"...) packed in rows, biggest first.
+        // More boards than fit go on the next sheet, to the right.
+        const list = designs(), keep = boards[active];
+        // 120 mm in from the top and left edges, about 30 mm on the right and bottom, as on the designer's sheet
+        const SHEET = 1270, MARGIN = 120, END = 30, GAP_X = 40, GAP_Y = 20, SHEET_GAP = 100, USE = SHEET - MARGIN - END;
+        const copies = [], perSize = {};
         list.forEach(({ b, qty }, i) => {
             load(b);
-            const one = boardSvg(qty), spec = currentSpec(), n = i + 1;
-            out.push(`<text id="Design_${n}_label" x="0" y="${fmt(y + LAB - 2.5)}" font-family="Arial" font-size="4.5" fill="#000000">${esc(`Design ${n} · ${spec.name}, ${spec.detail} · ${qty} board${qty > 1 ? 's' : ''}`)}</text>`);
-            let x = 0, top = y + LAB;
+            const one = boardSvg(qty);
             for (let c = 1; c <= qty; c++) {
-                if (x > 0 && x + one.W > SHEET) { x = 0; top += one.H + GAP_MM; }
-                k++; perSize[state.size] = (perSize[state.size] || 0) + 1;
-                out.push(`<g id="${state.size}M_${perSize[state.size]}" transform="translate(${fmt(x)} ${fmt(top)})">\n` +
-                    `<desc>${esc(`Design ${n}, copy ${c} of ${qty}: ${one.title}`)}</desc>\n` +
-                    one.body.replace(/ id="/g, ` id="B${k}_`) + '\n</g>');
-                x += one.W + GAP_MM; sheetW = Math.max(sheetW, x - GAP_MM);
+                perSize[state.size] = (perSize[state.size] || 0) + 1;
+                copies.push({ one, name: `${state.size}M_${perSize[state.size]}`, desc: `Design ${i + 1}, copy ${c} of ${qty}: ${one.title}` });
             }
-            y = top + one.H + GAP_MM * 1.5;
         });
         load(keep);
-        const title = `PAT order: ${list.length} design${list.length > 1 ? 's' : ''}, ${boards.length} boards`;
-        return head(sheetW, y - GAP_MM * 1.5) + `<title>${esc(title)}</title>\n${out.join('\n')}\n</svg>\n`;
+        copies.sort((a, b) => b.one.H - a.one.H || b.one.W - a.one.W);
+        const sheets = [[]];
+        let x = 0, y = 0, rowH = 0;
+        copies.forEach(cp => {
+            const { W, H } = cp.one;
+            if (x > 0 && (x + W > USE || H !== rowH)) { x = 0; y += rowH + GAP_Y; rowH = 0; }   // a row holds one board height
+            if (y > 0 && y + H > USE) { sheets.push([]); x = 0; y = 0; rowH = 0; }
+            sheets[sheets.length - 1].push({ ...cp, x: MARGIN + x, y: MARGIN + y });
+            x += W + GAP_X; rowH = Math.max(rowH, H);
+        });
+        const out = [];
+        let k = 0;
+        sheets.forEach((list, s) => {
+            const ox = s * (SHEET + SHEET_GAP);
+            out.push(`<rect id="Sheet_${s + 1}_${SHEET}x${SHEET}" x="${ox}" y="0" width="${SHEET}" height="${SHEET}" fill="#b5d300"/>`);
+            list.forEach(cp => {
+                k++;
+                out.push(`<g id="${cp.name}" transform="translate(${fmt(ox + cp.x)} ${fmt(cp.y)})">\n<desc>${esc(cp.desc)}</desc>\n` +
+                    cp.one.body.replace(/ id="/g, ` id="B${k}_`) + '\n</g>');
+            });
+        });
+        const title = `PAT order: ${list.length} design${list.length > 1 ? 's' : ''}, ${boards.length} board${boards.length > 1 ? 's' : ''}`;
+        return head(sheets.length * (SHEET + SHEET_GAP) - SHEET_GAP, SHEET) + `<title>${esc(title)}</title>\n${out.join('\n')}\n</svg>\n`;
     }
 
     /* ── Text summary ───────────────────────────────────── */
@@ -1710,7 +1722,7 @@
         a.href = URL.createObjectURL(blob); a.download = fileName().replace(/\.png$/, '-CorelDRAW.svg');
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-        toast(`CorelDRAW file saved${boards.length > 1 ? ` with all ${boards.length} boards, one per copy` : ''}: real size in mm, icons and socket cut out. Open it in CorelDRAW.`);
+        toast(`CorelDRAW file saved${boards.length > 1 ? ` with all ${boards.length} boards` : ''} on the 1270 mm print sheet: real size in mm, icons and socket cut out. Open it in CorelDRAW.`);
     });
     const dlBtn = $('dpDownload');
     dlBtn.addEventListener('click', async () => {
