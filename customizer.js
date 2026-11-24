@@ -1094,14 +1094,15 @@
 
         // Plate with transparent cut-outs
         const tex = state.finish === 'texture' ? images[state.texture] : state.finish === 'photo' ? photoPic() : null;
+        // Flat, like the designer's own boards: each board holds just its pieces (no groups inside)
         if (tex) {
-            parts.push(`<g id="Plate"><image id="Finish_with_cutouts" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none" xlink:href="${faceImage(tex, state.finish === 'photo' ? photoSrc(W, H) : coverSrc(tex, W, H), W, H, items)}"/></g>`);
+            parts.push(`<image id="Finish" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none" xlink:href="${faceImage(tex, state.finish === 'photo' ? photoSrc(W, H) : coverSrc(tex, W, H), W, H, items)}"/>`);
         } else {
-            parts.push(`<g id="Plate"><path id="Colour_with_cutouts" fill="${state.colour}" fill-rule="evenodd" d="${plateD}${traced.map(t => t.d).join('')}"/></g>`);
+            parts.push(`<path id="Colour" fill="${state.colour}" fill-rule="evenodd" d="${plateD}${traced.map(t => t.d).join('')}"/>`);
         }
-        // Each cut-out as its own closed vector shape: hairline only, so the holes stay see-through
-        parts.push(`<g id="Cut_shapes">\n${traced.map(t => `<path id="${t.name}" fill="none" fill-rule="evenodd" stroke="#ff00ff" stroke-width="0.05" d="${t.d}"/>`).join('\n')}\n</g>`);
-        parts.push(`<g id="Outline"><path id="Plate_cut_line" fill="none" stroke="#000000" stroke-width="0.1" d="${plateD}"/></g>`);
+        // All the icon and socket cut-outs as one curve, hairline only so the holes stay see-through
+        parts.push(`<path id="Cut_lines" fill="none" fill-rule="evenodd" stroke="#ff00ff" stroke-width="0.05" d="${traced.map(t => t.d).join('')}"/>`);
+        parts.push(`<path id="Outline" fill="none" stroke="#000000" stroke-width="0.1" d="${plateD}"/>`);
 
         // Logo at its place and size
         let img, sx = 0, sy = 0, sw, sh;
@@ -1111,7 +1112,7 @@
             const z = state.logoSize, bw = Math.min(24 * z, 0.6 * W), bh = Math.min(17 * z, 0.45 * H);
             const k = Math.min(bw / sw, bh / sh), lw = sw * k, lh = sh * k;
             const lx = state.logoPos.includes('r') ? W - 9 - lw : 9, ly = state.logoPos.includes('b') ? H - 8 - lh : 8;
-            parts.push(`<g id="Logo"><image x="${fmt(lx)}" y="${fmt(ly)}" width="${fmt(lw)}" height="${fmt(lh)}" preserveAspectRatio="none" xlink:href="${logoData(img, sx, sy, sw, sh, lw, lh, false)}"/></g>`);
+            parts.push(`<image id="Logo" x="${fmt(lx)}" y="${fmt(ly)}" width="${fmt(lw)}" height="${fmt(lh)}" preserveAspectRatio="none" xlink:href="${logoData(img, sx, sy, sw, sh, lw, lh, false)}"/>`);
         }
 
         const title = `PAT ${spec.name}, ${spec.detail}, ${finishLabel()}, ${logoLabel()} (${W} x ${H} mm)${qty > 1 ? `, quantity ${qty}` : ''}`;
@@ -1149,14 +1150,12 @@
             x += W + GAP_X; rowH = Math.max(rowH, H);
         });
         const out = [];
-        let k = 0;
         sheets.forEach((list, s) => {
             const ox = s * (SHEET + SHEET_GAP);
             out.push(`<rect id="Sheet_${s + 1}_${SHEET}x${SHEET}" x="${ox}" y="0" width="${SHEET}" height="${SHEET}" fill="#b5d300"/>`);
             list.forEach(cp => {
-                k++;
                 out.push(`<g id="${cp.name}" transform="translate(${fmt(ox + cp.x)} ${fmt(cp.y)})">\n<desc>${esc(cp.desc)}</desc>\n` +
-                    cp.one.body.replace(/ id="/g, ` id="B${k}_`) + '\n</g>');
+                    cp.one.body.replace(/ id="/g, ` id="${cp.name}_`) + '\n</g>');
             });
         });
         const title = `PAT order: ${list.length} design${list.length > 1 ? 's' : ''}, ${boards.length} board${boards.length > 1 ? 's' : ''}`;
