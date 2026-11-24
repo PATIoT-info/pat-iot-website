@@ -1123,25 +1123,32 @@
         const head = (W, H) => '<?xml version="1.0" encoding="UTF-8"?>\n' +
             `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${fmt(W)}mm" height="${fmt(H)}mm" viewBox="0 0 ${fmt(W)} ${fmt(H)}">\n`;
         const list = designs();
-        if (list.length === 1) {
-            const one = boardSvg(list[0].qty);
+        if (boards.length === 1) {
+            const one = boardSvg(1);
             return head(one.W, one.H) + `<title>${esc(one.title)}</title>\n${one.body}\n</svg>\n`;
         }
-        const keep = boards[active], out = [], LAB = 8, GAP_MM = 15, SHEET = 600;
-        let x = 0, y = 0, rowH = 0, sheetW = 0;
+        // Every board the customer ordered, one group per copy named like the designer's own files
+        // ("6M", "12M"), each design starting its own row: ready to place on the print sheet.
+        const keep = boards[active], out = [], LAB = 8, GAP_MM = 10, SHEET = 600, perSize = {};
+        let y = 0, sheetW = 0, k = 0;
         list.forEach(({ b, qty }, i) => {
             load(b);
             const one = boardSvg(qty), spec = currentSpec(), n = i + 1;
-            if (x > 0 && x + one.W > SHEET) { x = 0; y += rowH + GAP_MM; rowH = 0; }
-            out.push(`<g id="Board_${n}_${spec.name.replace(/\W+/g, '')}_qty_${qty}" transform="translate(${fmt(x)} ${fmt(y + LAB)})">\n` +
-                `<desc>${esc(one.title)}</desc>\n` +
-                `<text id="B${n}_Label" x="0" y="-2.5" font-family="Arial" font-size="4.5" fill="#000000">${esc(`Design ${n} · ${spec.name} · qty ${qty}`)}</text>\n` +
-                one.body.replace(/ id="/g, ` id="B${n}_`) + '\n</g>');
-            x += one.W + GAP_MM; rowH = Math.max(rowH, one.H + LAB); sheetW = Math.max(sheetW, x - GAP_MM);
+            out.push(`<text id="Design_${n}_label" x="0" y="${fmt(y + LAB - 2.5)}" font-family="Arial" font-size="4.5" fill="#000000">${esc(`Design ${n} · ${spec.name}, ${spec.detail} · ${qty} board${qty > 1 ? 's' : ''}`)}</text>`);
+            let x = 0, top = y + LAB;
+            for (let c = 1; c <= qty; c++) {
+                if (x > 0 && x + one.W > SHEET) { x = 0; top += one.H + GAP_MM; }
+                k++; perSize[state.size] = (perSize[state.size] || 0) + 1;
+                out.push(`<g id="${state.size}M_${perSize[state.size]}" transform="translate(${fmt(x)} ${fmt(top)})">\n` +
+                    `<desc>${esc(`Design ${n}, copy ${c} of ${qty}: ${one.title}`)}</desc>\n` +
+                    one.body.replace(/ id="/g, ` id="B${k}_`) + '\n</g>');
+                x += one.W + GAP_MM; sheetW = Math.max(sheetW, x - GAP_MM);
+            }
+            y = top + one.H + GAP_MM * 1.5;
         });
         load(keep);
-        const title = `PAT order: ${list.length} designs, ${boards.length} boards`;
-        return head(sheetW, y + rowH) + `<title>${esc(title)}</title>\n${out.join('\n')}\n</svg>\n`;
+        const title = `PAT order: ${list.length} design${list.length > 1 ? 's' : ''}, ${boards.length} boards`;
+        return head(sheetW, y - GAP_MM * 1.5) + `<title>${esc(title)}</title>\n${out.join('\n')}\n</svg>\n`;
     }
 
     /* ── Text summary ───────────────────────────────────── */
@@ -1703,7 +1710,7 @@
         a.href = URL.createObjectURL(blob); a.download = fileName().replace(/\.png$/, '-CorelDRAW.svg');
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-        toast(`CorelDRAW file saved${boards.length > 1 ? ` with all ${boards.length} designs (quantity in each name)` : ''}: real size in mm, icons and socket cut out. Open it in CorelDRAW.`);
+        toast(`CorelDRAW file saved${boards.length > 1 ? ` with all ${boards.length} boards, one per copy` : ''}: real size in mm, icons and socket cut out. Open it in CorelDRAW.`);
     });
     const dlBtn = $('dpDownload');
     dlBtn.addEventListener('click', async () => {
