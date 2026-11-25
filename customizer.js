@@ -20,30 +20,30 @@
     const S4 = [S, S, S, S], S6 = [S, S, S, S, S, S];
     // Plate sizes in mm, frame included
     const SIZES = {
-        '2':  { name: '2 Module',  w: 90, pitch: 30.7,  h: 90, boards: [
+        '2':  { name: '2 Module',  w: 90, left: 33,  h: 90, boards: [
             { label: '2 switches', rows: [[S, S]] },
             { label: 'Fan with speed', rows: [[FAN]] },
             { label: 'Curtain', rows: [[CUR]] }] },
-        '4':  { name: '4 Module',  w: 148, pitch: 30.6, h: 90, boards: [
+        '4':  { name: '4 Module',  w: 148, left: 39, h: 90, boards: [
             { label: '4 switches', rows: [S4] },
             { label: '2 switches + fan', rows: [[S, S, FAN]] },
             { label: '2 switches + curtain', rows: [[S, S, CUR]] },
             { label: '2 curtains', rows: [[CUR, CUR]] },
             { label: '2 switches + socket', rows: [[S, S, SOCK]] }] },
-        '6':  { name: '6 Module',  w: 222, pitch: 31.8, h: 90, boards: [
+        '6':  { name: '6 Module',  w: 222, left: 53, h: 90, boards: [
             { label: '6 switches', rows: [S6] },
             { label: '4 switches + fan', rows: [[...S4, FAN]] },
             { label: '4 switches + curtain', rows: [[...S4, CUR]] },
             { label: '4 switches + socket', rows: [[...S4, SOCK]] },
             { label: 'Fan + 2 switches + socket', rows: [[FAN, S, S, SOCK]] }] },
-        '8':  { name: '8 Module',  w: 250, pitch: 26.6, h: 90, boards: [
+        '8':  { name: '8 Module',  w: 250, left: 44, h: 90, boards: [
             { label: '8 switches', rows: [[...S6, S, S]] },
             { label: '6 switches + fan', rows: [[...S6, FAN]] },
             { label: '6 switches + curtain', rows: [[...S6, CUR]] },
             { label: 'Fan + 4 switches + curtain', rows: [[FAN, ...S4, CUR]] },
             { label: '6 switches + socket', rows: [[...S6, SOCK]] },
             { label: 'Fan + 4 switches + socket', rows: [[FAN, ...S4, SOCK]] }] },
-        '12': { name: '12 Module', w: 228, pitch: 30.5, h: 158, boards: [
+        '12': { name: '12 Module', w: 228, left: 56, h: 158, boards: [
             { label: '12 switches', rows: [S6, S6] },
             { label: '10 switches + fan', rows: [S6, [...S4, FAN]] },
             { label: '10 switches + curtain', rows: [S6, [...S4, CUR]] },
@@ -55,21 +55,26 @@
     };
     const SOCKET_W = 70;
     const ICON_MM = 13;   // brochure icons are 14 mm on a 96 mm drawing; the real plates are 90 mm tall
-    // Centre of each icon in a row, in mm from the plate's left edge.
-    // Brochure layout: icons sit as one centred group with an even gap; on socket boards (brochure page 6)
-    // they sit 27.4 mm apart, the last one 45 mm left of the socket's centre.
+    // Centre of each icon in a row, in mm from the plate's left edge (factory drawings). Framed boards: icons
+    // come in pairs, 24 mm apart inside a pair and 22 mm between pairs, starting `left` mm in from the left
+    // edge, so the group ends the same distance from the right edge. Frameless boards: 24 mm between all icons.
+    // Socket boards use the same gaps; the socket stays 51 mm from the right edge (its centre) and the last
+    // icon 45 mm left of it, until the factory gives the socket measurements.
+    const FRAMED_GAPS = [24, 22];
+    // Frameless boards (no metal frame) are their own size (factory sizes). Icons sit 24 mm apart, the group
+    // centred on the board (8M: 48.5 mm from each edge).
+    const FRAMELESS = Object.fromEntries([['2', 105, 96, 2], ['4', 151, 96, 4], ['6', 226, 96, 6], ['8', 265, 96, 8], ['12', 226, 170, 6]]
+        .map(([k, w, h, n]) => [k, { w, h, left: (w - 24 * (n - 1)) / 2, gaps: [24] }]));
+    const isFrameless = b => b.frame === 'none' && !!FRAMELESS[b.size];
+    const offsets = (n, gaps) => [...Array(n).keys()].map(i => [...Array(i).keys()].reduce((t, j) => t + gaps[j % gaps.length], 0));
     function iconXs(spec, ri) {
-        const n = spec.rows[ri].length, idx = [...Array(n).keys()];
+        const n = spec.rows[ri].length, at = offsets(n, spec.gaps);
         if (spec.socket) {
             const sr = spec.rows.length - 1, m = spec.rows[sr].length, last = spec.w - 51 - 45;
-            const p = m > 1 ? Math.min(27.4, (last - 20) / (m - 1)) : 27.4, first = last - p * (m - 1);
-            if (ri === sr) return idx.map(i => first + p * i);
-            // the row above lines up with the socket row's columns
-            const q = n > 1 ? Math.min(p, (spec.w - 20 - first) / (n - 1)) : 0;
-            return idx.map(i => first + q * i);
+            const first = last - offsets(m, spec.gaps)[m - 1];
+            return at.map(o => first + o);   // the row above lines up with the socket row's columns
         }
-        const p = n > 1 ? Math.min(spec.pitch, (spec.w - 40) / (n - 1)) : 0;
-        return idx.map(i => spec.w / 2 + (i - (n - 1) / 2) * p);
+        return at.map(o => spec.left + o);
     }
     const FILL = [L, P, B, R, L, L, P, B, R, L, L, P];
     function currentSpec(src = state) {
@@ -82,21 +87,115 @@
             if (c === CUR) return ['copen', 'cclose'];
             socket = true; return [];
         }));
-        return { ...b, rows, socket, switches: n, detail: board.label.toLowerCase() };
+        return { ...b, gaps: FRAMED_GAPS, ...(isFrameless(src) ? FRAMELESS[src.size] : {}), frameless: isFrameless(src),
+            rows, socket, switches: n, detail: board.label.toLowerCase() };
     }
 
-    // Brochure colour range
+    const cmykBoxes = [...document.querySelectorAll('#dpCmyk input')];
+    function showCmyk() { const c = boardCmyk(); cmykBoxes.forEach((el, i) => { el.value = c[i]; }); }
+    // Brochure colour range: name, screen colour, print ink (C, M, Y, K in %) used when printing
     const COLOURS = [
-        ['White', '#f7f7f5'], ['Black', '#1c1c1e'], ['Light Grey', '#c9cbcd'], ['Dark Grey', '#4a4d52'],
-        ['Light Blue', '#a9cbe6'], ['Dark Blue', '#1f3a5f'], ['Light Green', '#b9dcb8'], ['Dark Green', '#24493a'],
-        ['Baby Pink', '#f6d3dc'], ['Pink', '#e58fae'], ['Cream', '#efe4cc'], ['Brown', '#6b4630'], ['Orange', '#e9823a']
+        ['White', '#f7f7f5', [0, 0, 0, 0]],        ['Black', '#1c1c1e', [0, 0, 0, 100]],
+        ['Light Grey', '#c9cbcd', [0, 0, 0, 20]],  ['Dark Grey', '#4a4d52', [0, 0, 0, 70]],
+        ['Light Blue', '#a9cbe6', [30, 10, 0, 0]], ['Dark Blue', '#1f3a5f', [90, 70, 30, 40]],
+        ['Light Green', '#b9dcb8', [25, 0, 30, 0]], ['Dark Green', '#24493a', [75, 40, 65, 45]],
+        ['Baby Pink', '#f6d3dc', [0, 20, 5, 0]],   ['Pink', '#e58fae', [0, 50, 10, 0]],
+        ['Cream', '#efe4cc', [0, 5, 20, 5]],       ['Brown', '#6b4630', [35, 65, 85, 40]],
+        ['Orange', '#e9823a', [0, 55, 85, 0]]
     ];
+    // The two inks of the PAT logo (navy #003f7e and orange #ff8c00 on screen)
+    const LOGO_INKS = [['Navy', [100, 70, 0, 30]], ['Orange', [0, 45, 100, 0]]];
+    // Print model: process inks on white (coated stock), Yule-Nielsen Neugebauer, K overprinted
+    const INK = (() => {
+        const lin = v => (v /= 255) <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        const gam = v => Math.round(255 * Math.min(1, Math.max(0, v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055)));
+        const N = 2;   // Yule-Nielsen factor (dot gain)
+        const P = ['#ffffff', '#00aeef', '#ec008c', '#2e3192', '#fff200', '#00a651', '#ed1c24', '#2b2a30']   // index = c + 2m + 4y
+            .map(h => [1, 3, 5].map(i => Math.pow(lin(parseInt(h.substr(i, 2), 16)), 1 / N)));
+        const KI = [0x23, 0x1f, 0x20].map(lin);
+        // C, M, Y, K 0..1 -> linear RGB
+        function toLin(c, m, y, k) {
+            const out = [0, 0, 0];
+            for (let i = 0; i < 8; i++) {
+                const w = (i & 1 ? c : 1 - c) * (i & 2 ? m : 1 - m) * (i & 4 ? y : 1 - y);
+                for (let j = 0; j < 3; j++) out[j] += w * P[i][j];
+            }
+            return out.map((v, j) => Math.pow(v, N) * (1 - k * (1 - KI[j])));
+        }
+        const toRgb = (c, m, y, k) => toLin(c / 100, m / 100, y / 100, k / 100).map(gam);
+        const lab = L => {   // linear sRGB -> CIE Lab (D65)
+            const X = (0.4124 * L[0] + 0.3576 * L[1] + 0.1805 * L[2]) / 0.95047, Y = 0.2126 * L[0] + 0.7152 * L[1] + 0.0722 * L[2],
+                  Z = (0.0193 * L[0] + 0.1192 * L[1] + 0.9505 * L[2]) / 1.08883;
+            const f = t => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116;
+            return [116 * f(Y) - 16, 500 * (f(X) - f(Y)), 200 * (f(Y) - f(Z))];
+        };
+        const LIMIT = 300, COST = 0.012;   // total ink limit (%), and a small cost per % of ink so neutrals use black
+        const err = (t, c) => { if (c[0] + c[1] + c[2] + c[3] > LIMIT) return 1e9; const l = lab(toLin(c[0] / 100, c[1] / 100, c[2] / 100, c[3] / 100));
+            return (l[0] - t[0]) ** 2 + (l[1] - t[1]) ** 2 + (l[2] - t[2]) ** 2 + COST * (c[0] + c[1] + c[2] + c[3]) * 10; };
+        // coarse samples, then refine
+        const S = [];
+        for (let c = 0; c <= 100; c += 20) for (let m = 0; m <= 100; m += 20) for (let y = 0; y <= 100; y += 20) for (let k = 0; k <= 100; k += 20)
+            if (c + m + y + k <= LIMIT) S.push([c, m, y, k, ...lab(toLin(c / 100, m / 100, y / 100, k / 100))]);
+        function fit(rgb) {   // screen colour -> nearest printable CMYK (whole %)
+            const t = lab(rgb.map(lin));
+            let best = null, be = Infinity;
+            for (const s of S) { const e = (s[4] - t[0]) ** 2 + (s[5] - t[1]) ** 2 + (s[6] - t[2]) ** 2 + COST * (s[0] + s[1] + s[2] + s[3]) * 10; if (e < be) { be = e; best = s.slice(0, 4); } }
+            be = err(t, best);
+            for (const step of [10, 5, 2, 1]) {
+                for (let moved = true, n = 0; moved && n < 40; n++) {
+                    moved = false;
+                    for (let i = 0; i < 4; i++) for (const d of [-step, step]) {
+                        const v = best[i] + d; if (v < 0 || v > 100) continue;
+                        const c = best.slice(); c[i] = v; const e = err(t, c);
+                        if (e < be) { be = e; best = c; moved = true; }
+                    }
+                }
+            }
+            return best;
+        }
+        // 17-point grid over screen colours: the CMYK for each, and how it prints
+        const G = 17, lutC = new Float32Array(G * G * G * 4), lutR = new Float32Array(G * G * G * 3);
+        let built = false;
+        function build() {
+            if (built) return; built = true;
+            for (let r = 0; r < G; r++) for (let g = 0; g < G; g++) for (let b = 0; b < G; b++) {
+                const i = (r * G + g) * G + b, c = fit([r, g, b].map(v => Math.min(255, v * 16)));
+                lutC.set(c, i * 4); lutR.set(toRgb(...c), i * 3);
+            }
+        }
+        // Trilinear lookup for one pixel: writes CMYK (0..100) into oc and print colour into or
+        function look(r, g, b, oc, or) {
+            const fr = r / 16, fg = g / 16, fb = b / 16, r0 = Math.min(15, fr | 0), g0 = Math.min(15, fg | 0), b0 = Math.min(15, fb | 0);
+            const dr = fr - r0, dg = fg - g0, db = fb - b0;
+            if (oc) oc.fill(0); if (or) or.fill(0);
+            for (let n = 0; n < 8; n++) {
+                const w = (n & 4 ? dr : 1 - dr) * (n & 2 ? dg : 1 - dg) * (n & 1 ? db : 1 - db); if (!w) continue;
+                const i = ((r0 + (n >> 2 & 1)) * G + g0 + (n >> 1 & 1)) * G + b0 + (n & 1);
+                if (oc) for (let j = 0; j < 4; j++) oc[j] += w * lutC[i * 4 + j];
+                if (or) for (let j = 0; j < 3; j++) or[j] += w * lutR[i * 3 + j];
+            }
+        }
+        return { toRgb, fit, build, look };
+    })();
+    // Print ink for a colour: the fixed value for a brochure colour, otherwise the nearest printable CMYK
+    function cmykOf(hex) {
+        const named = COLOURS.find(c => c[1] === hex);
+        if (named) return named[2];
+        return INK.fit(hexRgb(hex));
+    }
+    // Screen colour for a CMYK ink (C, M, Y, K in %): how it prints
+    const cmykHex = c => '#' + INK.toRgb(...c).map(v => v.toString(16).padStart(2, '0')).join('');
+    const isCmyk = c => Array.isArray(c) && c.length === 4 && c.every(v => Number.isInteger(v) && v >= 0 && v <= 100);
+    // The ink of the board being edited: a custom colour keeps the exact CMYK it was picked or typed with
+    const boardCmyk = () => !state.colourName && isCmyk(state.cmyk) ? state.cmyk : cmykOf(state.colour);
+    const cmykText = c => `C${c[0]} M${c[1]} Y${c[2]} K${c[3]}`;
+    const cmykId = c => `C${c[0]}_M${c[1]}_Y${c[2]}_K${c[3]}`;
 
     const TEXTURES = {
-        'marble-1': { name: 'Marble 1 (Blue Gold)', src: 'images/finishes/marble-1.jpg' },
-        'marble-2': { name: 'Marble 2 (Mint)', src: 'images/finishes/marble-2.jpg' },
-        'marble-3': { name: 'Marble 3 (Rose)', src: 'images/finishes/marble-3.jpg' },
-        'wood':     { name: 'Wooden', src: 'images/finishes/wood.jpg' }
+        'marble-1': { name: 'Marble 1 (Blue Gold)', src: 'images/finishes/marble-1.jpg?v=2' },
+        'marble-2': { name: 'Marble 2 (Mint)', src: 'images/finishes/marble-2.jpg?v=2' },
+        'marble-3': { name: 'Marble 3 (Rose)', src: 'images/finishes/marble-3.jpg?v=2' },
+        'wood':     { name: 'Wooden', src: 'images/finishes/wood.jpg?v=2' }
     };
 
     // Walls to try the panel on
@@ -113,18 +212,21 @@
     };
 
     // Metal frame round the glass: 1.5 mm on each side, inside the board size. Stops run from the lit corner to the far one.
-    const FRAME_MM = 1.5, CORNER_MM = 1.2;
+    const FRAME_MM = 2, CORNER_MM = 1.2;
     const FRAMES = {
         silver: { name: 'Silver', stops: ['#f4f5f7', '#c3c7cd', '#8e939a', '#d5d8dc', '#a4a8ae'] },
         black:  { name: 'Black', stops: ['#5c5c60', '#2a2a2d', '#0c0c0e', '#3a3a3d', '#161618'] },
         gold:   { name: 'Gold', stops: ['#fbe7a6', '#d9b25a', '#9c7426', '#e8c873', '#b58b35'] },
-        rose:   { name: 'Rose gold', stops: ['#f8d5c8', '#dba292', '#a86c5c', '#e9b9aa', '#c08676'] }
+        rose:   { name: 'Rose gold', stops: ['#f8d5c8', '#dba292', '#a86c5c', '#e9b9aa', '#c08676'] },
+        none:   { name: 'No frame', stops: null }
     };
+    // The metal shine without its dark (shadow) tones: light, mid, bright, mid
+    const frameShine = s => [s[0], s[1], s[3], s[1]];
     const state = {
         frame: 'silver',
         size: '6', board: 4,       // 6 Module: fan + 2 switches + socket
         finish: 'colour',          // colour | texture | photo
-        colour: '#f7f7f5', colourName: 'White',
+        colour: '#f7f7f5', colourName: 'White', cmyk: null,
         texture: 'marble-1',
         photo: null,
         photoCrop: { cx: 0.5, cy: 0.5, zoom: 1 },   // part of the own photo on the board
@@ -136,7 +238,7 @@
         wall: 'studio',
         wallScale: 1,              // board size on a wall photo
         pos: { x: 0, y: 0 },       // board offset on a wall photo
-        light: { x: -0.35, y: -0.75 }   // light from the top left; follows the mouse on computers
+        light: { x: -0.35, y: -0.75 }   // fixed light from the top left: the frame shine never moves
     };
 
     const images = {};
@@ -177,17 +279,17 @@
        `state` always holds the board being edited; `boards` has one entry per board of the order.
        Boards of the same size and type sit together. "Apply changes to" decides whether an edit
        changes only the selected board, all boards like it, or every board. */
-    const BOARD_KEYS = ['size', 'board', 'finish', 'colour', 'colourName', 'texture', 'photo', 'photoCrop',
+    const BOARD_KEYS = ['size', 'board', 'finish', 'colour', 'colourName', 'cmyk', 'texture', 'photo', 'photoCrop',
         'logo', 'ownLogo', 'logoPos', 'logoSize', 'logoCrop', 'frame'];
     const LOOK_KEYS = ['photoImg', 'logoImg', 'photoLook', 'photoUrl'];
     // Settings that belong together: when one of them changes, the whole set goes to the other boards in scope
     const FAMILIES = [['size', 'board'],
-        ['finish', 'colour', 'colourName', 'texture', 'photo', 'photoCrop', 'photoImg', 'photoLook', 'photoUrl'],
+        ['finish', 'colour', 'colourName', 'cmyk', 'texture', 'photo', 'photoCrop', 'photoImg', 'photoLook', 'photoUrl'],
         ['logo', 'ownLogo', 'logoImg', 'logoCrop'], ['logoPos'], ['logoSize'], ['frame']];
-    const copyVal = v => v && typeof v === 'object' ? { ...v } : v;
+    const copyVal = v => Array.isArray(v) ? [...v] : v && typeof v === 'object' ? { ...v } : v;
     let boards = [], active = 0, view = 'one', scope = 'one', hits = [], photoUrl = '';
     const MAX_BOARDS = 200;
-    const kindOf = b => b.size + '.' + b.board;
+    const kindOf = b => b.size + '.' + b.board + (isFrameless(b) ? '.nf' : '');
     function snapshot() {
         const b = {};
         BOARD_KEYS.forEach(k => { b[k] = copyVal(state[k]); });
@@ -234,7 +336,7 @@
     function lookSig(b) {
         const f = b.finish;
         return JSON.stringify([b.size, b.board, f,
-            f === 'texture' ? b.texture : f === 'photo' ? [imgId(b.photoImg), b.photoCrop] : b.colour,
+            f === 'texture' ? b.texture : f === 'photo' ? [imgId(b.photoImg), b.photoCrop] : [b.colour, b.colourName ? null : b.cmyk],
             b.logo, b.logo === 'none' ? 0 : [b.logoPos, b.logoSize],
             b.logo === 'own' ? [imgId(b.logoImg), b.logoCrop] : 0, b.frame]);
     }
@@ -387,7 +489,7 @@
     // Show the controls as the board being edited has them
     function syncForm() {
         $('dpSize').value = state.size; fillBoards();
-        $('dpHex').value = state.colour.toUpperCase();
+        showCmyk();
         form.querySelector(`input[name="dpLogo"][value="${state.logo}"]`).checked = true;
         posSelect.value = state.logoPos; logoSize.value = Math.round(state.logoSize * 100);
         posSelect.disabled = logoSize.disabled = state.logo === 'none';
@@ -504,7 +606,7 @@
     let CH = 700, MM = SCALE, RES = 1, MIN_LINE = 1.6;
     let box = { x: 0, y: 0, w: 0, h: 0 };   // where the board was last drawn
 
-    function logicalH() { if (showAll()) return fitHeight ? sheetHeight() : 700; return fitHeight ? Math.round(SIZES[state.size].h * SCALE + 130) : 700; }
+    function logicalH() { if (showAll()) return fitHeight ? sheetHeight() : 700; return fitHeight ? Math.round(currentSpec().h * SCALE + 130) : 700; }
     function screenRes() {
         const w = canvas.clientWidth || CW;
         return Math.min(2.5, Math.max(1, w * (window.devicePixelRatio || 1) / CW));
@@ -672,81 +774,41 @@
 
     /* The glass board with depth, shadows and reflections */
     function drawPanel(spec, x, y, w, h) {
-        const r = CORNER_MM * MM, fw = FRAME_MM * MM, ri = 0.5 * MM;
-        const metal = (FRAMES[state.frame] || FRAMES.silver).stops, edge = hexRgb(metal[2]);
+        const bare = spec.frameless, r = (bare ? 0.5 : CORNER_MM) * MM, fw = bare ? 0 : FRAME_MM * MM, ri = 0.5 * MM;
         const look = panelLook(), dark = look.tone < 0.5;
-        const lx = state.light.x, ly = state.light.y;
-        const depth = 2.4 * MM;                       // visible glass and back-box edge
-        const ex = -lx * depth * 0.7, ey = -ly * depth;
-
-        // 1. shadows on the wall: a wide soft one and a tight contact one
-        ctx.save();
-        shadow('rgba(12,18,32,0.30)', 14 * MM, -lx * 7 * MM, -ly * 8 * MM);
-        roundRect(ctx, x + ex, y + ey, w, h, r); ctx.fillStyle = rgba(look.rgb, -0.5, 1); ctx.fill();
-        shadow('rgba(12,18,32,0.40)', 2.2 * MM, -lx * 1.2 * MM, -ly * 1.6 * MM);
-        ctx.fill();
-        ctx.restore();
-
-        // 2. the edge (thickness), drawn as a solid extrusion
-        const steps = Math.max(2, Math.ceil(Math.max(Math.abs(ex), Math.abs(ey)) * RES));
-        for (let i = steps; i >= 1; i--) {
-            const t = i / steps;
-            roundRect(ctx, x + ex * t, y + ey * t, w, h, r);
-            ctx.fillStyle = rgba(edge, -0.2 - 0.3 * t, 1); ctx.fill();
+        // No shadow or 3D edge: the frame keeps its metal shine (light tones only, no dark shade) and the glass
+        // 1. the metal frame (frameless boards are glass to the edge)
+        if (!bare) {
+            const metal = (FRAMES[state.frame] && FRAMES[state.frame].stops) || FRAMES.silver.stops;
+            const lx = state.light.x, ly = state.light.y;
+            const fg = ctx.createLinearGradient(x + w * (0.5 + lx * 0.5), y + h * (0.5 + ly * 0.5), x + w * (0.5 - lx * 0.5), y + h * (0.5 - ly * 0.5));
+            const shine = frameShine(metal);
+            shine.forEach((c, i) => fg.addColorStop(i / (shine.length - 1), c));
+            roundRect(ctx, x, y, w, h, r); ctx.fillStyle = fg; ctx.fill();
         }
-        roundRect(ctx, x + ex, y + ey, w, h, r);
-        ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.stroke();
 
-        // 3. the metal frame, lit from the light's side
-        const fg = ctx.createLinearGradient(x + w * (0.5 + lx * 0.5), y + h * (0.5 + ly * 0.5), x + w * (0.5 - lx * 0.5), y + h * (0.5 - ly * 0.5));
-        metal.forEach((c, i) => fg.addColorStop(i / (metal.length - 1), c));
-        roundRect(ctx, x, y, w, h, r); ctx.fillStyle = fg; ctx.fill();
-
-        // 4. the glass face inside the frame (the finish runs under the frame, as on the real board)
+        // 2. the glass face inside the frame (the finish runs under the frame, as on the real board)
         const gx = x + fw, gy = y + fw, gw = w - 2 * fw, gh = h - 2 * fw;
         ctx.save();
         roundRect(ctx, gx, gy, gw, gh, ri); ctx.clip();
-        if (state.finish === 'texture' && images[state.texture]) drawCover(images[state.texture], x, y, w, h);
+        if (state.finish === 'texture' && images[state.texture]) drawCover(texPic(), x, y, w, h);
         else if (state.finish === 'photo' && images.photo) {
             ctx.fillStyle = state.colour; ctx.fillRect(x, y, w, h);     // shows where the photo doesn't reach
             drawPart(ctx, photoPic(), photoSrc(spec.w, spec.h), x, y, w, h);
         }
         else { ctx.fillStyle = state.colour; ctx.fillRect(x, y, w, h); }
 
-        // glass: brighter top, slight shade at the bottom
-        const g = ctx.createLinearGradient(0, y, 0, y + h);
-        g.addColorStop(0, 'rgba(255,255,255,0.20)'); g.addColorStop(0.5, 'rgba(255,255,255,0.03)');
-        g.addColorStop(1, 'rgba(0,0,0,0.12)');
-        ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
-        // reflection band that moves with the light
-        const shift = (lx + 0.35) * 0.35;
-        const band = ctx.createLinearGradient(x + w * (0.05 + shift), y, x + w * (0.55 + shift), y + h);
-        band.addColorStop(0, 'rgba(255,255,255,0)');
-        band.addColorStop(0.42, 'rgba(255,255,255,0)');
-        band.addColorStop(0.5, `rgba(255,255,255,${dark ? 0.13 : 0.22})`);
-        band.addColorStop(0.62, 'rgba(255,255,255,0)');
-        ctx.fillStyle = band; ctx.fillRect(x, y, w, h);
-
         drawIcons(spec, x, y, w, h, dark);
         if (spec.socket) drawSocket(spec, x, y, w, h);
         drawLogo(x, y, w, h, dark);
 
-        // polished glass edge: light on the lit side, dark on the far side
-        const rim = ctx.createLinearGradient(x + w * (0.5 + lx * 0.5), y + h * (0.5 + ly * 0.5), x + w * (0.5 - lx * 0.5), y + h * (0.5 - ly * 0.5));
-        rim.addColorStop(0, 'rgba(255,255,255,0.75)'); rim.addColorStop(0.5, 'rgba(255,255,255,0.12)');
-        rim.addColorStop(1, 'rgba(0,0,0,0.30)');
-        roundRect(ctx, gx, gy, gw, gh, ri);
-        ctx.lineWidth = 0.8 * MM; ctx.strokeStyle = rim; ctx.stroke();
         // the glass sits a step below the frame: a thin shadow line along its edge
-        roundRect(ctx, gx, gy, gw, gh, ri);
-        ctx.lineWidth = Math.max(1, 0.35 * MM); ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.stroke();
+        if (!bare) {
+            roundRect(ctx, gx, gy, gw, gh, ri);
+            ctx.lineWidth = Math.max(1, 0.35 * MM); ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.stroke();
+        }
         ctx.restore();
 
-        // crisp frame edges: bright on the lit side, dark on the far side
-        const bevel = ctx.createLinearGradient(x + w * (0.5 + lx * 0.5), y + h * (0.5 + ly * 0.5), x + w * (0.5 - lx * 0.5), y + h * (0.5 - ly * 0.5));
-        bevel.addColorStop(0, 'rgba(255,255,255,0.85)'); bevel.addColorStop(0.5, 'rgba(255,255,255,0.15)'); bevel.addColorStop(1, 'rgba(0,0,0,0.35)');
-        roundRect(ctx, x + 0.2 * MM, y + 0.2 * MM, w - 0.4 * MM, h - 0.4 * MM, r * 0.85);
-        ctx.lineWidth = Math.max(1, 0.3 * MM); ctx.strokeStyle = bevel; ctx.stroke();
         roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, r);
         ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.stroke();
     }
@@ -773,7 +835,7 @@
         // backlit icons glow on dark glass
         if (dark) shadow('rgba(255,255,255,0.55)', 2.4 * MM, 0, 0);
         rows.forEach((row, ri) => {
-            const cy = rowY(rows.length, ri, y, h), xs = iconXs(spec, ri);
+            const cy = rowY(rows.length, ri, y, h, MM), xs = iconXs(spec, ri);
             row.forEach((kind, i) => ICONS[kind](x + xs[i] * MM, cy, s, colour));
         });
         ctx.restore();
@@ -864,7 +926,10 @@
     }
 
     // Universal socket with bronze shutters, placed as on brochure page 6 (mm from the plate's centre line)
-    function rowY(count, i, y, h) { return count === 1 ? y + h * 0.48 : y + h * (0.33 + i * 0.34); }
+    // icon row centres in whole mm: 43 mm down on a 90 mm board; 52 and 106 mm down on the 158 mm board
+    // Icon rows: one row centred; on the 158 mm board 45 mm from the top and bottom
+    // Two rows sit 68 mm apart, centred on the board (frameless 170 mm board: 51 and 119 mm). u = px per mm
+    function rowY(count, i, y, h, u) { return y + h / 2 + (count === 1 ? 0 : (i ? 34 : -34) * u); }
     // Universal socket as in the brochure (page 6): bronze earth slot running into a black round hole,
     // two stepped live/neutral slots below. These outlines are the holes in the glass.
     function socketPaths(sx, cy, m) {
@@ -885,7 +950,7 @@
         return { outer: [earth(0), pin(-1, 0), pin(1, 0)] };
     }
     function drawSocket(spec, x, y, w, h) {
-        const m = MM, cy = rowY(spec.rows.length, spec.rows.length - 1, y, h), sx = x + w - 51 * m;
+        const m = MM, cy = rowY(spec.rows.length, spec.rows.length - 1, y, h, m), sx = x + w - 51 * m;
         const { outer } = socketPaths(sx, cy, m);
         const metal = ctx.createLinearGradient(0, cy - 17.3 * m, 0, cy + 15.4 * m);
         metal.addColorStop(0, '#6a4528'); metal.addColorStop(0.5, '#4a2f1a'); metal.addColorStop(1, '#2e1c10');   // bronze, as in the brochure
@@ -969,14 +1034,14 @@
     function cutoutItems(spec, W, H) {
         const items = [];
         spec.rows.forEach((row, ri) => {
-            const cy = rowY(spec.rows.length, ri, 0, H), xs = iconXs(spec, ri);
+            const cy = rowY(spec.rows.length, ri, 0, H, 1), xs = iconXs(spec, ri);
             row.forEach((kind, i) => {
                 const cx = xs[i], tall = kind === 'speed' ? 17 : 10;   // the speed column is about twice as tall
                 items.push({ kind, cx, cy, name: `${ICON_NAMES[kind]}_row${ri + 1}_${i + 1}`, box: [cx - 11, cy - tall, 22, tall * 2] });
             });
         });
         if (spec.socket) {
-            const cy = rowY(spec.rows.length, spec.rows.length - 1, 0, H), sx = W - 51;
+            const cy = rowY(spec.rows.length, spec.rows.length - 1, 0, H, 1), sx = W - 51;
             items.push({ kind: 'socket', sx, cy, name: 'Socket', box: [sx - 19, cy - 20, 38, 38] });
         }
         return items;
@@ -1069,18 +1134,22 @@
         drawPart(o, tex, src, 0, 0, W, H);
         o.globalCompositeOperation = 'destination-out';
         items.forEach(it => drawCutout(o, it));
+        if (tiffOut) tiffOut.push({ name: `${tiffTag}_Finish_CMYK.tif`, canvas: c, ppm: P });
         return c.toDataURL('image/png');
     }
     function coverSrc(img, W, H) {
         const k = Math.max(W / img.width, H / img.height), sw = W / k, sh = H / k;
         return [(img.width - sw) / 2, (img.height - sh) / 2, sw, sh];
     }
+    // While the CorelDRAW file is made: the pictures to send as CMYK TIFF files too, and the design they belong to
+    let tiffOut = null, tiffTag = '';
     function logoData(img, sx, sy, sw, sh, wmm, hmm, white) {
         const P = Math.min(24, Math.max(12, sw / wmm)), c = document.createElement('canvas');
         c.width = Math.max(1, Math.round(wmm * P)); c.height = Math.max(1, Math.round(hmm * P));
         const o = c.getContext('2d');
         o.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
         if (white) { o.globalCompositeOperation = 'source-in'; o.fillStyle = '#ffffff'; o.fillRect(0, 0, c.width, c.height); }
+        if (tiffOut && state.logo === 'own' && !white) tiffOut.push({ name: `${tiffTag}_Logo_CMYK.tif`, canvas: c, ppm: P });
         return c.toDataURL('image/png');
     }
 
@@ -1093,12 +1162,12 @@
         const parts = [];
 
         // Plate with transparent cut-outs
-        const tex = state.finish === 'texture' ? images[state.texture] : state.finish === 'photo' ? photoPic() : null;
+        const tex = state.finish === 'texture' ? texPic() : state.finish === 'photo' ? photoPic() : null;
         // Flat, like the designer's own boards: each board holds just its pieces (no groups inside)
         if (tex) {
-            parts.push(`<image id="Finish" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none" xlink:href="${faceImage(tex, state.finish === 'photo' ? photoSrc(W, H) : coverSrc(tex, W, H), W, H, items)}"/>`);
+            parts.push(`<image id="${state.finish === 'photo' ? 'Photo' : 'Finish_' + state.texture}_CMYK_file_${tiffTag}_Finish_CMYK_tif" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none" xlink:href="${faceImage(tex, state.finish === 'photo' ? photoSrc(W, H) : coverSrc(tex, W, H), W, H, items)}"/>`);
         } else {
-            parts.push(`<path id="Colour" fill="${state.colour}" fill-rule="evenodd" d="${plateD}${traced.map(t => t.d).join('')}"/>`);
+            parts.push(`<path id="Colour_${(state.colourName || 'Custom').replace(/ /g, '_')}_${cmykId(boardCmyk())}" fill="${state.colour}" fill-rule="evenodd" d="${plateD}${traced.map(t => t.d).join('')}"/>`);
         }
         // All the icon and socket cut-outs as one curve, hairline only so the holes stay see-through
         parts.push(`<path id="Cut_lines" fill="none" fill-rule="evenodd" stroke="#ff00ff" stroke-width="0.05" d="${traced.map(t => t.d).join('')}"/>`);
@@ -1112,10 +1181,10 @@
             const z = state.logoSize, bw = Math.min(24 * z, 0.6 * W), bh = Math.min(17 * z, 0.45 * H);
             const k = Math.min(bw / sw, bh / sh), lw = sw * k, lh = sh * k;
             const lx = state.logoPos.includes('r') ? W - 9 - lw : 9, ly = state.logoPos.includes('b') ? H - 8 - lh : 8;
-            parts.push(`<image id="Logo" x="${fmt(lx)}" y="${fmt(ly)}" width="${fmt(lw)}" height="${fmt(lh)}" preserveAspectRatio="none" xlink:href="${logoData(img, sx, sy, sw, sh, lw, lh, false)}"/>`);
+            parts.push(`<image id="${state.logo === 'pat' ? `Logo_PAT_${LOGO_INKS.map(([n, c]) => `${n}_${cmykId(c)}`).join('_')}` : `Own_logo_CMYK_file_${tiffTag}_Logo_CMYK_tif`}" x="${fmt(lx)}" y="${fmt(ly)}" width="${fmt(lw)}" height="${fmt(lh)}" preserveAspectRatio="none" xlink:href="${logoData(img, sx, sy, sw, sh, lw, lh, false)}"/>`);
         }
 
-        const title = `PAT ${spec.name}, ${spec.detail}, ${finishLabel()}, ${logoLabel()} (${W} x ${H} mm)${qty > 1 ? `, quantity ${qty}` : ''}`;
+        const title = `PAT ${spec.name}, ${spec.detail}, ${printLabel()}, ${logoLabel()} (${W} x ${H} mm)${qty > 1 ? `, quantity ${qty}` : ''}`;
         return { W, H, title, body: parts.join('\n') };
     }
     function makeSvg() {
@@ -1132,6 +1201,7 @@
         const copies = [], perSize = {};
         list.forEach(({ b, qty }, i) => {
             load(b);
+            tiffTag = `Design${i + 1}_${state.size}M`;
             const one = boardSvg(qty);
             for (let c = 1; c <= qty; c++) {
                 perSize[state.size] = (perSize[state.size] || 0) + 1;
@@ -1166,9 +1236,12 @@
     function finishLabel() {
         if (state.finish === 'texture') return TEXTURES[state.texture].name;
         if (state.finish === 'photo' && state.photo) return 'Own photo';
-        return state.colourName ? state.colourName : `Custom colour ${state.colour.toUpperCase()}`;
+        return state.colourName ? state.colourName : `Custom colour CMYK ${cmykText(boardCmyk())}`;
     }
-    const frameLabel = () => `${(FRAMES[state.frame] || FRAMES.silver).name} frame`;
+    // Finish with its print ink, for the order message and the CorelDRAW file
+    const printLabel = () => finishLabel() + (state.finish === 'colour' && state.colourName ? ` (CMYK ${cmykText(boardCmyk())})` : '');
+    const frameName = b => isFrameless(b) ? 'No frame' : (FRAMES[b.frame] && FRAMES[b.frame].stops ? FRAMES[b.frame] : FRAMES.silver).name;
+    const frameLabel = () => isFrameless(state) ? 'No frame' : `${frameName(state)} frame`;
     function logoLabel() {
         const pos = { br: 'bottom right', bl: 'bottom left', tr: 'top right', tl: 'top left' }[state.logoPos];
         const size = state.logoSize === 1 ? '' : `, ${Math.round(state.logoSize * 100)}% size`;
@@ -1181,7 +1254,7 @@
     function printDpi(img, wmm, hmm) {
         return img ? Math.round(25.4 * Math.min(img.width / wmm, img.height / hmm)) : 0;
     }
-    function photoDpi() { const s = SIZES[state.size]; return images.photo ? Math.round(25.4 * photoSrc(s.w, s.h)[2] / s.w) : 0; }
+    function photoDpi() { const s = currentSpec(); return images.photo ? Math.round(25.4 * photoSrc(s.w, s.h)[2] / s.w) : 0; }
     function quality(dpi) {
         return dpi >= 250 ? { cls: 'is-good', text: 'sharp print' }
             : dpi >= 150 ? { cls: 'is-ok', text: 'good print' }
@@ -1316,8 +1389,27 @@
         if (img.standIn) c.standIn = true;
         return (m[rot] = c);
     }
-    const photoPic = () => turned(images.photo, state.photoCrop && state.photoCrop.rot);
-    const logoPic = () => turned(images.ownLogo, state.logoCrop && state.logoCrop.rot);
+    // Every picture on the board (finish, own photo, own logo) is printed in CMYK ink: shown here in the colours
+    // the inks can make (screen-only colours, like neon green, come out as the nearest printable colour)
+    const proofCache = new WeakMap();
+    function proofed(img) {
+        if (!img || img.standIn) return img;
+        let c = proofCache.get(img); if (c) return c;
+        INK.build();
+        const k = Math.min(1, Math.sqrt(16e6 / (img.width * img.height)));
+        c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+        const o = c.getContext('2d'); o.drawImage(img, 0, 0, c.width, c.height);
+        const d = o.getImageData(0, 0, c.width, c.height), px = d.data, or = new Float32Array(3);
+        for (let i = 0; i < px.length; i += 4) {
+            if (!px[i + 3]) continue;
+            INK.look(px[i], px[i + 1], px[i + 2], null, or); px[i] = or[0]; px[i + 1] = or[1]; px[i + 2] = or[2];
+        }
+        o.putImageData(d, 0, 0); proofCache.set(img, c);
+        return c;
+    }
+    const photoPic = () => turned(proofed(images.photo), state.photoCrop && state.photoCrop.rot);
+    const logoPic = () => turned(proofed(images.ownLogo), state.logoCrop && state.logoCrop.rot);
+    const texPic = () => proofed(images[state.texture]);
     function photoSrc(W, H) {
         const img = photoPic(), iw = img.width, ih = img.height, a = W / H, c = state.photoCrop;
         const cw0 = Math.min(iw, ih * a), AW = Math.max(iw, ih * a), AH = AW / a;   // cover width; whole-photo box
@@ -1343,7 +1435,7 @@
         return Math.round(25.4 / mmPerPx);
     }
     function cropPhoto() {
-        const s = SIZES[state.size], orig = images.photo, a = s.w / s.h, rot0 = (state.photoCrop.rot | 0) % 4;
+        const s = currentSpec(), orig = proofed(images.photo), a = s.w / s.h, rot0 = (state.photoCrop.rot | 0) % 4;
         const build = rot => {
             const img = turned(orig, rot), cw0 = Math.min(img.width, img.height * a);
             const reset = () => { const w = cw0, h = w / a; return [(img.width - w) / 2, (img.height - h) / 2, w, h]; };
@@ -1362,7 +1454,7 @@
         crop(build(rot0));
     }
     function cropLogo() {
-        const orig = images.ownLogo, rot0 = ((state.logoCrop && state.logoCrop.rot) | 0) % 4;
+        const orig = proofed(images.ownLogo), rot0 = ((state.logoCrop && state.logoCrop.rot) | 0) % 4;
         const build = rot => {
             const img = turned(orig, rot);
             return {
@@ -1396,6 +1488,15 @@
         }
         $('dpPhotoCrop').hidden = !(state.finish === 'photo' && images.photo);
         $('dpLogoCrop').hidden = !(state.logo === 'own' && images.ownLogo);
+        // Own logo: the same print-quality tag as the photo, at the size the logo prints
+        let lq = $('dpLogoQ');
+        if (!lq) { lq = document.createElement('span'); lq.id = 'dpLogoQ'; lq.style.marginLeft = '0.4rem'; $('dpLogoCrop').before(lq); }
+        lq.hidden = !(state.logo === 'own' && images.ownLogo && !images.ownLogo.standIn);
+        if (!lq.hidden) {
+            const r = logoSrc(), dpi = logoDpiFor(r[2], r[3]), q = quality(dpi);
+            lq.className = 'dp-quality ' + q.cls; lq.textContent = q.text;
+            lq.title = `${dpi} dpi at its print size. 250 dpi or more prints sharp.`;
+        }
         markFinish();
         markWall();
     }
@@ -1424,7 +1525,7 @@
     COLOURS.forEach(([name, hex]) => {
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'dp-swatch'; b.style.setProperty('--c', hex);
-        b.title = name; b.setAttribute('aria-label', name); b.dataset.hex = hex;
+        b.title = `${name} · CMYK ${cmykText(cmykOf(hex))}`; b.setAttribute('aria-label', name); b.dataset.hex = hex;
         b.addEventListener('click', () => { closeWheel(); setColour(hex, name); });
         colourRow.insertBefore(b, customBtn);
     });
@@ -1443,10 +1544,12 @@
         customBtn.style.setProperty('--dot', state.finish === 'colour' && !state.colourName ? state.colour : 'transparent');
     }
 
-    function setColour(hex, name) {
-        state.finish = 'colour'; state.colour = hex; state.colourName = name || '';
-        $('dpHex').value = hex.toUpperCase();
-        render();
+    // Brochure colour by name, or a custom colour by its CMYK ink (the screen shows that ink)
+    function setColour(hex, name, cmyk) {
+        state.finish = 'colour'; state.colourName = name || '';
+        state.cmyk = name ? null : cmyk || cmykOf(hex);
+        state.colour = name ? hex : cmykHex(state.cmyk);
+        showCmyk(); render();
     }
 
     // Colour wheel pop-up: hue around, saturation outward, brightness slider
@@ -1505,9 +1608,9 @@
         moveMarker(); marker.style.background = hex;
     }
     function fromWheel() {
-        const hex = toHex(hsv(wheelHS.h, wheelHS.s, bright.value / 100));
-        marker.style.background = hex;
-        setColour(hex, '');
+        const cmyk = cmykOf(toHex(hsv(wheelHS.h, wheelHS.s, bright.value / 100)));   // whole % of each ink
+        marker.style.background = cmykHex(cmyk);
+        setColour('', '', cmyk);
     }
     function pickAt(ev) {
         const rect = wheel.getBoundingClientRect();
@@ -1523,11 +1626,11 @@
     wheel.addEventListener('pointerup', () => { picking = false; });
     wheel.addEventListener('pointercancel', () => { picking = false; });
     bright.addEventListener('input', fromWheel);
-    $('dpHex').addEventListener('change', e => {
-        let v = e.target.value.trim(); if (!v.startsWith('#')) v = '#' + v;
-        if (/^#[0-9a-f]{6}$/i.test(v)) { placeWheelMarker(v.toLowerCase()); setColour(v.toLowerCase(), ''); }
-        else e.target.value = state.colour.toUpperCase();
-    });
+    // Typed CMYK: each box 0 to 100 %
+    cmykBoxes.forEach(el => el.addEventListener('change', () => {
+        const c = cmykBoxes.map(b => Math.min(100, Math.max(0, Math.round(+b.value) || 0)));
+        setColour('', '', c); placeWheelMarker(state.colour);
+    }));
 
     // Marble and wood
     finishGroup.querySelectorAll('.dp-swatch[data-texture]').forEach(b => {
@@ -1551,7 +1654,7 @@
         e.target.value = '';
         saveActive();
         const targets = scope === 'one' ? [state] : boards.filter(b => inScope(b, boards[active]));
-        const s = targets.map(b => SIZES[b.size]).reduce((m, z) => printDpi(img, z.w, z.h) < printDpi(img, m.w, m.h) ? z : m, SIZES[state.size]);
+        const s = targets.map(b => currentSpec(b)).reduce((m, z) => printDpi(img, z.w, z.h) < printDpi(img, m.w, m.h) ? z : m, currentSpec());
         if (printDpi(img, s.w, s.h) < MIN_DPI) {
             const need = [s.w, s.h].map(mm => Math.ceil(mm / 25.4 * MIN_DPI));
             toast(`Heads up: this photo is ${img.width} × ${img.height} px, so it may print blurry on the ${s.name} board (a clear print needs about ${need[0]} × ${need[1]} px). For the best print use the original photo from your camera, not a screenshot or a WhatsApp copy.`);
@@ -1586,7 +1689,7 @@
     wallBtns.forEach(el => {
         const wall = WALLS[el.dataset.wall];
         if (wall && wall.paint) el.style.setProperty('--c', wall.paint);
-        if (el.dataset.wall === 'wood') el.style.setProperty('--img', 'url("images/finishes/wood.jpg")');
+        if (el.dataset.wall === 'wood') el.style.setProperty('--img', 'url("images/finishes/wood.jpg?v=2")');
         if (el.tagName === 'BUTTON') el.addEventListener('click', () => setWall(el.dataset.wall));
     });
     const brickBtn = form.querySelector('[data-wall="brick"]');
@@ -1606,7 +1709,7 @@
     });
     $('dpWallScale').addEventListener('input', e => { state.wallScale = e.target.value / 100; renderSoon(); });
 
-    // Drag the board around on a wall photo; on computers the light follows the mouse
+    // Drag the board around on a wall photo
     let drag = null;
     function toLogical(e) {
         const rc = canvas.getBoundingClientRect();
@@ -1641,23 +1744,12 @@
         const p = toLogical(e);
         if (drag) {
             state.pos.x = drag.px + p.x - drag.x; state.pos.y = drag.py + p.y - drag.y;
-            renderSoon(); return;
-        }
-        if (e.pointerType === 'mouse') {
-            const cx = box.x + box.w / 2, cy = box.y + box.h / 2;
-            state.light = {
-                x: Math.max(-1, Math.min(1, (p.x - cx) / (CW / 2))),
-                y: Math.max(-1, Math.min(-0.3, (p.y - cy) / (CH / 2) - 0.5))
-            };
             renderSoon();
         }
     });
     function endDrag() { drag = null; canvas.classList.remove('is-dragging'); }
     canvas.addEventListener('pointerup', endDrag);
     canvas.addEventListener('pointercancel', endDrag);
-    canvas.addEventListener('pointerleave', e => {
-        if (e.pointerType === 'mouse' && !drag && !showAll()) { state.light = { x: -0.35, y: -0.75 }; renderSoon(); }
-    });
 
     // Logo: PAT stays until the visitor picks something else
     const ownInput = $('dpOwnLogo'), posSelect = $('dpLogoPos'), logoSize = $('dpLogoSize');
@@ -1677,8 +1769,9 @@
     });
     ownInput.addEventListener('change', e => readImage(e.target.files[0], img => {
         e.target.value = '';
-        if (Math.max(img.width, img.height) < LOGO_MIN_PX)
-            toast(`Heads up: this logo is small (${img.width} × ${img.height} px) and may print blurry. For a sharp print upload one at least ${LOGO_MIN_PX} px wide, or send us the PDF / SVG / CDR file.`);
+        const ldpi = logoDpiFor(img.width, img.height);
+        if (ldpi < MIN_DPI || Math.max(img.width, img.height) < LOGO_MIN_PX)
+            toast(`Heads up: this logo is small (${img.width} × ${img.height} px, ${ldpi} dpi at its print size) and may print blurry. For a sharp print upload one at least ${LOGO_MIN_PX} px wide, or send us the PDF / SVG / CDR file.`);
         images.ownLogo = img; state.ownLogo = true; state.logoCrop = null; setLogo('own');
         cropLogo();
     }));
@@ -1714,14 +1807,78 @@
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     }
-    const cdrBtn = $('dpCorel');
-    if (cdrBtn) cdrBtn.addEventListener('click', () => {
-        const blob = new Blob([makeSvg()], { type: 'image/svg+xml' });
+    // A CMYK TIFF (4 inks + transparency, deflate-compressed) of a picture, at its print resolution
+    async function cmykTiff(canvas, ppm) {
+        INK.build();
+        const w = canvas.width, h = canvas.height, px = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+        const raw = new Uint8Array(w * h * 5), oc = new Float32Array(4);
+        for (let i = 0, j = 0; i < px.length; i += 4, j += 5) {
+            const a = px[i + 3];
+            if (a) { INK.look(px[i], px[i + 1], px[i + 2], oc, null); for (let k = 0; k < 4; k++) raw[j + k] = Math.round(oc[k] * 2.55); }
+            raw[j + 4] = a;
+        }
+        const z = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
+        const tags = [[256, 4, 1, w], [257, 4, 1, h], [258, 3, 5, 'bits'], [259, 3, 1, 8], [262, 3, 1, 5], [273, 4, 1, 8],
+            [277, 3, 1, 5], [278, 4, 1, h], [279, 4, 1, z.length], [282, 5, 1, 'res'], [283, 5, 1, 'res'], [284, 3, 1, 1],
+            [296, 3, 1, 2], [332, 3, 1, 1], [338, 3, 1, 2]];
+        const ifd = 8 + z.length + (z.length & 1), extra = ifd + 2 + tags.length * 12 + 4;
+        const buf = new ArrayBuffer(extra + 10 + 8), v = new DataView(buf), u = new Uint8Array(buf);
+        u[0] = u[1] = 0x49; v.setUint16(2, 42, true); v.setUint32(4, ifd, true); u.set(z, 8);
+        v.setUint16(ifd, tags.length, true);
+        tags.forEach(([tag, type, count, val], n) => {
+            const at = ifd + 2 + n * 12;
+            v.setUint16(at, tag, true); v.setUint16(at + 2, type, true); v.setUint32(at + 4, count, true);
+            if (val === 'bits') v.setUint32(at + 8, extra, true);
+            else if (val === 'res') v.setUint32(at + 8, extra + 10, true);
+            else if (type === 3) v.setUint16(at + 8, val, true); else v.setUint32(at + 8, val, true);
+        });
+        for (let k = 0; k < 5; k++) v.setUint16(extra + k * 2, 8, true);
+        v.setUint32(extra + 10, Math.round(ppm * 25.4 * 100), true); v.setUint32(extra + 14, 100, true);   // dots per inch
+        return u;
+    }
+    // A plain (stored) ZIP of several files (crc32 is defined with the design-file code below)
+    function zipFiles(files) {
+        const enc = new TextEncoder(), parts = [], dir = []; let off = 0;
+        files.forEach(({ name, data }) => {
+            const nm = enc.encode(name), crc = crc32(data), h = new DataView(new ArrayBuffer(30));
+            h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint32(14, crc, true);
+            h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, nm.length, true);
+            parts.push(h, nm, data);
+            const d = new DataView(new ArrayBuffer(46));
+            d.setUint32(0, 0x02014b50, true); d.setUint16(4, 20, true); d.setUint16(6, 20, true); d.setUint32(16, crc, true);
+            d.setUint32(20, data.length, true); d.setUint32(24, data.length, true); d.setUint16(28, nm.length, true); d.setUint32(42, off, true);
+            dir.push(d, nm); off += 30 + nm.length + data.length;
+        });
+        const size = dir.reduce((t, x) => t + x.byteLength, 0), e = new DataView(new ArrayBuffer(22));
+        e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+        e.setUint32(12, size, true); e.setUint32(16, off, true);
+        return new Blob([...parts, ...dir, e], { type: 'application/zip' });
+    }
+    function saveAs(blob, name) {
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob); a.download = fileName().replace(/\.png$/, '-CorelDRAW.svg');
+        a.href = URL.createObjectURL(blob); a.download = name;
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-        toast(`CorelDRAW file saved${boards.length > 1 ? ` with all ${boards.length} boards` : ''} on the 1270 mm print sheet: real size in mm, icons and socket cut out. Open it in CorelDRAW.`);
+    }
+    const cdrBtn = $('dpCorel');
+    if (cdrBtn) cdrBtn.addEventListener('click', async () => {
+        tiffOut = [];
+        let svg, pics;
+        try { svg = makeSvg(); pics = tiffOut; } finally { tiffOut = null; }
+        const base = fileName().replace(/\.png$/, '-CorelDRAW'), where = `${boards.length > 1 ? ` with all ${boards.length} boards` : ''} on the 1270 mm print sheet: real size in mm, icons and socket cut out`;
+        if (!pics.length) {
+            saveAs(new Blob([svg], { type: 'image/svg+xml' }), base + '.svg');
+            toast(`CorelDRAW file saved${where}. Open it in CorelDRAW.`);
+            return;
+        }
+        // Pictures go along as CMYK TIFF files (the SVG can only hold screen colours)
+        cdrBtn.disabled = true;
+        try {
+            const files = [{ name: base + '.svg', data: new TextEncoder().encode(svg) }];
+            for (const p of pics) files.push({ name: p.name, data: await cmykTiff(p.canvas, p.ppm) });
+            saveAs(zipFiles(files), base + '.zip');
+            toast(`CorelDRAW ZIP saved${where}, plus ${pics.length} CMYK TIFF picture${pics.length > 1 ? 's' : ''}. In CorelDRAW swap each picture for its CMYK TIFF (named after it) for exact print ink.`);
+        } finally { cdrBtn.disabled = false; }
     });
     const dlBtn = $('dpDownload');
     dlBtn.addEventListener('click', async () => {
@@ -1734,7 +1891,8 @@
     // A link that rebuilds this exact design on patiot.in, so PAT IoT sees it straight from the chat
     // Links point at the site the customer is on, so a test copy (localhost / LAN) links to itself, not to the live site
     const SITE = /^https?:$/.test(location.protocol) ? location.origin + '/' : 'https://patiot.in/';
-    const finishCode = b => b.finish === 'texture' ? b.texture : b.finish === 'photo' ? 'photo' : b.colour.slice(1);
+    const finishCode = b => b.finish === 'texture' ? b.texture : b.finish === 'photo' ? 'photo'
+        : !b.colourName && isCmyk(b.cmyk) ? 'cmyk' + b.cmyk.join('-') : b.colour.slice(1);   // custom colours travel as CMYK
     // One code per design: size.board.finish.logo.position.logoSize.quantity.photoCrop.logoCrop
     // Own photos and logos are numbered (p1, p2 / o1, o2): the pictures travel in the design file, not in the link.
     const k3 = v => Math.round(v * 1000);
@@ -1826,7 +1984,10 @@
         else if (TEXTURES[f]) { state.finish = 'texture'; state.texture = f; }
         else if (/^[0-9a-f]{6}$/i.test(f)) {
             const hex = '#' + f.toLowerCase(), named = COLOURS.find(c => c[1] === hex);
-            state.finish = 'colour'; state.colour = hex; state.colourName = named ? named[0] : '';
+            state.finish = 'colour'; state.colour = hex; state.colourName = named ? named[0] : ''; state.cmyk = null;
+        } else if (/^cmyk\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}$/.test(f)) {
+            const c = f.slice(4).split('-').map(Number);
+            if (isCmyk(c)) { state.finish = 'colour'; state.colourName = ''; state.cmyk = c; state.colour = cmykHex(c); }
         }
         if (o.l === 'pat' || o.l === 'none') state.logo = o.l;
         if (/^(br|bl|tr|tl)$/.test(o.p || '')) state.logoPos = o.p;
@@ -1903,6 +2064,7 @@
             if (!SIZES[b.size]) b.size = base.size;
             if (!SIZES[b.size].boards[b.board]) b.board = 0;
             if (!/^#[0-9a-f]{6}$/i.test(b.colour || '')) b.colour = base.colour;
+            if (!isCmyk(b.cmyk)) b.cmyk = null;
             if (!TEXTURES[b.texture]) b.texture = base.texture;
             if (!/^(br|bl|tr|tl)$/.test(b.logoPos)) b.logoPos = 'br';
             b.logoSize = Math.min(1.8, Math.max(0.6, +b.logoSize || 1));
@@ -1950,15 +2112,18 @@
 
     const framePick = document.createElement('span');
     framePick.className = 'dp-frames'; framePick.setAttribute('role', 'group'); framePick.setAttribute('aria-label', 'Frame colour');
-    framePick.innerHTML = '<span class="dp-mini">Frame</span>' + Object.entries(FRAMES).map(([k, f]) =>
-        `<button type="button" class="dp-frame" data-frame="${k}" title="${f.name} frame" aria-label="${f.name} frame" style="--metal:linear-gradient(135deg,${f.stops.join(',')})"></button>`).join('');
+    framePick.innerHTML = '<span class="dp-mini">Frame</span>' + Object.entries(FRAMES).map(([k, f]) => f.stops
+        ? `<button type="button" class="dp-frame" data-frame="${k}" title="${f.name} frame" aria-label="${f.name} frame" style="--metal:linear-gradient(135deg,${frameShine(f.stops).join(',')})"></button>`
+        : `<button type="button" class="dp-frame dp-noframe" data-frame="${k}" title="${f.name}" aria-label="${f.name}"></button>`).join('');
     $('dpFinishGroup').querySelector('.dp-label').appendChild(framePick);
     framePick.addEventListener('click', e => {
         const b = e.target.closest('[data-frame]'); if (!b) return;
         state.frame = b.dataset.frame; render();
     });
     function markFrame() {
+        if (state.frame === 'none' && !FRAMELESS[state.size]) state.frame = 'silver';   // no frameless drawing for this size yet
         framePick.querySelectorAll('[data-frame]').forEach(b => {
+            if (b.dataset.frame === 'none') b.hidden = !FRAMELESS[state.size];
             const on = b.dataset.frame === state.frame;
             b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', on);
         });
@@ -1971,7 +2136,7 @@
         const own = [anyBoard(b => b.finish === 'photo') && 'photo finish', anyBoard(b => b.logo === 'own') && 'logo', state.wall === 'photo' && 'wall photo']
             .filter(Boolean);
         if (all.length === 1) {
-            list.push(`Size: ${s.name}, ${s.detail} (${s.w} × ${s.h} mm)`, `Finish: ${finishLabel()}`, `Frame: ${FRAMES[state.frame].name}`, `Logo: ${logoLabel()}`);
+            list.push(`Size: ${s.name}, ${s.detail} (${s.w} × ${s.h} mm)`, `Finish: ${printLabel()}`, `Frame: ${frameName(state)}`, `Logo: ${logoLabel()}`);
             if (N > 1) list.push(`Quantity: ${N}`);
         } else {
             // Designs that differ only in which uploaded picture or which crop they use get numbered,
@@ -1996,9 +2161,9 @@
             all.forEach(({ b, qty }, i) => {
                 load(b);
                 const t = currentSpec();
-                const fin = finishLabel().replace(/^Own photo/, m => m + photoTag(b));
+                const fin = printLabel().replace(/^Own photo/, m => m + photoTag(b));
                 const logo = logoLabel().replace(/^Own logo/, m => m + logoTag(b));
-                list.push(`${i + 1}) ${t.name}, ${t.detail} (${t.w} × ${t.h} mm) × ${qty}`, `    Finish: ${fin} · Frame: ${FRAMES[b.frame].name} · Logo: ${logo}`);
+                list.push(`${i + 1}) ${t.name}, ${t.detail} (${t.w} × ${t.h} mm) × ${qty}`, `    Finish: ${fin} · Frame: ${frameName(b)} · Logo: ${logo}`);
             });
             load(keep);
             list.push(`Total: ${N} boards`);

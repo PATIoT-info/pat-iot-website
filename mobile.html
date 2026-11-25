@@ -1109,7 +1109,7 @@
         .glb-prev, .glb-next { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(255,255,255,0.15); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
         .glb-prev { left: 0.5rem; } .glb-next { right: 0.5rem; }
     </style>
-<link rel="stylesheet" href="polish.css?v=dp26">
+<link rel="stylesheet" href="polish.css?v=dp28">
 </head>
 <body>
     <script src="intro.js"></script>
@@ -1412,8 +1412,13 @@
                             <div class="dp-wheel-side">
                                 <label class="dp-mini" for="dpBright">Brightness</label>
                                 <input type="range" id="dpBright" min="0" max="100" value="100">
-                                <label class="dp-mini" for="dpHex">Hex code</label>
-                                <input type="text" id="dpHex" maxlength="7" spellcheck="false" autocomplete="off">
+                                <span class="dp-mini" id="dpCmykLbl">CMYK print ink (%)</span>
+                                <div class="dp-cmyk" id="dpCmyk" role="group" aria-labelledby="dpCmykLbl">
+                                    <label>C<input type="number" min="0" max="100" step="1" inputmode="numeric" aria-label="Cyan %"></label>
+                                    <label>M<input type="number" min="0" max="100" step="1" inputmode="numeric" aria-label="Magenta %"></label>
+                                    <label>Y<input type="number" min="0" max="100" step="1" inputmode="numeric" aria-label="Yellow %"></label>
+                                    <label>K<input type="number" min="0" max="100" step="1" inputmode="numeric" aria-label="Black %"></label>
+                                </div>
                                 <button type="button" class="dp-done" id="dpWheelDone">Done</button>
                             </div>
                         </div>
@@ -1665,7 +1670,7 @@
         <a href="tel:+919030983040" class="qc-btn qc-call" aria-label="Call +91 90309 83040"><i class="fas fa-phone"></i></a>
     </div>
     <script src="script.js?v=h1"></script>
-    <script src="customizer.js?v=dp38" defer></script>
+    <script src="customizer.js?v=dp51" defer></script>
     <script>
     /* ── Hero Video — 6-video smooth forward+reverse player ── */
     (function () {
