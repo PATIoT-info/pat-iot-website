@@ -712,7 +712,9 @@
         box = { x, y, w, h };
 
         drawWall();
+        if (onScreen) logoHit = null;
         drawPanel(spec, x, y, w, h);
+        if (onScreen && logoDrag && logoHit) drawLogoSpots();
         if (state.wall === 'studio') drawDimension(spec, x, y, w, h);
         if (state.name) drawBoardName(state.name, x, y, w, h, state.wall === 'studio');
         ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -903,6 +905,7 @@
     const ICON_OFF = '#ffffff', ICON_ON = '#ff2a1f', EDGE = 'rgba(28,30,34,0.85)';
     const MI_MM = 17;   // box of a set icon: thin outlines about as big and as thin-lined as the drawn icons
     let iconHits = [], pickSlot = -1, onScreen = false, litBoard = null;
+    let logoHit = null, logoDrag = null;   // where the logo is on screen, and the logo being dragged to a corner
     const litSets = new WeakMap();
     function litOf(b) { b = b || litBoard || boards[active] || state; if (!litSets.has(b)) litSets.set(b, new Set()); return litSets.get(b); }
     // Fan speed per fan slot (1 to 4), per board
@@ -1152,11 +1155,37 @@
         const boxW = Math.min(24 * z, 0.6 * w / MM) * MM, boxH = Math.min(17 * z, 0.45 * h / MM) * MM;
         const k = Math.min(boxW / sw, boxH / sh);
         const lw = sw * k, lh = sh * k, mx = 9 * MM, my = 8 * MM;
-        const lx = state.logoPos.includes('r') ? x + w - mx - lw : x + mx;
-        const ly = state.logoPos.includes('b') ? y + h - my - lh : y + my;
+        const spot = pos => ({ pos, x: pos.includes('r') ? x + w - mx - lw : x + mx, y: pos.includes('b') ? y + h - my - lh : y + my, w: lw, h: lh });
+        let { x: lx, y: ly } = spot(state.logoPos);
+        if (onScreen) {
+            logoHit = { x: lx, y: ly, w: lw, h: lh, spots: ['tl', 'tr', 'bl', 'br'].map(spot) };
+            if (logoDrag) {   // follows the finger / mouse, kept on the board
+                lx = Math.max(x, Math.min(x + w - lw, logoDrag.x - logoDrag.ox));
+                ly = Math.max(y, Math.min(y + h - lh, logoDrag.y - logoDrag.oy));
+                logoDrag.lx = lx; logoDrag.ly = ly;
+            }
+        }
 
         // The PAT logo keeps its own colours on every finish, dark ones too
         ctx.drawImage(img, sx, sy, sw, sh, lx, ly, lw, lh);
+    }
+
+    // While the logo is dragged: the 4 exact corner places, the one it will snap to in blue
+    const nearestSpot = () => {
+        const cx = logoDrag.lx + logoHit.w / 2, cy = logoDrag.ly + logoHit.h / 2;
+        return logoHit.spots.reduce((a, b) => Math.hypot(b.x + b.w / 2 - cx, b.y + b.h / 2 - cy) < Math.hypot(a.x + a.w / 2 - cx, a.y + a.h / 2 - cy) ? b : a);
+    };
+    function drawLogoSpots() {
+        const near = nearestSpot();
+        ctx.save(); noShadow(); ctx.lineWidth = 2;
+        logoHit.spots.forEach(r => {
+            const on = r === near, pad = 4;
+            ctx.setLineDash(on ? [] : [6, 5]);
+            ctx.strokeStyle = on ? '#2563eb' : 'rgba(37,99,235,0.55)';
+            ctx.fillStyle = on ? 'rgba(37,99,235,0.16)' : 'rgba(255,255,255,0.10)';
+            roundRect(ctx, r.x - pad, r.y - pad, r.w + pad * 2, r.h + pad * 2, 6); ctx.fill(); ctx.stroke();
+        });
+        ctx.restore();
     }
 
     /* ── High quality picture (about 3000 px wide), made in the background ── */
@@ -1172,6 +1201,15 @@
         exportBlob = null; clearTimeout(exportTimer);
         const run = ++exportRun;
         exportTimer = setTimeout(() => makeBlob().then(b => { if (run === exportRun) exportBlob = b; }), 600);
+    }
+    // The picture of every board together (the "See all" view), whatever view is on screen
+    function allBoardsBlob() {
+        if (view === 'all' || boards.length < 2) return getBlob();
+        saveActive();
+        const was = view; view = 'all';
+        let out; try { out = makeBlob(); } finally { view = was; }   // painted right away; only the PNG packing waits
+        render();   // the on-screen tap areas back to the single board
+        return out;
     }
     function getBlob() { return exportBlob ? Promise.resolve(exportBlob) : makeBlob(); }
     function fileName() {
@@ -1377,9 +1415,7 @@
             parts.push(`<image id="${state.logo === 'pat' ? `Logo_PAT_${LOGO_INKS.map(([n, c]) => `${n}_${cmykId(c)}`).join('_')}` : `Own_logo_CMYK_file_${tiffTag}_Logo_CMYK_tif`}" x="${fmt(lx)}" y="${fmt(ly)}" width="${fmt(lw)}" height="${fmt(lh)}" preserveAspectRatio="none" xlink:href="${logoData(img, sx, sy, sw, sh, lw, lh, false)}"/>`);
         }
 
-        // The board's name under it on the sheet (outside the plate, so it is never printed on the glass)
-        if (state.name) parts.push(`<text id="Name" x="${fmt(W / 2)}" y="${fmt(H + 9)}" font-family="Arial" font-size="6" font-weight="bold" text-anchor="middle" fill="#000000">${esc(state.name)}</text>`);
-        const title = `PAT ${state.name ? state.name + ': ' : ''}${spec.name}, ${spec.detail}, ${printLabel()}, ${logoLabel()} (${W} x ${H} mm)${qty > 1 ? `, quantity ${qty}` : ''}`;
+        const title = `PAT ${spec.name}, ${spec.detail}, ${printLabel()}, ${logoLabel()} (${W} x ${H} mm)${qty > 1 ? `, quantity ${qty}` : ''}`;
         return { W, H, title, body: parts.join('\n') };
     }
     function makeSvg() {
@@ -1683,6 +1719,12 @@
         }
         $('dpPhotoCrop').hidden = !(state.finish === 'photo' && images.photo);
         $('dpLogoCrop').hidden = !(state.logo === 'own' && images.ownLogo);
+        const bg = $('dpLogoBg');
+        if (bg) {
+            const L = images.ownLogo, cutOn = !!(L && logoOrig.get(L));
+            bg.hidden = !(state.logo === 'own' && L && (cutOn || logoCut.get(L)));
+            bg.innerHTML = `<i class="fas fa-${cutOn ? 'fill' : 'eraser'}" aria-hidden="true"></i> ${cutOn ? 'Keep background' : 'Remove background'}`;
+        }
         // Own logo: the same print-quality tag as the photo, at the size the logo prints
         let lq = $('dpLogoQ');
         if (!lq) { lq = document.createElement('span'); lq.id = 'dpLogoQ'; lq.style.marginLeft = '0.4rem'; $('dpLogoCrop').before(lq); }
@@ -2023,9 +2065,14 @@
     canvas.addEventListener('pointerdown', e => {
         if (e.isPrimary !== false && doubleTap(e)) { endDrag(); e.preventDefault(); return; }
         if (showAll()) { const h = hitAt(e); if (h) select(h.i); return; }
+        const p = toLogical(e);
+        if (onLogo(p)) {   // drag the logo; it lands on the nearest corner
+            logoDrag = { x: p.x, y: p.y, ox: p.x - logoHit.x, oy: p.y - logoHit.y, lx: logoHit.x, ly: logoHit.y };
+            canvas.setPointerCapture(e.pointerId); canvas.classList.add('is-dragging');
+            e.preventDefault(); render(); return;
+        }
         if (tapIcon(e)) { e.preventDefault(); return; }
         if (!(state.wall === 'photo' && images.wall)) return;
-        const p = toLogical(e);
         if (p.x < box.x || p.x > box.x + box.w || p.y < box.y || p.y > box.y + box.h) return;
         drag = { x: p.x, y: p.y, px: state.pos.x, py: state.pos.y };
         canvas.setPointerCapture(e.pointerId); canvas.classList.add('is-dragging');
@@ -2034,13 +2081,35 @@
     canvas.addEventListener('pointermove', e => {
         if (showAll()) return;
         const p = toLogical(e);
-        canvas.classList.toggle('is-icon', !drag && !!iconAt(e));
+        const overLogo = !drag && !logoDrag && onLogo(p);
+        canvas.classList.toggle('is-logo', overLogo);
+        canvas.classList.toggle('is-icon', !drag && !logoDrag && !overLogo && !!iconAt(e));
+        if (logoDrag) { logoDrag.x = p.x; logoDrag.y = p.y; renderSoon(); return; }
         if (drag) {
             state.pos.x = drag.px + p.x - drag.x; state.pos.y = drag.py + p.y - drag.y;
             renderSoon();
         }
     });
-    function endDrag() { drag = null; canvas.classList.remove('is-dragging'); }
+    function endDrag() {
+        drag = null; canvas.classList.remove('is-dragging');
+        if (!logoDrag) return;
+        const moved = Math.hypot(logoDrag.lx - logoHit.x, logoDrag.ly - logoHit.y) > 3;
+        const to = logoHit ? nearestSpot().pos : state.logoPos;
+        logoDrag = null;
+        if (to !== state.logoPos) {
+            state.logoPos = to; posSelect.value = to;
+            toast(`Logo moved to the ${CORNER_NAMES[to]} corner.`);
+        } else if (!moved) toast('Drag the logo to any corner of the board.');
+        render();
+    }
+    const CORNER_NAMES = { tl: 'top left', tr: 'top right', bl: 'bottom left', br: 'bottom right' };
+    const onLogo = p => !showAll() && state.logo !== 'none' && logoHit && pickSlot < 0 &&
+        p.x >= logoHit.x - 6 && p.x <= logoHit.x + logoHit.w + 6 && p.y >= logoHit.y - 6 && p.y <= logoHit.y + logoHit.h + 6;
+    // Phones: a finger on the logo drags it instead of scrolling the page
+    canvas.addEventListener('touchstart', e => {
+        const t = e.touches[0];
+        if (e.touches.length === 1 && onLogo(toLogical(t))) e.preventDefault();
+    }, { passive: false });
     canvas.addEventListener('pointerup', endDrag);
     canvas.addEventListener('pointercancel', endDrag);
 
@@ -2060,14 +2129,134 @@
     $('dpOwnLogoChip').addEventListener('click', e => {
         if (state.logo === 'own') { e.preventDefault(); ownInput.click(); }
     });
+    /* Many "transparent PNG" logos from the internet are not see-through: the grey checkered squares
+       (or a plain white / coloured box) are painted into the picture. Such a background is taken off:
+       everything of the background colour(s) joined to the picture's edge, plus closed-in pockets of the
+       checkered pattern (inside an "A", a ring...). Returns the logo trimmed to what is left, or null. */
+    function cutBackground(img) {
+        const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height, N = W * H;
+        if (!W || !H || N > 16e6) return null;
+        const c = document.createElement('canvas'); c.width = W; c.height = H;
+        const o = c.getContext('2d', { willReadFrequently: true }); o.drawImage(img, 0, 0);
+        let d; try { d = o.getImageData(0, 0, W, H); } catch (e) { return null; }
+        const px = d.data;
+        // Already see-through? Then leave it alone
+        let clear = 0, seen = 0;
+        for (let i = 3; i < px.length; i += 28) { seen++; if (px[i] < 200) clear++; }
+        if (clear > seen * 0.01) return null;
+        // The colours along the edge: one plain colour, or the two colours of a checkerboard
+        const groups = [], TOL = 16;
+        const near = (i, g) => Math.max(Math.abs(px[i] - g[0]), Math.abs(px[i + 1] - g[1]), Math.abs(px[i + 2] - g[2]));
+        const edge = [];
+        for (let x = 0; x < W; x++) edge.push(x, (H - 1) * W + x);
+        for (let y = 1; y < H - 1; y++) edge.push(y * W, y * W + W - 1);
+        for (const k of edge) {
+            const i = k * 4, g = groups.find(g => near(i, g.c) <= 10);
+            if (g) g.n++; else { if (groups.length > 60) return null; groups.push({ c: [px[i], px[i + 1], px[i + 2]], n: 1 }); }
+        }
+        groups.sort((a, b) => b.n - a.n);
+        const pal = [groups[0]];
+        if (groups[1] && groups[1].n > edge.length * 0.15) pal.push(groups[1]);
+        if (pal.reduce((t, g) => t + g.n, 0) < edge.length * 0.9) return null;   // a photo, not a background
+        const grey = g => Math.max(...g.c) - Math.min(...g.c) <= 14;
+        const checker = pal.length === 2 && pal.every(grey);
+        if (pal.length === 2 && !checker) return null;
+        const cols = pal.map(g => g.c), dist = i => Math.min(...cols.map(g => near(i, g)));
+        // Checkered squares are perfectly flat; dark parts of the logo (brushed metal...) are grainy.
+        // So there a pixel only counts as background when it and its 8 neighbours all match a square colour.
+        const T = checker ? 6 : TOL;
+        const bgAt = k => {
+            if (dist(k * 4) > T) return false;
+            if (!checker) return true;
+            const x = k % W, y = (k - x) / W;
+            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                const xx = x + dx, yy = y + dy;
+                if (xx >= 0 && yy >= 0 && xx < W && yy < H && dist((yy * W + xx) * 4) > T) return false;
+            }
+            return true;
+        };
+        // Flood from the edge
+        const mask = new Uint8Array(N), stack = new Int32Array(N); let sp = 0;
+        const fill = (seeds, mark) => {
+            const got = [];
+            for (const k of seeds) if (!mask[k] && bgAt(k)) { mask[k] = mark; stack[sp++] = k; }
+            while (sp) {
+                const k = stack[--sp]; got.push(k);
+                const x = k % W;
+                if (x > 0 && !mask[k - 1] && bgAt(k - 1)) { mask[k - 1] = mark; stack[sp++] = k - 1; }
+                if (x < W - 1 && !mask[k + 1] && bgAt(k + 1)) { mask[k + 1] = mark; stack[sp++] = k + 1; }
+                if (k >= W && !mask[k - W] && bgAt(k - W)) { mask[k - W] = mark; stack[sp++] = k - W; }
+                if (k < N - W && !mask[k + W] && bgAt(k + W)) { mask[k + W] = mark; stack[sp++] = k + W; }
+            }
+            return got;
+        };
+        let removed = fill(edge, 1).length;
+        // Checkerboard: closed-in pockets of the same squares go too (both colours in them, and not tiny)
+        if (checker) {
+            for (let k = 0; k < N; k++) {
+                if (mask[k] || !bgAt(k)) continue;
+                const part = fill([k], 2);
+                let a = 0, b = 0;
+                for (const q of part) near(q * 4, cols[0]) <= near(q * 4, cols[1]) ? a++ : b++;
+                const keep = part.length < N * 0.0004 || Math.min(a, b) < part.length * 0.1;
+                for (const q of part) mask[q] = keep ? 3 : 1;
+                if (!keep) removed += part.length;
+            }
+        }
+        // The squares' last pixels right against the logo fail the 8-neighbour test: take those too (2 px)
+        if (checker) for (let pass = 0; pass < 2; pass++) {
+            const add = [];
+            for (let k = 0; k < N; k++) {
+                if (mask[k] === 1 || dist(k * 4) > T) continue;
+                const x = k % W;
+                if ((x > 0 && mask[k - 1] === 1) || (x < W - 1 && mask[k + 1] === 1) || (k >= W && mask[k - W] === 1) || (k < N - W && mask[k + W] === 1)) add.push(k);
+            }
+            add.forEach(k => { mask[k] = 1; }); removed += add.length;
+        }
+        if (removed < N * 0.02 || removed > N * 0.97) return null;
+        // Take it off, with a soft edge one pixel wide
+        let x0 = W, y0 = H, x1 = -1, y1 = -1;
+        for (let k = 0; k < N; k++) {
+            const i = k * 4;
+            if (mask[k] === 1) { px[i + 3] = 0; continue; }
+            const x = k % W, y = (k - x) / W;
+            if ((x > 0 && mask[k - 1] === 1) || (x < W - 1 && mask[k + 1] === 1) || (y > 0 && mask[k - W] === 1) || (y < H - 1 && mask[k + W] === 1))
+                px[i + 3] = Math.round(255 * Math.max(0, Math.min(1, (dist(i) - T) / (T * 1.5))));
+            if (px[i + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        }
+        if (x1 < x0) return null;
+        o.putImageData(d, 0, 0);
+        const t = document.createElement('canvas'); t.width = x1 - x0 + 1; t.height = y1 - y0 + 1;
+        t.getContext('2d').drawImage(c, x0, y0, t.width, t.height, 0, 0, t.width, t.height);
+        return { canvas: t, checker };
+    }
+    const logoOrig = new WeakMap(), logoCut = new WeakMap();   // the logo with and without its background
+    function useLogo(img) { images.ownLogo = img; state.ownLogo = true; state.logoCrop = null; setLogo('own'); }
     ownInput.addEventListener('change', e => readImage(e.target.files[0], img => {
         e.target.value = '';
         const ldpi = logoDpiFor(img.width, img.height);
-        if (ldpi < MIN_DPI || Math.max(img.width, img.height) < LOGO_MIN_PX)
-            toast(`Heads up: this logo is small (${img.width} × ${img.height} px, ${ldpi} dpi at its print size) and may print blurry. For a sharp print upload one at least ${LOGO_MIN_PX} px wide, or send us the PDF / SVG / CDR file.`);
-        images.ownLogo = img; state.ownLogo = true; state.logoCrop = null; setLogo('own');
-        cropLogo();
+        const small = ldpi < MIN_DPI || Math.max(img.width, img.height) < LOGO_MIN_PX;
+        if (small) toast(`Heads up: this logo is small (${img.width} × ${img.height} px, ${ldpi} dpi at its print size) and may print blurry. For a sharp print upload one at least ${LOGO_MIN_PX} px wide, or send us the PDF / SVG / CDR file.`);
+        const cut = cutBackground(img);
+        if (!cut) { useLogo(img); cropLogo(); return; }
+        const n = new Image();
+        n.onload = () => {
+            logoOrig.set(n, img); logoCut.set(img, n);
+            useLogo(n); cropLogo();
+            if (!small) toast(cut.checker
+                ? 'The checkered squares were part of your picture (it was not see-through), so we took them off. Tap “Keep background” next to Crop to undo.'
+                : 'We took off the plain background around your logo. Tap “Keep background” next to Crop to undo.');
+        };
+        n.src = cut.canvas.toDataURL('image/png');
     }));
+    // Switch between the logo without and with the background it came with
+    const bgBtn = document.createElement('button');
+    bgBtn.type = 'button'; bgBtn.className = 'dp-crop-btn'; bgBtn.id = 'dpLogoBg'; bgBtn.hidden = true;
+    $('dpLogoCrop').after(bgBtn);
+    bgBtn.addEventListener('click', () => {
+        const img = images.ownLogo, other = logoOrig.get(img) || logoCut.get(img);
+        if (other) useLogo(other);
+    });
     $('dpLogoCrop').addEventListener('click', cropLogo);
     // Picker closed without a file: keep the logo that was showing
     ownInput.addEventListener('cancel', () => setLogo(state.logo));
@@ -2161,18 +2350,16 @@
         let svg, pics;
         try { svg = makeSvg(); pics = tiffOut; } finally { tiffOut = null; }
         const base = fileName().replace(/\.png$/, '-CorelDRAW'), where = `${boards.length > 1 ? ` with all ${boards.length} boards` : ''} on the 1270 mm print sheet: real size in mm, icons and socket cut out`;
-        if (!pics.length) {
-            saveAs(new Blob([svg], { type: 'image/svg+xml' }), base + '.svg');
-            toast(`CorelDRAW file saved${where}. Open it in CorelDRAW.`);
-            return;
-        }
-        // Pictures go along as CMYK TIFF files (the SVG can only hold screen colours)
+        // One ZIP: the print sheet (SVG), a picture of all the boards together (PNG, opens again here with
+        // "Open file"), and the photos / textures as CMYK TIFF files (the SVG can only hold screen colours)
         cdrBtn.disabled = true;
         try {
             const files = [{ name: base + '.svg', data: new TextEncoder().encode(svg) }];
+            const mix = await designBlob(allBoardsBlob()).catch(() => null);
+            if (mix) files.push({ name: base.replace(/-CorelDRAW$/, '') + `-${boards.length > 1 ? 'all-boards' : 'board'}.png`, data: new Uint8Array(await mix.arrayBuffer()) });
             for (const p of pics) files.push({ name: p.name, data: await cmykTiff(p.canvas, p.ppm) });
             saveAs(zipFiles(files), base + '.zip');
-            toast(`CorelDRAW ZIP saved${where}, plus ${pics.length} CMYK TIFF picture${pics.length > 1 ? 's' : ''}. In CorelDRAW swap each picture for its CMYK TIFF (named after it) for exact print ink.`);
+            toast(`CorelDRAW ZIP saved${where}, with a picture of ${boards.length > 1 ? 'all the boards' : 'the board'}${pics.length ? `, plus ${pics.length} CMYK TIFF picture${pics.length > 1 ? 's' : ''}. In CorelDRAW swap each picture for its CMYK TIFF (named after it) for exact print ink` : ''}.`);
         } finally { cdrBtn.disabled = false; }
     });
     const dlBtn = $('dpDownload');
@@ -2316,8 +2503,8 @@
         const wallPic = state.wall === 'photo' ? idx(images.wall) : -1;
         return { v: 1, boards: list, active, wall: state.wall, wallPic, wallScale: state.wallScale, pos: state.pos, pictures: pics.map(i => i.src) };
     }
-    async function designBlob() {
-        const blob = await getBlob(); if (!blob) return blob;
+    async function designBlob(from) {
+        const blob = from ? await from : await getBlob(); if (!blob) return blob;
         const png = new Uint8Array(await blob.arrayBuffer());
         const json = JSON.stringify(designData()).replace(/[\u007f-\uffff]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
         const data = new TextEncoder().encode(KEYWORD + '\0' + json);
