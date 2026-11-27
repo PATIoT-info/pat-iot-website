@@ -1162,7 +1162,7 @@
 @media (max-width: 480px) { .dp-crop .dp-crop-actions .dp-crop-cancel, .dp-crop .dp-crop-actions .dp-crop-done { flex: 1 1 40%; } }
 
 /* ── The designer in simple steps (desktop and phones) ── */
-.dp-controls .dp-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.25rem; padding: 0.25rem; border-radius: 14px; background: #eef2f8; }
+.dp-controls .dp-steps { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.25rem; padding: 0.25rem; border-radius: 14px; background: #eef2f8; }
 .dp-controls .dp-steps button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; padding: 0.55rem 0.1rem 0.5rem; border: 0; border-radius: 10px; background: none; font: inherit; font-size: 0.8rem; font-weight: 600; color: #64748b; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.15s, color 0.15s; }
 .dp-controls .dp-steps button i { font-size: 1.1rem; }
 .dp-controls .dp-steps button:hover { color: #334155; }
@@ -1205,3 +1205,51 @@
 .dp-preview .dp-caption { margin-top: 0.45rem; font-size: 0.78rem; font-weight: 500; color: #64748b; line-height: 1.4; }
 .site-mobile .dp-preview .dp-caption { margin-top: 0.3rem; font-size: 0.7rem; }
 .dp-note { font-size: 0.74rem; }
+/* Switch icons: one button per switch, and the icon picker */
+.dp-icons [hidden] { display: none !important; }
+.dp-icon-all { margin: 0; font-size: 0.86rem; color: #475569; }
+.dp-icon-one { border: 0; background: none; padding: 0; font: inherit; font-weight: 700; color: var(--primary-color, #2563eb); cursor: pointer; }
+.dp-slots { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.dp-slot { position: relative; width: 44px; height: 44px; padding: 0; border-radius: 10px; border: 2px solid transparent; cursor: pointer;
+    background: radial-gradient(circle at 30% 20%, #2a2d33, #121418); display: flex; align-items: center; justify-content: center; }
+.dp-slot canvas, .dp-icon-opt canvas { display: block; pointer-events: none; }
+.dp-slot canvas { width: 34px; height: 34px; }
+.dp-slot span { position: absolute; top: -7px; right: -7px; min-width: 17px; height: 17px; border-radius: 9px; background: #fff; color: #334155;
+    border: 1px solid #cbd5e1; font-size: 0.66rem; font-weight: 700; line-height: 15px; text-align: center; }
+.dp-slot.is-on { box-shadow: inset 0 0 0 2px #ff2a1f; }
+.dp-slot.is-picking { border-color: #2563eb; }
+.dp-slot:hover { border-color: #93c5fd; }
+.dp-icons.dp-group { position: static; }   /* so the icon list below covers the whole controls card */
+/* The icon list opens over the controls card (same size), scrolling on its own: the page never grows or jumps */
+.dp-icon-pop { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; gap: 0.5rem;
+    border-radius: var(--radius-card); background: #fff; padding: 0.8rem; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12); }
+.dp-icon-pop[hidden] { display: none; }
+.dp-icon-head { display: flex; align-items: center; gap: 0.5rem; flex: none; }
+.dp-icon-pop .dp-slots { flex: none; padding: 6px 0 0.55rem; border-bottom: 1px solid #e2e8f0; }
+.dp-icon-title { font-size: 0.85rem; font-weight: 700; color: #1f2937; margin-right: auto; }
+.dp-icon-std { border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 0.3rem 0.6rem; font-size: 0.78rem; font-weight: 600; cursor: pointer; color: #334155; }
+.dp-icon-std:hover { border-color: #94a3b8; }
+.dp-icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 0.35rem; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; align-content: start; padding: 0.1rem; }
+.dp-icon-sec { grid-column: 1 / -1; font-size: 0.74rem; font-weight: 700; color: #64748b; margin-top: 0.35rem; }
+.dp-icon-opt { height: 46px; padding: 0; border-radius: 9px; border: 2px solid transparent; cursor: pointer;
+    background: radial-gradient(circle at 30% 20%, #2a2d33, #121418); display: flex; align-items: center; justify-content: center; }
+.dp-icon-opt canvas { width: 40px; height: 40px; }
+.dp-icon-opt:hover { border-color: #93c5fd; }
+.dp-icon-opt.is-on { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25); }
+.dp-stage canvas.is-icon { cursor: pointer; }
+/* "Tap a switch" hint on the preview */
+.dp-preview { position: relative; }
+.dp-tap-hint {
+    position: absolute; top: 0.65rem; left: 50%; transform: translateX(-50%); z-index: 4; margin: 0;
+    display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; pointer-events: none;
+    padding: 0.38rem 0.85rem; border-radius: 999px;
+    background: rgba(15, 23, 42, 0.82); color: #fff; font-size: 0.8rem; font-weight: 600;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+}
+.dp-tap-hint i { color: #ff5a4f; animation: dp-tap 1.6s ease-in-out infinite; }
+.dp-tap-hint[hidden] { display: none; }
+@keyframes dp-tap { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px) scale(0.9); } }
+@media (prefers-reduced-motion: reduce) { .dp-tap-hint i { animation: none; } }
+.site-mobile .dp-tap-hint { position: static; transform: none; width: max-content; max-width: 100%; margin: 0.4rem auto 0;
+    font-size: 0.7rem; padding: 0.28rem 0.7rem; }   /* phones: under the board, never over it */
+.site-mobile .dp-icon-pop { border-radius: 0.85rem; padding: 0.7rem; }

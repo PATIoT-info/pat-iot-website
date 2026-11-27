@@ -77,18 +77,40 @@
         return at.map(o => spec.left + o);
     }
     const FILL = [L, P, B, R, L, L, P, B, R, L, L, P];
+    // Switch icons: the original drawn icons, plus the icon set in board-icons.js (filled vector shapes,
+    // viewBox 0 -960 960 960). Every icon is a see-through cut-out: white backlight when off, red when on.
+    const OLD_ICONS = [['light', 'Light'], ['pendant', 'Pendant light'], ['bulb', 'Bulb'], ['ring', 'Switch (ring)'],
+        ['fan', 'Fan'], ['copen', 'Curtain open'], ['cclose', 'Curtain close'], ['master', 'Master'], ['bell', 'Bell'],
+        ['chandelier', 'Chandelier'], ['spot', 'Spot / track light'], ['tube', 'Tube light']];
+    // (set icons are named "m-<name>" so they never clash with the drawn ones, e.g. the set's own "light")
+    const MI = new Map((window.BOARD_ICONS || []).map(([k, label, group, d]) => ['m-' + k, { label, group, d, path: new Path2D(d) }]));
+    // Every icon in a fixed order: the link stores an icon as its number here (new icons only ever go at the end)
+    const ICON_LIST = [...OLD_ICONS.map(([k]) => k), ...MI.keys()];
+    const iconOk = k => k !== 'speed' && (ICON_LIST.includes(k));
+    // The icons a board uses, as a short code: the icon number per slot, empty where it keeps its standard icon
+    const iconCodes = b => !Array.isArray(b.icons) ? '' :
+        currentSpec(b).slots.map(s => s.key === s.def ? '' : ICON_LIST.indexOf(s.key).toString(36)).join('-').replace(/-+$/, '');
+    function iconsFromCode(code, src) {
+        if (!code) return null;
+        const list = code.split('-').map(t => ICON_LIST[parseInt(t, 36)] || null);
+        return list.some(Boolean) ? currentSpec({ ...src, icons: list }).slots.map(s => s.key) : null;
+    }
+    const iconLabel = k => MI.has(k) ? MI.get(k).label : (OLD_ICONS.find(o => o[0] === k) || [k, k])[1];
+    // Each switch, fan and curtain button is a "slot"; the fan's speed marks stay as they are
     function currentSpec(src = state) {
         const b = SIZES[src.size];
         const board = b.boards[src.board] || b.boards[0];
         let n = 0, socket = false;
+        const pick = Array.isArray(src.icons) ? src.icons : [], slots = [];
+        const at = (def, type) => { const k = pick[slots.length]; const key = k && iconOk(k) ? k : def; slots.push({ def, key, type }); return key; };
         const rows = board.rows.map(row => row.flatMap(c => {
-            if (c === S) return [FILL[n++]];
-            if (c === FAN) return ['fan', 'speed'];
-            if (c === CUR) return ['copen', 'cclose'];
+            if (c === S) return [at(FILL[n++], 'switch')];
+            if (c === FAN) return [at('fan', 'fan'), 'speed'];
+            if (c === CUR) return [at('copen', 'curtain open'), at('cclose', 'curtain close')];
             socket = true; return [];
         }));
         return { ...b, gaps: FRAMED_GAPS, ...(isFrameless(src) ? FRAMELESS[src.size] : {}), frameless: isFrameless(src),
-            rows, socket, switches: n, detail: board.label.toLowerCase() };
+            rows, slots, socket, switches: n, detail: board.label.toLowerCase() };
     }
 
     const cmykBoxes = [...document.querySelectorAll('#dpCmyk input')];
@@ -235,6 +257,7 @@
         ownLogo: null,
         logoPos: 'br',
         logoSize: 1,
+        icons: null,               // icon key per slot (null = the standard icons)
         wall: 'studio',
         wallScale: 1,              // board size on a wall photo
         pos: { x: 0, y: 0 },       // board offset on a wall photo
@@ -280,12 +303,12 @@
        Boards of the same size and type sit together. "Apply changes to" decides whether an edit
        changes only the selected board, all boards like it, or every board. */
     const BOARD_KEYS = ['size', 'board', 'finish', 'colour', 'colourName', 'cmyk', 'texture', 'photo', 'photoCrop',
-        'logo', 'ownLogo', 'logoPos', 'logoSize', 'logoCrop', 'frame'];
+        'logo', 'ownLogo', 'logoPos', 'logoSize', 'logoCrop', 'frame', 'icons'];
     const LOOK_KEYS = ['photoImg', 'logoImg', 'photoLook', 'photoUrl'];
     // Settings that belong together: when one of them changes, the whole set goes to the other boards in scope
     const FAMILIES = [['size', 'board'],
         ['finish', 'colour', 'colourName', 'cmyk', 'texture', 'photo', 'photoCrop', 'photoImg', 'photoLook', 'photoUrl'],
-        ['logo', 'ownLogo', 'logoImg', 'logoCrop'], ['logoPos'], ['logoSize'], ['frame']];
+        ['logo', 'ownLogo', 'logoImg', 'logoCrop'], ['logoPos'], ['logoSize'], ['frame'], ['icons']];
     const copyVal = v => Array.isArray(v) ? [...v] : v && typeof v === 'object' ? { ...v } : v;
     let boards = [], active = 0, view = 'one', scope = 'one', hits = [], photoUrl = '';
     const MAX_BOARDS = 200;
@@ -310,7 +333,10 @@
             const diff = k => LOOK_KEYS.includes(k) ? cur[k] !== now[k] : JSON.stringify(cur[k]) !== JSON.stringify(now[k]);
             const changed = FAMILIES.filter(f => f.some(diff)).flat();
             if (changed.length) boards.forEach(b => {
-                if (b !== cur && inScope(b, cur)) changed.forEach(k => { b[k] = LOOK_KEYS.includes(k) ? now[k] : copyVal(now[k]); });   // pictures are shared, not copied
+                if (b !== cur && inScope(b, cur)) changed.forEach(k => {
+                    if (k === 'icons' && kindOf(b).split('.').slice(0, 2).join() !== [now.size, now.board].join()) return;   // icons fit one layout only
+                    b[k] = LOOK_KEYS.includes(k) ? now[k] : copyVal(now[k]);
+                });   // pictures are shared, not copied
             });
         }
         Object.assign(cur, now);
@@ -338,7 +364,7 @@
         return JSON.stringify([b.size, b.board, f,
             f === 'texture' ? b.texture : f === 'photo' ? [imgId(b.photoImg), b.photoCrop] : [b.colour, b.colourName ? null : b.cmyk],
             b.logo, b.logo === 'none' ? 0 : [b.logoPos, b.logoSize],
-            b.logo === 'own' ? [imgId(b.logoImg), b.logoCrop] : 0, b.frame]);
+            b.logo === 'own' ? [imgId(b.logoImg), b.logoCrop] : 0, b.frame, iconCodes(b)]);
     }
     function designs() {
         const out = [], at = new Map();
@@ -408,8 +434,8 @@
         const keep = boards[active], minLine = MIN_LINE;
         hits = L.rects.map(r => ({ i: r.i, x: ox + r.x * sc, y: oy + r.y * sc, w: r.w * sc, h: r.h * sc }));
         MM = sc; MIN_LINE = 0.8;
-        hits.forEach(r => { load(boards[r.i]); drawPanel(currentSpec(), r.x, r.y, r.w, r.h); });
-        load(keep); MIN_LINE = minLine;
+        hits.forEach(r => { load(boards[r.i]); litBoard = boards[r.i]; drawPanel(currentSpec(), r.x, r.y, r.w, r.h); });
+        load(keep); MIN_LINE = minLine; litBoard = null;
         noShadow();
         // Blue outline: strong on the board being edited, light on the others the edits also go to
         ctx.save();
@@ -645,6 +671,7 @@
         ctx.setTransform(k, 0, 0, k, 0, 0);
         ctx.clearRect(0, 0, CW, CH);
         noShadow();
+        onScreen = target === canvas && !showAll(); if (!onScreen && target === canvas) iconHits = [];
         if (showAll()) {
             paintAll(); box = { x: 0, y: 0, w: 0, h: 0 };
             ctx.setTransform(1, 0, 0, 1, 0, 0); ctx = mainCtx;
@@ -668,7 +695,7 @@
         drawPanel(spec, x, y, w, h);
         if (state.wall === 'studio') drawDimension(spec, x, y, w, h);
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx = mainCtx;
+        ctx = mainCtx; onScreen = false;
     }
 
     function render() {
@@ -677,7 +704,7 @@
         catch (err) { console.error(err); load(boards[active] || snapshot()); }
         canvas.classList.toggle('is-draggable', !showAll() && state.wall === 'photo' && !!images.wall);
         canvas.classList.toggle('is-pickable', showAll() && boards.length > 1);
-        updateCaption();
+        updateCaption(); showSlots(); showTapHint();
         updateBoardsBar();
         scheduleExport();
     }
@@ -827,18 +854,57 @@
         ctx.fillText(label, cx, dy);
     }
 
+    // The icons are see-through cut-outs lit from behind: white when the switch is off, red when it is on.
+    // No glow; on light glass a thin dark edge keeps the white shape readable on screen.
+    const ICON_OFF = '#ffffff', ICON_ON = '#ff2a1f', EDGE = 'rgba(28,30,34,0.85)';
+    const MI_MM = 17;   // box of a set icon: thin outlines about as big and as thin-lined as the drawn icons
+    let iconHits = [], pickSlot = -1, onScreen = false, litBoard = null;
+    const litSets = new WeakMap();
+    function litOf(b) { b = b || litBoard || boards[active] || state; if (!litSets.has(b)) litSets.set(b, new Set()); return litSets.get(b); }
+    // Fan speed per fan slot (1 to 4), per board
+    const speedSets = new WeakMap();
+    function speedsOf(b) { b = b || litBoard || boards[active] || state; if (!speedSets.has(b)) speedSets.set(b, new Map()); return speedSets.get(b); }
+    const speedOf = n => speedsOf().get(n) || 3;
+    function drawIcon(c, kind, cx, cy, s, colour, ...more) {
+        if (MI.has(kind)) {
+            const k = s * MI_MM / ICON_MM / 960;
+            c.save(); c.translate(cx, cy); c.scale(k, k); c.translate(-480, 480);
+            c.fillStyle = colour; c.fill(MI.get(kind).path); c.restore();
+        } else { const keep = ctx; ctx = c; try { ICONS[kind](cx, cy, s, colour, ...more); } finally { ctx = keep; } }
+    }
     function drawIcons(spec, x, y, w, h, dark) {
-        const colour = dark ? 'rgba(255,255,255,0.96)' : 'rgba(17,17,17,0.88)';
-        const rows = spec.rows;
-        const s = ICON_MM * MM;
+        const rows = spec.rows, s = ICON_MM * MM, lit = litOf();
         ctx.save();
-        // backlit icons glow on dark glass
-        if (dark) shadow('rgba(255,255,255,0.55)', 2.4 * MM, 0, 0);
+        // On light glass a white shape is hard to see, so in the preview each icon gets a thin dark edge
+        // (the print files use the cut-outs, not this):
+        // dark copies nudged 0.3 mm all round, the lit icon on top
+        const edge = dark ? [] : [...Array(8).keys()].map(k => [Math.cos(k * Math.PI / 4) * 0.3 * MM, Math.sin(k * Math.PI / 4) * 0.3 * MM]);
+        const draw = (kind, cx, cy, colour, level, off) => {
+            edge.forEach(([dx, dy]) => drawIcon(ctx, kind, cx + dx, cy + dy, s, EDGE, level, EDGE));
+            drawIcon(ctx, kind, cx, cy, s, colour, level, off);
+        };
+        let slot = 0;
+        if (onScreen) iconHits = [];
         rows.forEach((row, ri) => {
             const cy = rowY(rows.length, ri, y, h, MM), xs = iconXs(spec, ri);
-            row.forEach((kind, i) => ICONS[kind](x + xs[i] * MM, cy, s, colour));
+            row.forEach((kind, i) => {
+                const n = kind === 'speed' ? slot - 1 : slot++, cx = x + xs[i] * MM;   // the speed marks light with their fan
+                const on = lit.has(n);
+                if (kind === 'speed') draw(kind, cx, cy, on ? ICON_ON : ICON_OFF, on ? speedOf(n) : undefined, ICON_OFF);
+                else draw(kind, cx, cy, on ? ICON_ON : ICON_OFF);
+                if (!onScreen) return;
+                if (kind !== 'speed') iconHits.push({ slot: n, x: cx, y: cy, r: 10 * MM });
+                else iconHits.push({ slot: n, act: 1, x: cx, y: cy - 0.75 * s, r: 0.6 * s }, { slot: n, act: -1, x: cx, y: cy + 0.75 * s, r: 0.6 * s });
+            });
         });
         ctx.restore();
+        if (onScreen && pickSlot >= 0) {      // the slot being changed in the icon picker
+            const at = iconHits.find(t => t.slot === pickSlot && !t.act);
+            if (at) {
+                ctx.save(); ctx.setLineDash([2 * MM, 1.4 * MM]); ctx.lineWidth = Math.max(1.5, 0.5 * MM);
+                ctx.strokeStyle = '#2563eb'; ctx.beginPath(); ctx.arc(at.x, at.y, 9.5 * MM, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+            }
+        }
     }
 
     // Each icon is drawn in a box about s wide and s tall around (cx, cy), measured from the brochure artwork
@@ -897,11 +963,16 @@
             }
             ctx.beginPath(); ctx.arc(cx, hy, hub, 0, Math.PI * 2); ctx.stroke();
         },
-        speed(cx, cy, s, c) {          // product photos: four level marks, double chevrons up top and down below
-            stroke(c, s);
-            ctx.fillStyle = c;
-            const bx = cx - s * 0.3, bw = s * 0.2, bh = s * 0.15;
-            [-0.95, -0.32, 0.32, 0.95].forEach(oy => ctx.fillRect(bx - bw / 2, cy + oy * s - bh / 2, bw, bh));
+        speed(cx, cy, s, c, level, off) {   // product photos: four level marks, double chevrons up top and down below
+            stroke(c, s);                      // with a level, the marks up to that speed take colour c, the rest `off`
+            const bx = cx - s * 0.3, bw = s * 0.26, bh = s * 0.15;   // factory file: hollow marks; lit ones fill in
+            [-0.95, -0.32, 0.32, 0.95].forEach((oy, j) => {
+                const lit = level !== undefined && level > 3 - j, y0 = cy + oy * s - bh / 2;
+                ctx.strokeStyle = level === undefined || lit ? c : off;
+                ctx.strokeRect(bx - bw / 2, y0, bw, bh);
+                if (lit) { ctx.fillStyle = c; ctx.fillRect(bx - bw / 2, y0, bw, bh); }
+            });
+            ctx.strokeStyle = c;
             const ax = cx + s * 0.34, aw = s * 0.2, ah = s * 0.2;
             [[-1.15, -1], [-0.9, -1], [0.9, 1], [1.15, 1]].forEach(([oy, d]) => {
                 const tip = cy + oy * s;
@@ -919,6 +990,65 @@
             const g = s * 0.035, d = s * 0.52, hh = s * 0.52;
             ctx.beginPath(); ctx.moveTo(cx - g - d, cy - hh); ctx.lineTo(cx - g, cy); ctx.lineTo(cx - g - d, cy + hh); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(cx + g + d, cy - hh); ctx.lineTo(cx + g, cy); ctx.lineTo(cx + g + d, cy + hh); ctx.stroke();
+        },
+        // The icons below are redrawn from the factory's CorelDRAW file, same line as the others
+        master(cx, cy, s, c) {         // ring with a double-lined square inside and a short dash on each side
+            stroke(c, s);
+            ctx.beginPath(); ctx.arc(cx, cy, s * 0.48, 0, Math.PI * 2); ctx.stroke();
+            ctx.strokeRect(cx - s * 0.17, cy - s * 0.17, s * 0.34, s * 0.34);
+            ctx.strokeRect(cx - s * 0.11, cy - s * 0.11, s * 0.22, s * 0.22);
+            ctx.beginPath();
+            [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([dx, dy]) => {
+                const d = s * 0.3, l = s * 0.09;
+                ctx.moveTo(cx + dx * d - dy * l, cy + dy * d - dx * l); ctx.lineTo(cx + dx * d + dy * l, cy + dy * d + dx * l);
+            });
+            ctx.stroke();
+        },
+        bell(cx, cy, s, c) {           // bell with a small loop on top and a fringe of short tassels
+            stroke(c, s);
+            const top = cy - s * 0.36, base = cy + s * 0.34;
+            ctx.beginPath(); ctx.arc(cx, top - s * 0.06, s * 0.06, Math.PI, 0); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(cx - s * 0.12, top);
+            ctx.bezierCurveTo(cx - s * 0.3, top, cx - s * 0.26, base - s * 0.2, cx - s * 0.42, base);
+            ctx.lineTo(cx + s * 0.42, base);
+            ctx.bezierCurveTo(cx + s * 0.26, base - s * 0.2, cx + s * 0.3, top, cx + s * 0.12, top);
+            ctx.arc(cx, top, s * 0.12, 0, Math.PI, true);
+            ctx.closePath(); ctx.stroke();
+            ctx.beginPath();
+            for (let k = -2; k <= 2; k++) { ctx.moveTo(cx + k * s * 0.16, base); ctx.lineTo(cx + k * s * 0.16, base + s * 0.1); }
+            ctx.stroke();
+        },
+        chandelier(cx, cy, s, c) {     // ceiling bar with three hanging lamps, the middle one lower
+            stroke(c, s);
+            const bar = cy - s * 0.42;
+            ctx.beginPath(); ctx.moveTo(cx - s * 0.42, bar); ctx.lineTo(cx + s * 0.42, bar); ctx.stroke();
+            [[-0.36, 0.08], [0, 0.3], [0.36, 0.08]].forEach(([dx, end]) => {
+                const x = cx + dx * s, y = cy + end * s;
+                ctx.beginPath(); ctx.moveTo(x, bar); ctx.lineTo(x, y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x - s * 0.08, y - s * 0.14); ctx.lineTo(x, y - s * 0.06); ctx.lineTo(x + s * 0.08, y - s * 0.14); ctx.stroke();
+                ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y + s * 0.06, s * 0.07, 0, Math.PI * 2); ctx.fill();
+            });
+        },
+        spot(cx, cy, s, c) {           // track: rail on top, a short stem and a tilted lamp body
+            stroke(c, s);
+            const rail = cy - s * 0.42;
+            ctx.beginPath(); ctx.moveTo(cx - s * 0.45, rail); ctx.lineTo(cx + s * 0.3, rail);
+            ctx.moveTo(cx - s * 0.05, rail); ctx.lineTo(cx - s * 0.05, cy - s * 0.16); ctx.stroke();
+            ctx.save(); ctx.translate(cx + s * 0.1, cy + s * 0.08); ctx.rotate(Math.PI * 0.27);
+            ctx.strokeRect(-s * 0.18, -s * 0.12, s * 0.5, s * 0.24);
+            ctx.beginPath(); ctx.moveTo(s * 0.24, -s * 0.12); ctx.lineTo(s * 0.24, s * 0.12); ctx.stroke();
+            ctx.restore();
+        },
+        tube(cx, cy, s, c) {           // tall panel light: double outline, a band near the top and the bottom
+            stroke(c, s);
+            const w = s * 0.5, h = s * 0.98;
+            ctx.strokeRect(cx - w / 2, cy - h / 2, w, h);
+            ctx.strokeRect(cx - w / 2 + s * 0.06, cy - h / 2 + s * 0.06, w - s * 0.12, h - s * 0.12);
+            ctx.beginPath();
+            ctx.moveTo(cx - w / 2 + s * 0.06, cy - h / 2 + s * 0.14); ctx.lineTo(cx + w / 2 - s * 0.06, cy - h / 2 + s * 0.14);
+            ctx.moveTo(cx - w / 2 + s * 0.06, cy + h / 2 - s * 0.14); ctx.lineTo(cx + w / 2 - s * 0.06, cy + h / 2 - s * 0.14);
+            ctx.stroke();
         }
     };
     function stroke(c, s) {
@@ -1010,13 +1140,12 @@
        Opens in CorelDRAW (File > Open or Import). Layers, bottom to top:
          Plate   - the finish with every icon and the socket cut out (transparent), so light and the wall show through.
                    A plain colour is one vector shape with holes; marble, wood or a photo is a 300 dpi picture with holes.
-         Cut_shapes - each icon and the socket as a closed vector outline, named, on a hairline: ready to Trim,
-                   Intersect or Weld with the picture, or to fill for a spot colour / white ink.
-         Outline - the plate's cut line.   Logo - the logo picture.
-       The cut shapes are traced from the same drawing code as the preview, so they match it exactly. */
+         Logo    - the logo picture.   (No cut-line or outline layers: the factory doesn't need them.)
+       The holes are traced from the same drawing code as the preview, so they match it exactly. */
     const fmt = n => +n.toFixed(3);
     const ICON_NAMES = { light: 'Light', pendant: 'Pendant', bulb: 'Bulb', ring: 'Switch', fan: 'Fan', speed: 'Fan_speed',
-        copen: 'Curtain_open', cclose: 'Curtain_close' };
+        copen: 'Curtain_open', cclose: 'Curtain_close', master: 'Master', bell: 'Bell', chandelier: 'Chandelier',
+        spot: 'Spot_light', tube: 'Tube_light' };
 
     // Draw one icon (or the socket) in mm onto any 2D context, filled solid
     function drawCutout(c, item) {
@@ -1027,7 +1156,7 @@
                 c.fillStyle = '#000';
                 socketPaths(item.sx, item.cy, 1).outer.forEach(p => c.fill(p));
             } else {
-                ICONS[item.kind](item.cx, item.cy, ICON_MM, '#000');
+                drawIcon(c, item.kind, item.cx, item.cy, ICON_MM, '#000');
             }
         } finally { ctx = keep.ctx; MM = keep.MM; MIN_LINE = keep.MIN_LINE; }
     }
@@ -1037,7 +1166,8 @@
             const cy = rowY(spec.rows.length, ri, 0, H, 1), xs = iconXs(spec, ri);
             row.forEach((kind, i) => {
                 const cx = xs[i], tall = kind === 'speed' ? 17 : 10;   // the speed column is about twice as tall
-                items.push({ kind, cx, cy, name: `${ICON_NAMES[kind]}_row${ri + 1}_${i + 1}`, box: [cx - 11, cy - tall, 22, tall * 2] });
+                const name = ICON_NAMES[kind] || iconLabel(kind).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+                items.push({ kind, cx, cy, name: `${name}_row${ri + 1}_${i + 1}`, box: [cx - 11, cy - tall, 22, tall * 2] });
             });
         });
         if (spec.socket) {
@@ -1047,6 +1177,27 @@
         return items;
     }
 
+    const OVERLAPS = new Set(['m-door_open']);   // checked: the only set icon whose parts overlap
+    // A set icon's own vector outline, moved and scaled to its place in mm (exact curves, no tracing)
+    function iconPathMM(item) {
+        const k = MI_MM / 960, tx = item.cx - 480 * k, ty = item.cy + 480 * k;
+        const tok = MI.get(item.kind).d.match(/[a-zA-Z]|-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/g) || [];
+        const ARGS = { M: 2, L: 2, T: 2, Q: 4, C: 6, S: 4, H: 1, V: 1, Z: 0 };
+        let out = '', cmd = '', i = 0;
+        while (i < tok.length) {
+            if (/[a-zA-Z]/.test(tok[i])) { cmd = tok[i++]; out += cmd; if (/z/i.test(cmd)) continue; }
+            else if (!cmd || /z/i.test(cmd)) break;
+            else { out += ' '; if (cmd === 'M') cmd = 'L'; else if (cmd === 'm') cmd = 'l'; }   // repeated pairs after a move are lines
+            const up = cmd.toUpperCase(), rel = cmd !== up, n = ARGS[up];
+            if (n === undefined) break;
+            const v = tok.slice(i, i + n).map(Number); i += n;
+            out += v.map((a, j) => {
+                const isY = up === 'V' || (up !== 'H' && j % 2 === 1);
+                return fmt(rel ? a * k : a * k + (isY ? ty : tx));
+            }).join(' ');
+        }
+        return out;
+    }
     // Trace a drawn shape into closed outlines (marching squares at 40 px per mm, then simplified)
     const TRACE = 40;
     function traceItem(item) {
@@ -1157,7 +1308,8 @@
         const spec = currentSpec(), W = spec.w, H = spec.h;
         const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
         const items = cutoutItems(spec, W, H);
-        const traced = items.map(it => ({ name: it.name, d: loopsPath(traceItem(it)) }));
+        // set icons go in as their own curves; one with overlapping parts is traced like the drawn icons, so it stays a clean hole
+        const traced = items.map(it => ({ name: it.name, d: MI.has(it.kind) && !OVERLAPS.has(it.kind) ? iconPathMM(it) : loopsPath(traceItem(it)) }));
         const plateD = `M0 0H${W}V${H}H0Z`;   // sharp corners
         const parts = [];
 
@@ -1169,9 +1321,6 @@
         } else {
             parts.push(`<path id="Colour_${(state.colourName || 'Custom').replace(/ /g, '_')}_${cmykId(boardCmyk())}" fill="${state.colour}" fill-rule="evenodd" d="${plateD}${traced.map(t => t.d).join('')}"/>`);
         }
-        // All the icon and socket cut-outs as one curve, hairline only so the holes stay see-through
-        parts.push(`<path id="Cut_lines" fill="none" fill-rule="evenodd" stroke="#ff00ff" stroke-width="0.05" d="${traced.map(t => t.d).join('')}"/>`);
-        parts.push(`<path id="Outline" fill="none" stroke="#000000" stroke-width="0.1" d="${plateD}"/>`);
 
         // Logo at its place and size
         let img, sx = 0, sy = 0, sw, sh;
@@ -1513,10 +1662,106 @@
         const before = mix((SIZES[state.size].boards[state.board] || {}).rows || []);
         state.size = e.target.value;
         const same = SIZES[state.size].boards.findIndex(bd => mix(bd.rows) === before);
-        state.board = same < 0 ? 0 : same;
+        state.board = same < 0 ? 0 : same; state.icons = null;
         fillBoards(); render();
     });
-    boardSelect.addEventListener('change', e => { state.board = +e.target.value; render(); });
+    boardSelect.addEventListener('change', e => { state.board = +e.target.value; state.icons = null; render(); });
+
+    // Switch icons: one button per switch / fan / curtain button of the board on screen; pick any icon for it
+    const iconGroup = document.createElement('div');
+    iconGroup.className = 'dp-group dp-icons'; iconGroup.id = 'dpIconGroup';
+    iconGroup.innerHTML = '<p class="dp-icon-all" hidden>Icons are picked per board. <button type="button" class="dp-icon-one">Show the selected board</button></p>' +
+        '<div class="dp-slots" id="dpSlots" role="group" aria-label="Switches on this board"></div>' +
+        '<div class="dp-icon-pop" id="dpIconPop" hidden><div class="dp-icon-head"><span class="dp-icon-title" id="dpIconTitle"></span>' +
+        '<button type="button" class="dp-icon-std" id="dpIconStd">Standard icon</button><button type="button" class="dp-done" id="dpIconDone">Done</button></div>' +
+        '<div class="dp-icon-grid" id="dpIconGrid"></div></div>';
+    form.querySelector('.dp-pick').after(iconGroup);
+    const slotsEl = $('dpSlots'), iconPop = $('dpIconPop'), iconGrid = $('dpIconGrid');
+    function iconTile(kind, px) {
+        const c = document.createElement('canvas'), k = 2;
+        c.width = c.height = px * k; c.className = 'dp-icon-pic';
+        const o = c.getContext('2d'); o.setTransform(k, 0, 0, k, 0, 0);
+        const keep = MIN_LINE; MIN_LINE = 1.2;
+        try { drawIcon(o, kind, px / 2, px / 2, px * 0.62, ICON_OFF); } finally { MIN_LINE = keep; }
+        return c;
+    }
+    const slotName = (s, i) => `${i + 1}. ${s.type === 'switch' ? 'Switch' : s.type === 'fan' ? 'Fan' : s.type[0].toUpperCase() + s.type.slice(1)}`;
+    const iconAll = iconGroup.querySelector('.dp-icon-all');
+    iconGroup.querySelector('.dp-icon-one').addEventListener('click', () => setView('one'));
+    function showSlots() {
+        const all = showAll();
+        iconAll.hidden = !all; slotsEl.hidden = all;
+        if (all) { closePicker(false); return; }
+        const slots = currentSpec().slots, lit = litOf();
+        if (pickSlot >= slots.length) closePicker(false);
+        slotsEl.innerHTML = '';
+        slots.forEach((s, i) => {
+            const b = document.createElement('button');
+            b.type = 'button'; b.className = 'dp-slot' + (i === pickSlot ? ' is-picking' : '') + (lit.has(i) ? ' is-on' : '');
+            b.title = `${slotName(s, i)}: ${iconLabel(s.key)} (change icon)`; b.setAttribute('aria-label', b.title);
+            b.append(iconTile(s.key, 34)); const n = document.createElement('span'); n.textContent = i + 1; b.append(n);
+            b.addEventListener('click', () => openPicker(i));
+            slotsEl.append(b);
+        });
+        if (pickSlot >= 0) {
+            $('dpIconTitle').textContent = `Icon for ${slotName(slots[pickSlot], pickSlot)}`;
+            iconGrid.querySelectorAll('.dp-icon-opt').forEach(el => el.classList.toggle('is-on', el.dataset.k === slots[pickSlot].key));
+        }
+    }
+    function fillGrid() {
+        if (iconGrid.childElementCount) return;
+        const groups = [['Original icons', OLD_ICONS.map(o => o[0])]];
+        MI.forEach((v, k) => { let g = groups.find(x => x[0] === v.group); if (!g) groups.push(g = [v.group, []]); g[1].push(k); });
+        groups.forEach(([title, keys]) => {
+            const h = document.createElement('div'); h.className = 'dp-icon-sec'; h.textContent = title; iconGrid.append(h);
+            keys.forEach(k => {
+                const b = document.createElement('button');
+                b.type = 'button'; b.className = 'dp-icon-opt'; b.dataset.k = k; b.title = iconLabel(k); b.setAttribute('aria-label', iconLabel(k));
+                b.append(iconTile(k, 40));
+                b.addEventListener('click', () => setSlotIcon(k));
+                iconGrid.append(b);
+            });
+        });
+    }
+    // The list covers the controls card, so the switch buttons move into it while it is open
+    function openPicker(i) { fillGrid(); pickSlot = i; iconPop.insertBefore(slotsEl, iconGrid); iconPop.hidden = false; render(); }
+    function closePicker(draw = true) {
+        if (pickSlot < 0 && iconPop.hidden) return;
+        pickSlot = -1; iconPop.hidden = true; iconAll.after(slotsEl);
+        if (draw) render();
+    }
+    // Scrolling the list stays in the list: the page (and its navigation bar) does not react to it
+    iconGrid.addEventListener('wheel', e => e.stopPropagation(), { passive: true });
+    function setSlotIcon(k) {
+        const slots = currentSpec().slots; if (pickSlot < 0 || !slots[pickSlot]) return;
+        const list = slots.map(s => s.key); list[pickSlot] = k;
+        state.icons = list.every((key, i) => key === slots[i].def) ? null : list;
+        render();
+    }
+    $('dpIconDone').addEventListener('click', () => closePicker());
+    $('dpIconStd').addEventListener('click', () => { const s = currentSpec().slots[pickSlot]; if (s) setSlotIcon(s.def); });
+    const iconAt = e => { if (showAll()) return null; const p = toLogical(e); return iconHits.find(t => Math.hypot(p.x - t.x, p.y - t.y) <= t.r); };
+    // A hint on the preview itself, so visitors know the switches can be tapped
+    const tapHint = document.createElement('p');
+    tapHint.className = 'dp-tap-hint'; tapHint.setAttribute('aria-hidden', 'true');
+    tapHint.innerHTML = '<i class="fa-solid fa-hand-pointer"></i><span></span>';
+    canvas.parentElement.after(tapHint);   // over the top of the preview on computers, under it on phones (CSS)
+    function showTapHint() {
+        tapHint.hidden = showAll();
+        tapHint.lastChild.textContent = pickSlot >= 0 ? 'Tap a switch on the board to change its icon'
+            : 'Tap a switch to turn it on / off';
+    }
+    // Tap a switch on the board: on (red) / off (white). While the picker is open, the tap picks that switch instead.
+    function tapIcon(e) {
+        const t = iconAt(e); if (!t) return false;
+        if (pickSlot >= 0) { pickSlot = t.slot; render(); return true; }
+        const lit = litOf();
+        if (t.act) {          // fan speed up / down: switches the fan on, then steps the speed 1 to 4
+            if (lit.has(t.slot)) speedsOf().set(t.slot, Math.max(1, Math.min(4, speedOf(t.slot) + t.act)));
+            else lit.add(t.slot);
+        } else lit.has(t.slot) ? lit.delete(t.slot) : lit.add(t.slot);
+        render(); return true;
+    }
 
     // One grid: brochure colours, the colour wheel, marble and wood, your photo
     const finishGroup = $('dpFinishGroup');
@@ -1732,6 +1977,7 @@
     canvas.addEventListener('pointerdown', e => {
         if (e.isPrimary !== false && doubleTap(e)) { endDrag(); e.preventDefault(); return; }
         if (showAll()) { const h = hitAt(e); if (h) select(h.i); return; }
+        if (tapIcon(e)) { e.preventDefault(); return; }
         if (!(state.wall === 'photo' && images.wall)) return;
         const p = toLogical(e);
         if (p.x < box.x || p.x > box.x + box.w || p.y < box.y || p.y > box.y + box.h) return;
@@ -1742,6 +1988,7 @@
     canvas.addEventListener('pointermove', e => {
         if (showAll()) return;
         const p = toLogical(e);
+        canvas.classList.toggle('is-icon', !drag && !!iconAt(e));
         if (drag) {
             state.pos.x = drag.px + p.x - drag.x; state.pos.y = drag.py + p.y - drag.y;
             renderSoon();
@@ -1893,7 +2140,7 @@
     const SITE = /^https?:$/.test(location.protocol) ? location.origin + '/' : 'https://patiot.in/';
     const finishCode = b => b.finish === 'texture' ? b.texture : b.finish === 'photo' ? 'photo'
         : !b.colourName && isCmyk(b.cmyk) ? 'cmyk' + b.cmyk.join('-') : b.colour.slice(1);   // custom colours travel as CMYK
-    // One code per design: size.board.finish.logo.position.logoSize.quantity.photoCrop.logoCrop
+    // One code per design: size.board.finish.logo.position.logoSize.quantity.photoCrop.logoCrop.frame.icons
     // Own photos and logos are numbered (p1, p2 / o1, o2): the pictures travel in the design file, not in the link.
     const k3 = v => Math.round(v * 1000);
     function designLink() {
@@ -1905,7 +2152,7 @@
             const pc = photo && b.photoCrop ? [b.photoCrop.cx, b.photoCrop.cy, b.photoCrop.zoom, b.photoCrop.rot | 0].map(k3).join('~') : '';
             const lc = own && b.logoCrop ? [b.logoCrop.x, b.logoCrop.y, b.logoCrop.w, b.logoCrop.h, b.logoCrop.rot | 0].map(k3).join('-') : '';
             return [b.size, b.board, photo ? 'p' + num(pics, b.photoImg) : finishCode(b), own ? 'o' + num(logos, b.logoImg) : b.logo,
-                b.logoPos, Math.round(b.logoSize * 100), qty, pc, lc, b.frame === 'silver' ? '' : b.frame].join('.').replace(/\.+$/, '');
+                b.logoPos, Math.round(b.logoSize * 100), qty, pc, lc, b.frame === 'silver' ? '' : b.frame, iconCodes(b)].join('.').replace(/\.+$/, '');
         }).join('_'));
         q.set('w', state.wall);
         return `${SITE}#design-panel?${q}`;
@@ -1946,8 +2193,8 @@
             d.split('_').filter(Boolean).slice(0, MAX_BOARDS).forEach(code => {
                 if (list.length >= MAX_BOARDS) return;
                 load(base);
-                const [s, b, f, l, p, z, n, pc, lc, fr] = code.split('.');
-                applyCode({ s, b, f, l, p, z, pc, lc, fr });
+                const [s, b, f, l, p, z, n, pc, lc, fr, ic] = code.split('.');
+                applyCode({ s, b, f, l, p, z, pc, lc, fr, ic });
                 const k = Math.max(1, parseInt(n, 10) || 1);
                 for (let c = 0; c < k && list.length < MAX_BOARDS; c++) list.push(snapshot());
             });
@@ -1966,6 +2213,7 @@
             const b = parseInt(o.b, 10);
             state.board = SIZES[state.size].boards[b] ? b : 0;
         }
+        state.icons = /^[0-9a-z-]{1,200}$/.test(o.ic || '') ? iconsFromCode(o.ic, state) : null;
         const f = o.f || '', nums = v => (v || '').split((v || '').includes('~') ? '~' : '-').map(t => parseInt(t, 10) / 1000);
         const pm = f === 'photo' ? ['', '1'] : f.match(/^p(\d{1,3})$/);
         if (pm) {
@@ -2206,9 +2454,10 @@
     // One step at a time (Size, Colour, Logo, Wall, Boards), Send always at the bottom
     {
         const form = $('dpForm'), finish = $('dpFinishGroup');
-        const [wallGroup, logoGroup] = [...form.querySelectorAll(':scope > .dp-group')].filter(g => g !== finish);
+        const [wallGroup, logoGroup] = [...form.querySelectorAll(':scope > .dp-group')].filter(g => g !== finish && g !== iconGroup);
         const STEPS = [
             ['size', 'Size', 'fa-border-all', form.querySelector('.dp-pick'), 'Pick the board size, then what goes on it.'],
+            ['icons', 'Icons', 'fa-lightbulb', iconGroup, 'Tap a switch below to pick its icon. Tap an icon on the board to turn it on (red) or off (white); tap the fan’s up / down arrows to change its speed.'],
             ['colour', 'Colour', 'fa-palette', finish, 'Tap a colour, marble or wood. Tap the camera to use your own photo.'],
             ['logo', 'Logo', 'fa-certificate', logoGroup, 'Keep the PAT logo, add your own, or have no logo.'],
             ['wall', 'Wall', 'fa-house', wallGroup, 'See the board on a wall. Tap the house to use a photo of your own wall.'],
@@ -2244,6 +2493,7 @@
                 t.classList.toggle('is-on', on); t.setAttribute('aria-selected', on);
             });
             closeWheel();
+            if (k !== 'icons') closePicker();
         }
         bar.addEventListener('click', e => { const t = e.target.closest('[data-step]'); if (t) showStep(t.dataset.step); });
         showStep('size');
