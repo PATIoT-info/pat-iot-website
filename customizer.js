@@ -258,6 +258,7 @@
         logoPos: 'br',
         logoSize: 1,
         icons: null,               // icon key per slot (null = the standard icons)
+        name: '',                  // the customer's name for this board ("Living room"), printed under it
         wall: 'studio',
         wallScale: 1,              // board size on a wall photo
         pos: { x: 0, y: 0 },       // board offset on a wall photo
@@ -303,14 +304,16 @@
        Boards of the same size and type sit together. "Apply changes to" decides whether an edit
        changes only the selected board, all boards like it, or every board. */
     const BOARD_KEYS = ['size', 'board', 'finish', 'colour', 'colourName', 'cmyk', 'texture', 'photo', 'photoCrop',
-        'logo', 'ownLogo', 'logoPos', 'logoSize', 'logoCrop', 'frame', 'icons'];
+        'logo', 'ownLogo', 'logoPos', 'logoSize', 'logoCrop', 'frame', 'icons', 'name'];   // name: per board, never shared
     const LOOK_KEYS = ['photoImg', 'logoImg', 'photoLook', 'photoUrl'];
     // Settings that belong together: when one of them changes, the whole set goes to the other boards in scope
     const FAMILIES = [['size', 'board'],
         ['finish', 'colour', 'colourName', 'cmyk', 'texture', 'photo', 'photoCrop', 'photoImg', 'photoLook', 'photoUrl'],
         ['logo', 'ownLogo', 'logoImg', 'logoCrop'], ['logoPos'], ['logoSize'], ['frame'], ['icons']];
+    const cleanName = v => String(v || '').replace(/[\u0000-\u001f<>]/g, '').replace(/\s+/g, ' ').trimStart().slice(0, 40);
     const copyVal = v => Array.isArray(v) ? [...v] : v && typeof v === 'object' ? { ...v } : v;
     let boards = [], active = 0, view = 'one', scope = 'one', hits = [], photoUrl = '';
+    const hist = { past: [], future: [], cur: null, timer: 0, busy: false, ready: false };   // undo / redo (see "Undo / redo")
     const MAX_BOARDS = 200;
     const kindOf = b => b.size + '.' + b.board + (isFrameless(b) ? '.nf' : '');
     function snapshot() {
@@ -364,7 +367,7 @@
         return JSON.stringify([b.size, b.board, f,
             f === 'texture' ? b.texture : f === 'photo' ? [imgId(b.photoImg), b.photoCrop] : [b.colour, b.colourName ? null : b.cmyk],
             b.logo, b.logo === 'none' ? 0 : [b.logoPos, b.logoSize],
-            b.logo === 'own' ? [imgId(b.logoImg), b.logoCrop] : 0, b.frame, iconCodes(b)]);
+            b.logo === 'own' ? [imgId(b.logoImg), b.logoCrop] : 0, b.frame, iconCodes(b), b.name || '']);
     }
     function designs() {
         const out = [], at = new Map();
@@ -389,7 +392,8 @@
         });
         return out;
     }
-    function place(groups, SW, lab) {
+    const hasNames = () => boards.some(b => b.name);
+    function place(groups, SW, lab, nb = 0) {   // nb: room under each row for the board names
         let y = 0, w = 0;
         const rects = [], labels = [];
         groups.forEach(g => {
@@ -397,11 +401,11 @@
             y += lab;
             let x = 0;
             for (let c = 0; c < g.n; c++) {
-                if (x > 0 && x + g.spec.w > SW + 0.01) { x = 0; y += g.spec.h + GAP; }
+                if (x > 0 && x + g.spec.w > SW + 0.01) { x = 0; y += g.spec.h + nb + GAP; }
                 rects.push({ i: g.start + c, x, y, w: g.spec.w, h: g.spec.h });
                 w = Math.max(w, x + g.spec.w); x += g.spec.w + GAP;
             }
-            y += g.spec.h + GAP * 1.6;
+            y += g.spec.h + nb + GAP * 1.6;
         });
         return { w, h: y - GAP * 1.6, rects, labels, lab };
     }
@@ -413,11 +417,11 @@
         let best = null;
         for (let k = 0; k <= 30; k++) {
             const SW = maxW + (longest - maxW) * k / 30;
-            let lab = 0, L = null, sc = 0;
+            let lab = 0, nb = 0, L = null, sc = 0;
             for (let pass = 0; pass < 2; pass++) {
-                L = place(groups, SW, lab);
+                L = place(groups, SW, lab, nb);
                 sc = Math.min(availW / L.w, availH / L.h, 2.6);
-                lab = 30 / sc;
+                lab = 30 / sc; nb = hasNames() ? 24 / sc : 0;
             }
             if (!best || sc > best.sc + 1e-6) best = { ...L, sc };
         }
@@ -437,9 +441,9 @@
         hits.forEach(r => { load(boards[r.i]); litBoard = boards[r.i]; drawPanel(currentSpec(), r.x, r.y, r.w, r.h); });
         load(keep); MIN_LINE = minLine; litBoard = null;
         noShadow();
-        // Blue outline: strong on the board being edited, light on the others the edits also go to
+        // Blue outline: strong on the board being edited, light on the others the edits also go to (screen only)
         ctx.save();
-        hits.forEach(r => {
+        if (!exporting) hits.forEach(r => {
             const on = r.i === active;
             if (!on && !inScope(boards[r.i], keep)) return;
             roundRect(ctx, r.x - 4, r.y - 4, r.w + 8, r.h + 8, 8);
@@ -447,6 +451,10 @@
             ctx.stroke();
         });
         ctx.restore();
+        // Each board's own name under it
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#0f172a';
+        ctx.font = '600 13px Inter, "Segoe UI", system-ui, sans-serif';
+        hits.forEach(r => { const n = boards[r.i].name; if (n) ctx.fillText(fitText(n, r.w + GAP * sc * 0.8), r.x + r.w / 2, r.y + r.h + 8); });
         L.labels.forEach(({ g, y }) => {
             const ly = oy + y * sc + L.lab * sc / 2, mine = active >= g.start && active < g.start + g.n;
             ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
@@ -482,7 +490,7 @@
         n = Math.max(0, Math.min(MAX_BOARDS - boards.length, Math.round(+n) || 1));
         if (!n) return;
         const made = [];
-        for (let c = 0; c < n; c++) made.push({ ...snapshot(), size, board: type });
+        for (let c = 0; c < n; c++) made.push({ ...snapshot(), size, board: type, name: '' });
         const last = boards.map(kindOf).lastIndexOf(kindOf(made[0]));
         boards.splice(last < 0 ? boards.length : last + 1, 0, ...made);
         active = boards.indexOf(made[0]); scope = 'one'; view = 'all';
@@ -493,7 +501,7 @@
     function duplicate() {
         if (boards.length >= MAX_BOARDS) return;
         saveActive();
-        const b = boards[active], copy = { ...b, photoCrop: copyVal(b.photoCrop), logoCrop: copyVal(b.logoCrop) };
+        const b = boards[active], copy = { ...b, photoCrop: copyVal(b.photoCrop), logoCrop: copyVal(b.logoCrop), name: "" };
         boards.splice(active + 1, 0, copy);
         active++; scope = 'one'; view = 'all';
         load(copy); syncForm(); render();
@@ -532,6 +540,8 @@
             <div class="dp-ws-view" role="group" aria-label="Preview">
                 <button type="button" data-view="all"><i class="fas fa-table-cells" aria-hidden="true"></i> See all</button>
                 <button type="button" data-view="one"><i class="fas fa-magnifying-glass-plus" aria-hidden="true"></i> Zoom in</button></div></div>
+        <label class="dp-ws-name"><span>Board name</span>
+            <input type="text" maxlength="40" placeholder="e.g. Living room" autocomplete="off" spellcheck="false"></label>
         <div class="dp-ws-scope">
             <span class="dp-ws-scope-label">Apply changes to</span>
             <div class="dp-ws-pills" role="group" aria-label="Apply changes to">
@@ -550,6 +560,14 @@
     wsQ('.dp-ws-add').addEventListener('click', () => openAdd());
     wsQ('.dp-ws-dup').addEventListener('click', duplicate);
     wsQ('.dp-ws-del').addEventListener('click', removeBoards);
+    // The name belongs to the selected board only (printed under that board in the picture and the CorelDRAW file)
+    const nameIn = wsQ('.dp-ws-name input');
+    nameIn.addEventListener('input', () => {
+        state.name = cleanName(nameIn.value);
+        if (boards[active]) boards[active].name = state.name;
+        renderSoon();
+    });
+    nameIn.addEventListener('change', () => { state.name = state.name.trim(); if (boards[active]) boards[active].name = state.name; nameIn.value = state.name; renderSoon(); });
 
     // "Add boards": pick a size, a type and how many
     const addDlg = document.createElement('dialog');
@@ -601,6 +619,8 @@
         // Mixed sizes can't all become one size by accident: size and type change per board or per group
         $('dpSize').disabled = boardSelect.disabled = scope === 'all';
         $('dpSize').title = boardSelect.title = scope === 'all' ? 'To change a size, pick one board or one group under “Apply changes to”' : '';
+        if (document.activeElement !== nameIn) nameIn.value = state.name || '';
+        wsQ('.dp-ws-name span').textContent = N > 1 ? `Name of board ${active + 1}` : 'Board name';
         if (key === wsKey) return;
         wsKey = key;
         wsQ('.dp-ws-total').textContent = `· ${N} board${N === 1 ? '' : 's'}`;
@@ -682,7 +702,7 @@
         const onPhoto = state.wall === 'photo' && images.wall;
         MM = SCALE * (onPhoto ? state.wallScale : 1);
         const w = spec.w * MM, h = spec.h * MM;
-        let x = (CW - w) / 2, y = (CH - h) / 2 - (state.wall === 'studio' ? 18 : 0);
+        let x = (CW - w) / 2, y = (CH - h) / 2 - (state.wall === 'studio' ? (state.name ? 36 : 18) : 0);
         if (onPhoto) {
             // keep at least a third of the board inside the picture
             state.pos.x = Math.max(-(CW + w) / 2 + w / 3, Math.min((CW + w) / 2 - w / 3, state.pos.x));
@@ -694,6 +714,7 @@
         drawWall();
         drawPanel(spec, x, y, w, h);
         if (state.wall === 'studio') drawDimension(spec, x, y, w, h);
+        if (state.name) drawBoardName(state.name, x, y, w, h, state.wall === 'studio');
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx = mainCtx; onScreen = false;
     }
@@ -707,6 +728,7 @@
         updateCaption(); showSlots(); showTapHint();
         updateBoardsBar();
         scheduleExport();
+        trackHistory();
     }
     let frame = 0;
     function renderSoon() { if (!frame) frame = requestAnimationFrame(() => { frame = 0; render(); }); }
@@ -854,6 +876,28 @@
         ctx.fillText(label, cx, dy);
     }
 
+    // Shorten a text with "…" to fit a width (current font)
+    function fitText(t, max) {
+        if (ctx.measureText(t).width <= max) return t;
+        while (t.length > 1 && ctx.measureText(t + '…').width > max) t = t.slice(0, -1);
+        return t + '…';
+    }
+    // The board's name under it: below the size line on the studio wall, on a dark label on the other walls
+    function drawBoardName(name, x, y, w, h, studio) {
+        const big = fitHeight ? 1.4 : 1;
+        ctx.save(); noShadow();
+        ctx.font = `700 ${Math.round(28 * big)}px Inter, "Segoe UI", system-ui, sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const t = fitText(name, CW - 40), cx = x + w / 2;
+        if (studio) { ctx.fillStyle = '#0f172a'; ctx.fillText(t, cx, Math.min(CH - 20 * big, y + h + 92 * big)); }
+        else {
+            const tw = ctx.measureText(t).width + 30 * big, th = 44 * big, ty = Math.min(CH - th - 8, y + h + 16);
+            ctx.fillStyle = 'rgba(15,23,42,0.82)'; roundRect(ctx, cx - tw / 2, ty, tw, th, th / 2); ctx.fill();
+            ctx.fillStyle = '#ffffff'; ctx.fillText(t, cx, ty + th / 2 + 1);
+        }
+        ctx.restore();
+    }
+
     // The icons are see-through cut-outs lit from behind: white when the switch is off, red when it is on.
     // No glow; on light glass a thin dark edge keeps the white shape readable on screen.
     const ICON_OFF = '#ffffff', ICON_ON = '#ff2a1f', EDGE = 'rgba(28,30,34,0.85)';
@@ -992,14 +1036,13 @@
             ctx.beginPath(); ctx.moveTo(cx + g + d, cy - hh); ctx.lineTo(cx + g, cy); ctx.lineTo(cx + g + d, cy + hh); ctx.stroke();
         },
         // The icons below are redrawn from the factory's CorelDRAW file, same line as the others
-        master(cx, cy, s, c) {         // ring with a double-lined square inside and a short dash on each side
+        master(cx, cy, s, c) {         // from the factory's picture: ring, one plain square, a short dash on each side
             stroke(c, s);
             ctx.beginPath(); ctx.arc(cx, cy, s * 0.48, 0, Math.PI * 2); ctx.stroke();
-            ctx.strokeRect(cx - s * 0.17, cy - s * 0.17, s * 0.34, s * 0.34);
-            ctx.strokeRect(cx - s * 0.11, cy - s * 0.11, s * 0.22, s * 0.22);
+            ctx.lineJoin = 'miter'; ctx.strokeRect(cx - s * 0.19, cy - s * 0.19, s * 0.38, s * 0.38); ctx.lineJoin = 'round';   // sharp corners, as in the picture
             ctx.beginPath();
             [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([dx, dy]) => {
-                const d = s * 0.3, l = s * 0.09;
+                const d = s * 0.33, l = s * 0.1;
                 ctx.moveTo(cx + dx * d - dy * l, cy + dy * d - dx * l); ctx.lineTo(cx + dx * d + dy * l, cy + dy * d + dx * l);
             });
             ctx.stroke();
@@ -1118,10 +1161,11 @@
 
     /* ── High quality picture (about 3000 px wide), made in the background ── */
     const EXPORT_W = 3000;
-    let exportBlob = null, exportTimer = 0, exportRun = 0;
+    let exportBlob = null, exportTimer = 0, exportRun = 0, exporting = false;
     function makeBlob() {
         const c = document.createElement('canvas');
-        paint(c, Math.max(2, EXPORT_W / CW));
+        exporting = true;   // the saved picture has no blue "selected board" outline
+        try { paint(c, Math.max(2, EXPORT_W / CW)); } finally { exporting = false; }
         return new Promise(resolve => c.toBlob(resolve, 'image/png'));
     }
     function scheduleExport() {
@@ -1333,7 +1377,9 @@
             parts.push(`<image id="${state.logo === 'pat' ? `Logo_PAT_${LOGO_INKS.map(([n, c]) => `${n}_${cmykId(c)}`).join('_')}` : `Own_logo_CMYK_file_${tiffTag}_Logo_CMYK_tif`}" x="${fmt(lx)}" y="${fmt(ly)}" width="${fmt(lw)}" height="${fmt(lh)}" preserveAspectRatio="none" xlink:href="${logoData(img, sx, sy, sw, sh, lw, lh, false)}"/>`);
         }
 
-        const title = `PAT ${spec.name}, ${spec.detail}, ${printLabel()}, ${logoLabel()} (${W} x ${H} mm)${qty > 1 ? `, quantity ${qty}` : ''}`;
+        // The board's name under it on the sheet (outside the plate, so it is never printed on the glass)
+        if (state.name) parts.push(`<text id="Name" x="${fmt(W / 2)}" y="${fmt(H + 9)}" font-family="Arial" font-size="6" font-weight="bold" text-anchor="middle" fill="#000000">${esc(state.name)}</text>`);
+        const title = `PAT ${state.name ? state.name + ': ' : ''}${spec.name}, ${spec.detail}, ${printLabel()}, ${logoLabel()} (${W} x ${H} mm)${qty > 1 ? `, quantity ${qty}` : ''}`;
         return { W, H, title, body: parts.join('\n') };
     }
     function makeSvg() {
@@ -2049,6 +2095,7 @@
         clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('is-on'), 12000);
     }
     function saveBlob(blob) {
+        markSaved();
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob); a.download = fileName();
         document.body.appendChild(a); a.click(); a.remove();
@@ -2102,6 +2149,7 @@
         return new Blob([...parts, ...dir, e], { type: 'application/zip' });
     }
     function saveAs(blob, name) {
+        markSaved();
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob); a.download = name;
         document.body.appendChild(a); a.click(); a.remove();
@@ -2152,7 +2200,8 @@
             const pc = photo && b.photoCrop ? [b.photoCrop.cx, b.photoCrop.cy, b.photoCrop.zoom, b.photoCrop.rot | 0].map(k3).join('~') : '';
             const lc = own && b.logoCrop ? [b.logoCrop.x, b.logoCrop.y, b.logoCrop.w, b.logoCrop.h, b.logoCrop.rot | 0].map(k3).join('-') : '';
             return [b.size, b.board, photo ? 'p' + num(pics, b.photoImg) : finishCode(b), own ? 'o' + num(logos, b.logoImg) : b.logo,
-                b.logoPos, Math.round(b.logoSize * 100), qty, pc, lc, b.frame === 'silver' ? '' : b.frame, iconCodes(b)].join('.').replace(/\.+$/, '');
+                b.logoPos, Math.round(b.logoSize * 100), qty, pc, lc, b.frame === 'silver' ? '' : b.frame, iconCodes(b),
+                b.name ? encodeURIComponent(b.name).replace(/\./g, '%2E').replace(/_/g, '%5F') : ''].join('.').replace(/\.+$/, '');
         }).join('_'));
         q.set('w', state.wall);
         return `${SITE}#design-panel?${q}`;
@@ -2193,8 +2242,8 @@
             d.split('_').filter(Boolean).slice(0, MAX_BOARDS).forEach(code => {
                 if (list.length >= MAX_BOARDS) return;
                 load(base);
-                const [s, b, f, l, p, z, n, pc, lc, fr, ic] = code.split('.');
-                applyCode({ s, b, f, l, p, z, pc, lc, fr, ic });
+                const [s, b, f, l, p, z, n, pc, lc, fr, ic, nm] = code.split('.');
+                applyCode({ s, b, f, l, p, z, pc, lc, fr, ic, nm });
                 const k = Math.max(1, parseInt(n, 10) || 1);
                 for (let c = 0; c < k && list.length < MAX_BOARDS; c++) list.push(snapshot());
             });
@@ -2214,6 +2263,7 @@
             state.board = SIZES[state.size].boards[b] ? b : 0;
         }
         state.icons = /^[0-9a-z-]{1,200}$/.test(o.ic || '') ? iconsFromCode(o.ic, state) : null;
+        try { state.name = cleanName(decodeURIComponent(o.nm || '')).trim(); } catch (e) { state.name = ''; }
         const f = o.f || '', nums = v => (v || '').split((v || '').includes('~') ? '~' : '-').map(t => parseInt(t, 10) / 1000);
         const pm = f === 'photo' ? ['', '1'] : f.match(/^p(\d{1,3})$/);
         if (pm) {
@@ -2303,6 +2353,11 @@
             toast('This picture has no design inside. Open the PNG file the customer sent from “Send on WhatsApp” (as a Document), or one saved with “Download HD”.');
             return;
         }
+        const n = await applyDesign(o);
+        toast(`Design opened: ${n.boards} board${n.boards === 1 ? '' : 's'}${n.pics ? ', with the customer’s original pictures' : ''}.`);
+    }
+    // Rebuild every board (and the wall photo) from a design: from a design file or from the autosave
+    async function applyDesign(o) {
         const pics = await Promise.all((o.pictures || []).map(picFrom)), picLooks = pics.map(i => i && lookOf(i));
         load(boards[0] || snapshot());
         const base = snapshot(), list = [];
@@ -2336,8 +2391,7 @@
         }
         syncForm(); markWall();
         setWall(wallImg ? 'photo' : WALLS[o.wall] && o.wall !== 'photo' ? o.wall : state.wall === 'photo' && !images.wall ? 'studio' : state.wall);
-        const N = boards.length;
-        toast(`Design opened: ${N} board${N === 1 ? '' : 's'}${pics.filter(Boolean).length ? ', with the customer’s original pictures' : ''}.`);
+        return { boards: boards.length, pics: pics.filter(Boolean).length };
     }
     // "Open design file" next to the CorelDRAW button, and drop a file on the preview
     const openInput = document.createElement('input');
@@ -2384,6 +2438,7 @@
         const own = [anyBoard(b => b.finish === 'photo') && 'photo finish', anyBoard(b => b.logo === 'own') && 'logo', state.wall === 'photo' && 'wall photo']
             .filter(Boolean);
         if (all.length === 1) {
+            if (state.name) list.push(`Board name: ${state.name}`);
             list.push(`Size: ${s.name}, ${s.detail} (${s.w} × ${s.h} mm)`, `Finish: ${printLabel()}`, `Frame: ${frameName(state)}`, `Logo: ${logoLabel()}`);
             if (N > 1) list.push(`Quantity: ${N}`);
         } else {
@@ -2411,7 +2466,7 @@
                 const t = currentSpec();
                 const fin = printLabel().replace(/^Own photo/, m => m + photoTag(b));
                 const logo = logoLabel().replace(/^Own logo/, m => m + logoTag(b));
-                list.push(`${i + 1}) ${t.name}, ${t.detail} (${t.w} × ${t.h} mm) × ${qty}`, `    Finish: ${fin} · Frame: ${frameName(b)} · Logo: ${logo}`);
+                list.push(`${i + 1}) ${b.name ? b.name + ': ' : ''}${t.name}, ${t.detail} (${t.w} × ${t.h} mm) × ${qty}`, `    Finish: ${fin} · Frame: ${frameName(b)} · Logo: ${logo}`);
             });
             load(keep);
             list.push(`Total: ${N} boards`);
@@ -2507,16 +2562,167 @@
             new IntersectionObserver(([en]) => document.documentElement.classList.toggle('dp-in-view', en.isIntersecting), { threshold: 0.25 }).observe(section);
     }
 
+    /* ── Undo / redo ──
+       Every change to the boards (finish, icons, logo, names, adding or removing boards...) is one step.
+       Quick changes in a row (dragging a slider, typing a name) count as one step. */
+    const cloneBoard = b => { const o = { ...b }; BOARD_KEYS.forEach(k => { o[k] = copyVal(b[k]); }); if (Array.isArray(b.icons)) o.icons = [...b.icons]; return o; };
+    const workSig = () => JSON.stringify(boards.map(lookSig));
+    const capture = () => ({ boards: boards.map(cloneBoard), active, scope, view, sig: workSig() });
+    function trackHistory() {
+        if (hist.busy || !hist.ready) return;
+        if (!hist.cur) { hist.cur = capture(); updateUndo(); return; }
+        clearTimeout(hist.timer); hist.timer = 0;
+        if (workSig() !== hist.cur.sig) hist.timer = setTimeout(commitStep, 450);
+    }
+    function commitStep() {
+        clearTimeout(hist.timer); hist.timer = 0;
+        if (!hist.cur) return;
+        saveActive();
+        if (workSig() === hist.cur.sig) return;
+        hist.past.push(hist.cur); if (hist.past.length > 150) hist.past.shift();
+        hist.cur = capture(); hist.future = [];
+        updateUndo(); autosave();
+    }
+    function goTo(h) {
+        hist.busy = true;
+        try {
+            boards = h.boards.map(cloneBoard); active = Math.min(h.active, boards.length - 1);
+            scope = h.scope; view = h.view;
+            load(boards[active]); closePicker(false); syncForm(); render();
+        } finally { hist.busy = false; }
+        hist.cur = { ...h, sig: workSig() };
+        updateUndo(); autosave();
+    }
+    function undo() {
+        if (hist.timer) commitStep();
+        if (!hist.past.length) return;
+        hist.future.push(hist.cur); goTo(hist.past.pop());
+    }
+    function redo() {
+        if (hist.timer) commitStep();
+        if (!hist.future.length) return;
+        hist.past.push(hist.cur); goTo(hist.future.pop());
+    }
+    const undoBar = document.createElement('div');
+    undoBar.className = 'dp-undo'; undoBar.setAttribute('role', 'group'); undoBar.setAttribute('aria-label', 'Undo and redo');
+    undoBar.innerHTML = `<button type="button" class="dp-undo-btn" data-u="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><i class="fas fa-rotate-left" aria-hidden="true"></i><span>Undo</span></button>
+        <button type="button" class="dp-undo-btn" data-u="redo" title="Redo (Ctrl+Y)" aria-label="Redo"><i class="fas fa-rotate-right" aria-hidden="true"></i><span>Redo</span></button>`;
+    canvas.parentElement.after(undoBar);   // on the preview's top right corner on computers, under it on phones (CSS)
+    const undoBtn = undoBar.querySelector('[data-u="undo"]'), redoBtn = undoBar.querySelector('[data-u="redo"]');
+    undoBtn.addEventListener('click', undo); redoBtn.addEventListener('click', redo);
+    function updateUndo() { undoBtn.disabled = !hist.past.length; redoBtn.disabled = !hist.future.length; }
+    updateUndo();
+    hist.ready = true;
+    // Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z (Cmd on a Mac), except while typing in a box (the box has its own undo)
+    document.addEventListener('keydown', e => {
+        if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+        const k = e.key.toLowerCase(); if (k !== 'z' && k !== 'y') return;
+        const t = e.target;
+        if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && !/^(button|radio|checkbox|range|color)$/.test(t.type || ''))) return;
+        if (document.querySelector('dialog[open]')) return;
+        e.preventDefault();
+        if (k === 'y' || e.shiftKey) redo(); else undo();
+    });
+
+    /* ── Never lose the boards ──
+       The boards are kept in this browser (with the photos and logos) after every change, and come back
+       when the page is refreshed or opened again. Before refreshing or closing with boards that were not
+       saved to a file yet, the customer is asked first. */
+    const keep = (() => {
+        let dbp = null;
+        const db = () => dbp || (dbp = new Promise((res, rej) => {
+            const r = indexedDB.open('pat-design-panel', 1);
+            r.onupgradeneeded = () => r.result.createObjectStore('work');
+            r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+        }));
+        const run = (mode, f) => db().then(d => new Promise((res, rej) => {
+            const t = d.transaction('work', mode), q = f(t.objectStore('work'));
+            t.oncomplete = () => res(q.result); t.onerror = () => rej(t.error);
+        }));
+        const safe = f => { try { return f().catch(() => null); } catch (e) { return Promise.resolve(null); } };
+        return {
+            get: () => safe(() => run('readonly', st => st.get('boards'))),
+            set: v => safe(() => run('readwrite', st => st.put(v, 'boards'))),
+            clear: () => safe(() => run('readwrite', st => st.delete('boards')))
+        };
+    })();
+    let freshSig = '', savedSig = '', freshBoards = null;
+    function autosave() {
+        if (!freshSig) return;
+        if (workSig() === freshSig) { keep.clear(); return; }
+        let data; try { data = designData(); } catch (e) { return; }
+        keep.set({ t: Date.now(), data });
+    }
+    const unsaved = () => !!freshSig && workSig() !== savedSig && workSig() !== freshSig;
+    function markSaved() { saveActive(); savedSig = workSig(); }
+    window.addEventListener('beforeunload', e => {
+        if (hist.timer) commitStep();
+        if (!unsaved()) return;
+        e.preventDefault(); e.returnValue = '';   // the browser asks "Leave site? Changes may not be saved"
+    });
+    window.addEventListener('pagehide', () => { if (hist.timer) commitStep(); });
+    // Refresh with F5 / Ctrl+R: our own question, with "Save and refresh"
+    const leaveDlg = document.createElement('dialog');
+    leaveDlg.className = 'dp-crop dp-leave';
+    leaveDlg.innerHTML = `<form method="dialog" class="dp-crop-card">
+            <div class="dp-crop-head"><strong>Save your boards first?</strong></div>
+            <p class="dp-crop-hint">Your boards are not saved to a file yet. Save the picture (it also opens again here with “Open file”, with every board), then refresh.</p>
+            <div class="dp-crop-actions">
+                <button type="button" class="dp-crop-cancel" data-l="stay">Cancel</button>
+                <button type="button" class="dp-crop-cancel" data-l="go">Refresh without saving</button>
+                <button type="submit" class="dp-crop-done" data-l="save">Save and refresh</button></div></form>`;
+    document.body.appendChild(leaveDlg);
+    leaveDlg.addEventListener('click', async e => {
+        const b = e.target.closest('[data-l]'); if (!b) return;
+        e.preventDefault();
+        if (b.dataset.l === 'stay') { leaveDlg.close(); return; }
+        if (b.dataset.l === 'save') {
+            b.disabled = true; b.textContent = 'Saving…';
+            const blob = await designBlob().catch(() => null);
+            if (blob) saveBlob(blob);
+            await new Promise(r => setTimeout(r, 900));   // let the download start
+        }
+        savedSig = workSig(); location.reload();
+    });
+    document.addEventListener('keydown', e => {
+        const reload = e.key === 'F5' || ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'r');
+        if (!reload || !unsaved() || leaveDlg.open) return;
+        e.preventDefault();
+        const s = leaveDlg.querySelector('[data-l="save"]'); s.disabled = false; s.textContent = 'Save and refresh';
+        leaveDlg.showModal();
+    });
+    function offerStartNew() {
+        const t = stage.querySelector('.dp-toast'); if (!t) return;
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'dp-toast-btn'; b.textContent = 'Start new';
+        b.addEventListener('click', () => {
+            if (hist.timer) commitStep();
+            hist.past.push(hist.cur); hist.future = []; goTo({ ...freshBoards });
+            t.classList.remove('is-on');
+        });
+        t.append(' ', b);
+    }
+
     // Start: brochure defaults (6 Module fan + socket, White, PAT logo bottom right), or a shared design link
     fillBoards();
     boards = [snapshot()];
     setColour('#f7f7f5', 'White');
+    saveActive(); freshSig = savedSig = workSig(); freshBoards = capture();
     if (applyLink()) {
         render();
         window.addEventListener('load', () => setTimeout(() => {
             document.getElementById('design-panel').scrollIntoView({ behavior: 'instant', block: 'start' });
         }, 300));
     }
+    else keep.get().then(async rec => {
+        // the boards from last time (refreshed, or closed without saving) come back
+        if (!rec || !rec.data || !Array.isArray(rec.data.boards) || Date.now() - rec.t > 30 * 864e5) return;
+        if (workSig() !== freshSig) return;   // the customer already started something new
+        await applyDesign(rec.data);
+        if (hist.timer) commitStep();
+        toast(`Your ${boards.length > 1 ? boards.length + ' boards are' : 'board is'} back, as you left ${boards.length > 1 ? 'them' : 'it'}.`);
+        offerStartNew();
+    });
     const loads = [loadImage('pat', 'images/logo.png')];
     Object.entries(TEXTURES).forEach(([k, t]) => loads.push(loadImage(k, t.src)));
     Promise.all(loads).then(render);

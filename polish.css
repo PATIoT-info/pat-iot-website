@@ -1108,6 +1108,10 @@
 .dp-ws-view button.is-on { background: #fff; color: var(--primary-color, #2563eb); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15); }
 .dp-ws-scope { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.6rem 0.7rem; border: 1px solid #dbe3ee; border-radius: 12px; background: #fff; }
 .dp-ws-scope-label { font-size: 0.8rem; font-weight: 700; color: #334155; }
+.dp-ws-name { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.5rem 0.45rem 0.7rem; border: 1px solid #dbe3ee; border-radius: 12px; background: #fff; }
+.dp-ws-name span { font-size: 0.8rem; font-weight: 700; color: #334155; white-space: nowrap; }
+.dp-ws-name input { flex: 1; min-width: 0; font: inherit; font-size: 0.9rem; color: #0f172a; padding: 0.4rem 0.6rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; outline: none; }
+.dp-ws-name input:focus { border-color: #2563eb; background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
 .dp-ws-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .dp-ws-pills button { padding: 0.4rem 0.85rem; border: 1.5px solid #cbd5e1; border-radius: 999px; background: #fff; font: inherit; font-size: 0.8rem; font-weight: 600; color: #334155; cursor: pointer; }
 .dp-ws-pills button:hover { border-color: var(--primary-color, #2563eb); }
@@ -1253,3 +1257,19 @@
 .site-mobile .dp-tap-hint { position: static; transform: none; width: max-content; max-width: 100%; margin: 0.4rem auto 0;
     font-size: 0.7rem; padding: 0.28rem 0.7rem; }   /* phones: under the board, never over it */
 .site-mobile .dp-icon-pop { border-radius: 0.85rem; padding: 0.7rem; }
+/* Undo / redo on the preview */
+.dp-undo { position: absolute; top: 0.6rem; right: 0.6rem; z-index: 4; display: flex; gap: 0.3rem; }
+.dp-undo-btn { display: inline-flex; align-items: center; gap: 0.35rem; height: 34px; padding: 0 0.75rem; border: 1px solid #dbe3ee; border-radius: 999px;
+    background: rgba(255,255,255,0.92); color: #0f172a; font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(15,23,42,0.08); transition: background 0.15s, border-color 0.15s; }
+.dp-undo-btn:hover:not(:disabled) { background: #fff; border-color: #2563eb; color: #1d4ed8; }
+.dp-undo-btn:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
+.site-mobile .dp-undo { position: static; justify-content: center; margin: 0.45rem auto 0; }
+.site-mobile .dp-undo-btn { height: 32px; font-size: 0.75rem; }
+.dp-toast-btn { margin-left: 0.3rem; padding: 0.2rem 0.65rem; border: 1px solid rgba(255,255,255,0.6); border-radius: 999px; background: transparent;
+    color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+.dp-leave { width: min(540px, calc(100vw - 32px)); }
+.dp-leave .dp-crop-actions { flex-wrap: nowrap; align-items: center; }
+.dp-leave .dp-crop-actions button { white-space: nowrap; flex: 0 0 auto; }
+.dp-leave [data-l="stay"] { margin-right: auto; }
+@media (max-width: 520px) { .dp-leave .dp-crop-actions { flex-wrap: wrap; } .dp-leave .dp-crop-actions [data-l="save"] { flex: 1 1 100%; order: -1; } }
